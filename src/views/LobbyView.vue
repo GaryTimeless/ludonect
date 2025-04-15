@@ -51,6 +51,7 @@
   import { ref, computed } from 'vue'
   import { useRouter } from 'vue-router'
   import questions from '@/questions.json'
+  import { db } from '@/firebaseConfig'
 
   const router = useRouter()
 
