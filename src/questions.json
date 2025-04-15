@@ -1,0 +1,26 @@
+[
+    {
+      "id": 1,
+      "text": "Wie gerne machst du Smalltalk?",
+      "min": 0,
+      "max": 100
+    },
+    {
+      "id": 2,
+      "text": "Wie viel Prozent deiner Freizeit verbringst du mit deinem Handy?",
+      "min": 0,
+      "max": 100
+    },
+    {
+      "id": 3,
+      "text": "Wie stark schätzt du deine Teamfähigkeit ein?",
+      "min": 0,
+      "max": 100
+    },
+    {
+      "id": 4,
+      "text": "Wie wichtig ist dir Pünktlichkeit?",
+      "min": 0,
+      "max": 100
+    }
+  ]
