@@ -7,88 +7,78 @@
     </ion-header>
 
     <ion-content>
-      <ion-list>
-        <ion-reorder-group @ionItemReorder="handleReorder" :disabled="false">
-          <ion-item v-for="player in players" :key="player.id">
-            <ion-label>{{ player.name }}</ion-label>
-            <ion-reorder slot="end"></ion-reorder>
-          </ion-item>
-        </ion-reorder-group>
-      </ion-list>
+      <div style="padding: 16px; text-align: center;">
+        <p>Hier würde später das Reordering passieren.</p>
+      </div>
+
+      <!-- Anzeige der Spieler Namen -->
+      <div v-if="players.length > 0" style="padding: 16px;">
+        <h3>Spieler:</h3>
+        <ul>
+          <li v-for="player in players" :key="player.id">{{ player.name }}</li>
+        </ul>
+      </div>
+
+      <!-- Anzeige der Anzahl der Spieler -->
       <ion-text class="info-text" color="medium">
-        {{ estimationsCount }} / {{ players.length }} estimations received
+        {{ playerCount }} / {{ players.length }} estimations received
       </ion-text>
-      <ion-button expand="full" @click="submitEstimation">Submit Order</ion-button>
+
+      <!-- Button zum Abschicken der Schätzung -->
+      <ion-button expand="full" @click="submitEstimation('DEINE_USER_ID')">Submit Order</ion-button>
     </ion-content>
   </ion-page>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from "vue";
+import { useRoute } from 'vue-router';
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonList, IonItem, IonLabel, IonReorderGroup, IonReorder, IonButton
-} from '@ionic/vue'
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButton,
+  IonText,
+} from "@ionic/vue";
 
-import { getFirestore, collection, getDocs, doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore'
+import {
+  getFirestore,
+  doc,
+  getDoc,
+} from "firebase/firestore";
 
-const db = getFirestore()
-const players = ref([])
-const estimationsCount = ref(0)
+const db = getFirestore();
+const route = useRoute();
+const gameId = ref(null);
+const playerCount = ref(0);
+const players = ref([]);
 
-// Replace this with dynamic game ID logic later
-const gameId = 'test-room'
+onMounted(async () => {
+  // Spiel-ID aus den Route-Parametern holen
+  gameId.value = route.params.gameId;
+  console.log("[EstimationView] gameId gesetzt:", gameId.value);
 
-async function loadPlayers() {
-  const snapshot = await getDocs(collection(db, 'games', gameId, 'players'))
-  players.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-}
+  try {
+    // Abfrage des Room-Dokuments der entsprechenden roomId
+    const roomRef = doc(db, `rooms/${gameId.value}`);
+    const docSnap = await getDoc(roomRef);
+    console.log("[EstimationView] Dokument-Daten:", docSnap.data());
 
-onMounted(() => {
-  loadPlayers()
-  watch(players, (newPlayers) => {
-    if (newPlayers.length > 0) {
-      watchEstimationProgress()
+    if (docSnap.exists()) {
+      // Spieler aus dem players-Array holen
+      const playersData = docSnap.data().players;
+      players.value = playersData || [];
+      playerCount.value = players.value.length;
+      console.log("[EstimationView] Spieler geladen:", players.value);
+    } else {
+      console.error("[EstimationView] Room-Dokument nicht gefunden.");
     }
-  })
-})
-
-function watchEstimationProgress() {
-  const estimationRef = collection(db, 'games', gameId, 'estimations')
-  const gameDocRef = doc(db, 'games', gameId)
-
-  onSnapshot(estimationRef, async (snapshot) => {
-    estimationsCount.value = snapshot.size
-    if (snapshot.size === players.value.length) {
-      console.log('All estimations received! Advancing to reveal phase...')
-      await updateDoc(gameDocRef, { phase: 'reveal' })
-    }
-  })
-}
-
-function handleReorder(event) {
-  const from = event.detail.from
-  const to = event.detail.to
-  const movedItem = players.value.splice(from, 1)[0]
-  players.value.splice(to, 0, movedItem)
-  event.detail.complete()
-}
-
-async function submitEstimation() {
-  const userId = localStorage.getItem('userId')
-  if (!userId) {
-    console.error('No userId found in localStorage')
-    return
+  } catch (error) {
+    console.error("[EstimationView] Fehler beim Abrufen der Spieler:", error);
   }
-
-  const estimationRef = collection(db, 'games', gameId, 'estimations')
-  await setDoc(doc(estimationRef, userId), {
-    order: players.value.map(p => p.id),
-    timestamp: Date.now()
-  })
-
-  console.log('Estimation submitted:', players.value.map(p => p.id))
-}
+});
 </script>
 
 <style scoped>

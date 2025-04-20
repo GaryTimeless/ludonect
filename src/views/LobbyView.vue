@@ -11,11 +11,11 @@
           <ion-button expand="block" @click="createRoom">Neuen Raum erstellen</ion-button>
           <ion-item>
             <ion-label position="floating">Raumcode eingeben</ion-label>
-            <ion-input v-model="joinCode" maxlength="4" @ionInput="onJoinCodeInput" />
+            <ion-input v-model="joinCode" :maxlength="4" @ionInput="onJoinCodeInput" />
           </ion-item>
           <ion-item>
             <ion-label position="floating">Dein Name</ion-label>
-            <ion-input v-model="playerName" maxlength="20" />
+            <ion-input v-model="playerName" :maxlength="20" />
           </ion-item>
           <ion-button expand="block" :disabled="!joinCode || !playerName" @click="joinRoom">Beitreten</ion-button>
         </div>
@@ -133,6 +133,7 @@
     }
     
     listenToRoom(code)
+    listenToGame(code)
   }
   
   function listenToRoom(code: string) {
@@ -141,6 +142,33 @@
       if (docSnap.exists()) {
         players.value = docSnap.data().players || []
         console.log('[listenToRoom] Spieler im Raum:', docSnap.data().players)
+      }
+    })
+  }
+
+  function listenToGame(code: string) {
+    const gameRef = doc(db, 'games', code)
+    onSnapshot(gameRef, (docSnap) => {
+      console.log('%clistenToGame: Neue Snapshot-Aktualisierung', 'color: cyan; font-weight: bold;');
+      console.log('[listenToGame] Snapshot Inhalt:', docSnap.data());
+
+      if (!docSnap.exists()) {
+        console.warn('%clistenToGame: Dokument existiert nicht!', 'color: orange; font-weight: bold;');
+        return;
+      }
+
+      const data = docSnap.data();
+      console.log('[listenToGame] Daten empfangen:', data);
+
+      const userId = localStorage.getItem('userId');
+      const isHost = players.value.find(p => p.id === userId)?.isHost;
+      console.log('[listenToGame] Spieler-ID:', userId, '| Host:', isHost);
+
+      if (!isHost) {
+        console.log('%c[listenToGame] Weiterleitung zu Frage...', 'color: green; font-weight: bold;', `/question/${code}/${data.currentQuestion}`);
+        router.push(`/question/${code}/${data.currentQuestion}`);
+      } else {
+        console.log('%c[listenToGame] Host bleibt auf aktueller Seite.', 'color: grey; font-style: italic;');
       }
     })
   }
@@ -154,34 +182,33 @@
   
   async function startGame() {
     const code = roomCode.value;
-    if (!code) return;
+    console.log('[startGame] Aktueller roomCode:', code);
+
+    if (!code) {
+      console.warn('[startGame] Kein roomCode gefunden – Abbruch');
+      return;
+    }
+
+    const question = getRandomQuestion();
+    console.log('[startGame] Gewählte Frage:', question);
+
+    if (!question || typeof question.id !== 'number') {
+      console.error('[startGame] Ungültige oder fehlende Frage-ID:', question);
+      alert('Fehler beim Starten des Spiels – ungültige Frage');
+      return;
+    }
+
     const gameRef = doc(db, 'games', code);
+    console.log('[startGame] Spiel wird angelegt unter ID:', code);
 
     await setDoc(gameRef, {
       createdAt: Timestamp.now(),
       phase: 'question',
-      currentQuestion: null
-    }, { merge: true });
-
-    const freshSnap = await getDoc(doc(db, 'rooms', code))
-    const currentPlayers = freshSnap.data()?.players || []
-
-    for (const player of currentPlayers) {
-      const playerRef = doc(db, 'games', code, 'players', player.id)
-      await setDoc(playerRef, {
-        name: player.name,
-        score: 0
-      })
-    }
-
-    const question = getRandomQuestion()
-    console.log('[startGame] Frage gewählt:', question)
-
-    await updateDoc(gameRef, {
       currentQuestion: question.id
-    })
+    });
 
-    window.open(`/question?gameId=${code}&id=${question.id}`, '_blank')
+    console.log(`[startGame] Navigiere zu: /question/${code}/${question.id}`);
+    router.push(`/question/${code}/${question.id}`);
   }
 
   function addBot() {

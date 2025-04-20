@@ -30,65 +30,44 @@ import {
   IonRange,
   IonButton
 } from '@ionic/vue'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getFirestore, doc, onSnapshot, getDocs, collection, getDoc, setDoc } from 'firebase/firestore'
-import questions from "@/questions.json";
-
+import questions from '@/questions.json'
+console.log("Welcome to QuestionView")
 const route = useRoute()
 const router = useRouter()
-const db = getFirestore()
-const gameId = route.query.gameId as string
-const userId = localStorage.getItem('userId') || 'unknown-user'
 
-const questionId = parseInt(route.query.id as string)
-const question = questions.find(q => q.id === questionId)
+const gameId = route.params.gameId as string
+const rawQuestionId = route.params.questionId
+const questionId = Number(rawQuestionId)
 
-if (!question) {
-  throw new Error('Frage nicht gefunden')
+if (isNaN(questionId)) {
+  console.warn('Ungültige questionId – Weiterleitung zur Lobby.')
+  router.push(`/lobby/${gameId}`)
 }
 
-const questionText = ref(question.text)
-const min = ref(question.min)
-const max = ref(question.max)
-const answer = ref(Math.floor((min.value + max.value) / 2))
+const questionText = ref('')
+const min = ref(0)
+const max = ref(100)
+const answer = ref(50)
 
-const gameRef = doc(db, 'games', gameId)
+onMounted(() => {
+  console.log('[Debug] Suche Frage mit ID:', questionId, '| Typ:', typeof questionId)
+  const question = questions.find(q => q.id === questionId)
+  console.log('[Debug] Gefundene Frage:', question)
 
-onSnapshot(gameRef, (snapshot) => {
-  const data = snapshot.data()
-  if (data?.phase === 'estimation') {
-    router.push({ name: 'estimation', params: { gameId } })
+  if (question) {
+    questionText.value = question.text
+    min.value = question.min
+    max.value = question.max
+  } else {
+    console.warn('Fehlende oder ungültige gameId/questionId – Weiterleitung zur Lobby.')
+    router.push(`/lobby/${gameId}`)
   }
 })
 
-async function checkIfAllAnswered() {
-  const playersSnapshot = await getDocs(collection(db, 'games', gameId, 'players'))
-  const allAnswered = playersSnapshot.docs.every(doc => doc.data().answer !== undefined)
-  if (allAnswered) {
-    await setDoc(gameRef, { phase: 'estimation' }, { merge: true })
-  }
-}
-
-async function submitAnswer() {
-  try {
-    const playerRef = doc(db, 'games', gameId, 'players', userId)
-    const playerSnap = await getDoc(playerRef)
-
-    console.log('Spieler-ID:', userId)
-    console.log('PlayerRef:', playerRef.path)
-    console.log('PlayerDoc exists?', playerSnap.exists())
-
-    await setDoc(playerRef, {
-      name: 'Unbekannt',
-      score: 0,
-      answer: answer.value
-    }, { merge: true })
-
-    console.log('Antwort gespeichert:', answer.value)
-    await checkIfAllAnswered()
-  } catch (err) {
-    console.error('Fehler beim Speichern:', err)
-  }
+function submitAnswer() {
+  console.log('Antwort abgesendet:', answer.value)
+  router.push(`/estimation/${gameId}/${questionId}`)
 }
 </script>

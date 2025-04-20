@@ -16,17 +16,17 @@ const routes: Array<RouteRecordRaw> = [
     component: LobbyView
   },
   {
-    path: '/question',
+    path: '/question/:gameId/:questionId',
     name: 'question',
     component: QuestionView
   },
   {
-    path: '/estimation',
+    path: '/estimation/:gameId/:questionId',
     name: 'estimation',
     component: EstimationView
   },
   {
-    path: '/reveal',
+    path: '/reveal/:gameId',
     name: 'reveal',
     component: RevealView
   }

@@ -33,7 +33,7 @@ import {
 import { getFirestore, collection, getDocs, doc, updateDoc } from 'firebase/firestore'
 
 const db = getFirestore()
-const gameId = 'test-room'
+// const gameId = 'test-room'
 const players = ref([])
 const sortedPlayers = ref([])
 
