@@ -31,16 +31,64 @@ import {
   IonButton
 } from '@ionic/vue'
 import { ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { getFirestore, doc, onSnapshot, getDocs, collection, getDoc, setDoc } from 'firebase/firestore'
+import questions from "@/questions.json";
 
 const route = useRoute()
+const router = useRouter()
+const db = getFirestore()
+const gameId = route.query.gameId as string
+const userId = localStorage.getItem('userId') || 'unknown-user'
 
-const questionText = ref<string>(route.query.text as string)
-const min = ref<number>(parseInt(route.query.min as string) || 0)
-const max = ref<number>(parseInt(route.query.max as string) || 100)
-const answer = ref<number>(Math.floor((min.value + max.value) / 2))
+const questionId = parseInt(route.query.id as string)
+const question = questions.find(q => q.id === questionId)
 
-function submitAnswer() {
-  alert(`Antwort gespeichert: ${answer.value}`)
+if (!question) {
+  throw new Error('Frage nicht gefunden')
+}
+
+const questionText = ref(question.text)
+const min = ref(question.min)
+const max = ref(question.max)
+const answer = ref(Math.floor((min.value + max.value) / 2))
+
+const gameRef = doc(db, 'games', gameId)
+
+onSnapshot(gameRef, (snapshot) => {
+  const data = snapshot.data()
+  if (data?.phase === 'estimation') {
+    router.push({ name: 'estimation', params: { gameId } })
+  }
+})
+
+async function checkIfAllAnswered() {
+  const playersSnapshot = await getDocs(collection(db, 'games', gameId, 'players'))
+  const allAnswered = playersSnapshot.docs.every(doc => doc.data().answer !== undefined)
+  if (allAnswered) {
+    await setDoc(gameRef, { phase: 'estimation' }, { merge: true })
+  }
+}
+
+async function submitAnswer() {
+  try {
+    const playerRef = doc(db, 'games', gameId, 'players', userId)
+    const playerSnap = await getDoc(playerRef)
+
+    console.log('Spieler-ID:', userId)
+    console.log('PlayerRef:', playerRef.path)
+    console.log('PlayerDoc exists?', playerSnap.exists())
+
+    await setDoc(playerRef, {
+      name: 'Unbekannt',
+      score: 0,
+      answer: answer.value
+    }, { merge: true })
+
+    console.log('Antwort gespeichert:', answer.value)
+    await checkIfAllAnswered()
+  } catch (err) {
+    console.error('Fehler beim Speichern:', err)
+  }
 }
 </script>

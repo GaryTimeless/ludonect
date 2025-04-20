@@ -82,6 +82,7 @@
   const canStartGame = computed(() => players.value.length >= 2)
 
   async function createRoom() {
+    if (!playerName.value.trim()) { alert('Bitte gib einen Namen ein'); return; }
     const code = generateRoomCode()
     roomCode.value = code
 
@@ -90,6 +91,8 @@
       name: playerName.value ? `${playerName.value} (Host)` : 'Du (Host)',
       isHost: true
     }
+    
+    localStorage.setItem('userId', player.id)
 
     players.value = [player]
 
@@ -104,6 +107,7 @@
   }
   
   async function joinRoom() {
+    if (!playerName.value.trim()) { alert('Bitte gib einen Namen ein'); return; }
     const code = joinCode.value.toUpperCase()
     roomCode.value = code
 
@@ -112,6 +116,8 @@
       name: playerName.value || 'Du',
       isHost: false
     }
+    
+    localStorage.setItem('userId', player.id)
 
     const roomRef = doc(db, 'rooms', code)
     const roomSnap = await getDoc(roomRef)
@@ -120,7 +126,6 @@
       await updateDoc(roomRef, {
         players: arrayUnion(player)
       })
-      players.value = (roomSnap.data().players || []).concat(player)
       console.log('[joinRoom] Beigetreten zu Raum:', code)
     } else {
       alert('Raum existiert nicht!')
@@ -147,9 +152,36 @@
     ).join('')
   }
   
-  function startGame() {
+  async function startGame() {
+    const code = roomCode.value;
+    if (!code) return;
+    const gameRef = doc(db, 'games', code);
+
+    await setDoc(gameRef, {
+      createdAt: Timestamp.now(),
+      phase: 'question',
+      currentQuestion: null
+    }, { merge: true });
+
+    const freshSnap = await getDoc(doc(db, 'rooms', code))
+    const currentPlayers = freshSnap.data()?.players || []
+
+    for (const player of currentPlayers) {
+      const playerRef = doc(db, 'games', code, 'players', player.id)
+      await setDoc(playerRef, {
+        name: player.name,
+        score: 0
+      })
+    }
+
     const question = getRandomQuestion()
-    router.push({ name: 'question', query: { text: question.text, min: question.min, max: question.max } })
+    console.log('[startGame] Frage gewählt:', question)
+
+    await updateDoc(gameRef, {
+      currentQuestion: question.id
+    })
+
+    window.open(`/question?gameId=${code}&id=${question.id}`, '_blank')
   }
 
   function addBot() {

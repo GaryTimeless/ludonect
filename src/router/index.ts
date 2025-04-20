@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
 import LobbyView from '../views/LobbyView.vue'
 import QuestionView from '../views/QuestionView.vue'
+import EstimationView from '../views/EstimationView.vue'
+import RevealView from '../views/RevealView.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -17,6 +19,16 @@ const routes: Array<RouteRecordRaw> = [
     path: '/question',
     name: 'question',
     component: QuestionView
+  },
+  {
+    path: '/estimation',
+    name: 'estimation',
+    component: EstimationView
+  },
+  {
+    path: '/reveal',
+    name: 'reveal',
+    component: RevealView
   }
 ]
 
