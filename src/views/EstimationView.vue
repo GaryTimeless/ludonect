@@ -14,18 +14,18 @@
       <!-- Anzeige der Spieler Namen -->
       <div v-if="players.length > 0" style="padding: 16px;">
         <h3>Spieler:</h3>
-        <ul>
-          <li v-for="player in players" :key="player.id">{{ player.name }}</li>
-        </ul>
+        <ion-reorder-group disabled="false">
+          <ion-item v-for="(player, index) in players" :key="player.id" :class="{'reordered': index === players.indexOf(player)}">
+            <ion-label>{{ player.name }}</ion-label>
+            <ion-reorder slot="end"></ion-reorder>
+          </ion-item>
+        </ion-reorder-group>
       </div>
 
       <!-- Anzeige der Anzahl der Spieler -->
       <ion-text class="info-text" color="medium">
         {{ playerCount }} / {{ players.length }} estimations received
       </ion-text>
-
-      <!-- Button zum Abschicken der Schätzung -->
-      <ion-button expand="full" @click="submitEstimation('DEINE_USER_ID')">Submit Order</ion-button>
     </ion-content>
   </ion-page>
 </template>
