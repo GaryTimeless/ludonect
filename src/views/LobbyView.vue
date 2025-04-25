@@ -92,7 +92,8 @@
       isHost: true
     }
     
-    localStorage.setItem('userId', player.id)
+    
+    localStorage.setItem('playerId', player.id);
 
     players.value = [player]
 
@@ -117,7 +118,8 @@
       isHost: false
     }
     
-    localStorage.setItem('userId', player.id)
+    
+    localStorage.setItem('playerId', player.id);
 
     const roomRef = doc(db, 'rooms', code)
     const roomSnap = await getDoc(roomRef)
@@ -160,9 +162,9 @@
       const data = docSnap.data();
       console.log('[listenToGame] Daten empfangen:', data);
 
-      const userId = localStorage.getItem('userId');
-      const isHost = players.value.find(p => p.id === userId)?.isHost;
-      console.log('[listenToGame] Spieler-ID:', userId, '| Host:', isHost);
+      const playerId = localStorage.getItem('playerId');
+      const isHost = players.value.find(p => p.id === playerId)?.isHost;
+      console.log('[listenToGame] Spieler-ID:', playerId, '| Host:', isHost);
 
       if (!isHost) {
         console.log('%c[listenToGame] Weiterleitung zu Frage...', 'color: green; font-weight: bold;', `/question/${code}/${data.currentQuestion}`);

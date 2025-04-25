@@ -33,10 +33,16 @@ import {
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import questions from '@/questions.json'
+import { getFirestore, doc, updateDoc, getDoc } from 'firebase/firestore';
+
 console.log("Welcome to QuestionView")
 const route = useRoute()
 const router = useRouter()
 
+const db = getFirestore();
+
+// Spielername lokal auslesen (kann später nützlich sein für Feedback oder Debugging)
+const userName = localStorage.getItem('playerName');
 const gameId = route.params.gameId as string
 const rawQuestionId = route.params.questionId
 const questionId = Number(rawQuestionId)
@@ -66,8 +72,38 @@ onMounted(() => {
   }
 })
 
-function submitAnswer() {
-  console.log('Antwort abgesendet:', answer.value)
-  router.push(`/estimation/${gameId}/${questionId}`)
+async function submitAnswer() {
+  console.log('Antwort abgesendet:', answer.value);
+  console.log('Spielername (lokal):', userName);
+  localStorage.setItem(`answer-${gameId}-${questionId}`, answer.value.toString());
+
+  const roomRef = doc(db, 'rooms', gameId);
+  const roomSnap = await getDoc(roomRef);
+  const roomData = roomSnap.data();
+
+  if (!roomData || !roomData.players) {
+    console.error('Raum oder Spielerdaten nicht gefunden.');
+    return;
+  }
+
+  const playerId = localStorage.getItem('playerId');
+  console.log('Lokale Player-ID:', playerId);
+  console.log('Player-IDs im Raum:', roomData.players.map((p: any) => p.id));
+  const updatedPlayers = roomData.players.map((player: any) => {
+    if (player.id === playerId) {
+      return {
+        ...player,
+        estimation: answer.value
+      };
+    }
+    return player;
+  });
+
+  await updateDoc(roomRef, {
+    players: updatedPlayers
+  });
+  console.log("Spielerdaten nach Update:", updatedPlayers);
+
+  router.push(`/estimation/${gameId}/${questionId}`);
 }
 </script>

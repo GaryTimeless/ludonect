@@ -7,20 +7,27 @@
     </ion-header>
 
     <ion-content>
-      <div style="padding: 16px; text-align: center;">
+      <div style="padding: 16px; text-align: center">
         <p>Hier würde später das Reordering passieren.</p>
       </div>
 
       <!-- Anzeige der Spieler Namen -->
-      <div v-if="players.length > 0" style="padding: 16px;">
+      <div v-if="players.length > 0" style="padding: 16px">
         <h3>Spieler:</h3>
-        <ion-reorder-group disabled="false">
-          <ion-item v-for="(player, index) in players" :key="player.id" :class="{'reordered': index === players.indexOf(player)}">
+        <VueDraggable v-model="players" item-key="id" @update="onListUpdated">
+          <ion-item v-for="player in players" :key="player.id">
             <ion-label>{{ player.name }}</ion-label>
-            <ion-reorder slot="end"></ion-reorder>
           </ion-item>
-        </ion-reorder-group>
+        </VueDraggable>
       </div>
+
+      <!-- Submit Button zum Speichern der Änderungen -->
+      <ion-button expand="full" @click="submitReorder"
+        >Reihenfolge Speichern</ion-button
+      >
+      <ion-button expand="full" @click="reloadPlayers"
+        >Daten neu laden</ion-button
+      >
 
       <!-- Anzeige der Anzahl der Spieler -->
       <ion-text class="info-text" color="medium">
@@ -32,7 +39,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { useRoute } from 'vue-router';
+import { useRoute } from "vue-router";
 import {
   IonPage,
   IonHeader,
@@ -41,13 +48,20 @@ import {
   IonContent,
   IonButton,
   IonText,
+  
+  IonItem,
+  IonLabel,
+  
 } from "@ionic/vue";
-
 import {
   getFirestore,
   doc,
   getDoc,
+  updateDoc,
+  onSnapshot,
 } from "firebase/firestore";
+import { VueDraggable } from "vue-draggable-plus";
+
 
 const db = getFirestore();
 const route = useRoute();
@@ -56,29 +70,72 @@ const playerCount = ref(0);
 const players = ref([]);
 
 onMounted(async () => {
-  // Spiel-ID aus den Route-Parametern holen
   gameId.value = route.params.gameId;
-  console.log("[EstimationView] gameId gesetzt:", gameId.value);
 
   try {
-    // Abfrage des Room-Dokuments der entsprechenden roomId
     const roomRef = doc(db, `rooms/${gameId.value}`);
     const docSnap = await getDoc(roomRef);
-    console.log("[EstimationView] Dokument-Daten:", docSnap.data());
 
     if (docSnap.exists()) {
-      // Spieler aus dem players-Array holen
       const playersData = docSnap.data().players;
       players.value = playersData || [];
       playerCount.value = players.value.length;
-      console.log("[EstimationView] Spieler geladen:", players.value);
     } else {
-      console.error("[EstimationView] Room-Dokument nicht gefunden.");
+      console.error("Room-Dokument nicht gefunden.");
     }
+
+    // Hinzufügen des Listeners, um Änderungen in Echtzeit zu verfolgen
+    onSnapshot(roomRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const playersData = snapshot.data().players;
+        if (playersData) {
+          players.value = playersData;
+          playerCount.value = playersData.length;
+        }
+      }
+    });
   } catch (error) {
-    console.error("[EstimationView] Fehler beim Abrufen der Spieler:", error);
+    console.error("Fehler beim Abrufen der Spieler:", error);
   }
 });
+
+
+// Funktion um die Änderungen zu speichern
+const submitReorder = async () => {
+  try {
+    const roomRef = doc(db, `rooms/${gameId.value}`);
+    await updateDoc(roomRef, {
+      players: players.value,
+    });
+    console.log("Reihenfolge gespeichert:", players.value);
+  } catch (error) {
+    console.error("Fehler beim Speichern der Reihenfolge:", error);
+  }
+};
+
+// Funktion um die Spieler neu zu laden
+const reloadPlayers = async () => {
+  try {
+    const roomRef = doc(db, `rooms/${gameId.value}`);
+    const docSnap = await getDoc(roomRef);
+
+    if (docSnap.exists()) {
+      const playersData = docSnap.data().players;
+      players.value = playersData || [];
+      playerCount.value = players.value.length;
+      console.log("Spieler neu geladen:", players.value);
+      alert("Spieler erfolgreich neu geladen!");
+    } else {
+      console.error("Room-Dokument nicht gefunden.");
+    }
+  } catch (error) {
+    console.error("Fehler beim Laden der Spieler:", error);
+  }
+};
+const onListUpdated = () => {
+  console.log("Neue Reihenfolge nach Drag:", players.value.map(p => p.name));
+};
+//http://localhost:8100/estimation/AZZI/2
 </script>
 
 <style scoped>
