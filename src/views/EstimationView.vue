@@ -10,35 +10,59 @@
       <div style="padding: 16px; text-align: center">
         <p>Hier würde später das Reordering passieren.</p>
       </div>
-
-      <!-- Anzeige der Spieler Namen -->
-      <div v-if="players.length > 0" style="padding: 16px">
-        <h3>Spieler:</h3>
-        <VueDraggable v-model="players" item-key="id" @update="onListUpdated">
-          <ion-item v-for="player in players" :key="player.id">
-            <ion-label>{{ player.name }}</ion-label>
-          </ion-item>
-        </VueDraggable>
-      </div>
-
-      <!-- Submit Button zum Speichern der Änderungen -->
-      <ion-button expand="full" @click="submitReorder"
-        >Reihenfolge Speichern</ion-button
-      >
-      <ion-button expand="full" @click="reloadPlayers"
-        >Daten neu laden</ion-button
-      >
-
+      
       <!-- Anzeige der Anzahl der Spieler -->
       <ion-text class="info-text" color="medium">
         {{ playerCount }} / {{ players.length }} estimations received
       </ion-text>
+      <!-- Anzeige der Spieler Namen -->
+      <div v-if="players.length > 0" style="padding: 16px">
+        <h3>Spieler:</h3>
+        <VueDraggable
+          v-model="players"
+          :key="players.map(p => p.id).join('-')"
+          item-key="id"
+          @update="onListUpdated"
+          :disabled="!isHost"
+        >
+          <ion-item v-for="player in players.filter(p => p.estimation !== undefined)" :key="player.id">
+            <ion-label :style="{ color: isHost ? 'inherit' : 'gray' }">
+              {{ players.filter(p => p.estimation !== undefined).indexOf(player) + 1 }}. {{ player.name }}
+              <br />
+              <small v-if="player.isHost">Host</small>
+              <small v-else>Player</small>
+            </ion-label>
+          </ion-item>
+        </VueDraggable>
+      </div>
+
+      <ion-button v-if="isHost && !sortingStarted" expand="full" @click="submitReorder"
+        >Reihenfolge Speichern</ion-button
+      >
+      <ion-button expand="full" @click="reloadPlayers"
+      >Daten neu laden</ion-button
+      >
+      
+      <ion-button v-if="isHost && !sortingStarted" expand="full" @click="startGame"
+        >Spiel starten</ion-button
+      >
+      <div v-if="sortingStarted" style="padding: 16px">
+        <h3>Sortiere Spieler:</h3>
+        <VueDraggable v-model="sortedPlayers" item-key="id" :disabled="true">
+          <ion-item v-for="player in placedPlayers" :key="player.id">
+            <ion-label>
+              {{ player.name }}
+            </ion-label>
+          </ion-item>
+        </VueDraggable>
+      </div>
+
     </ion-content>
   </ion-page>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
   IonPage,
@@ -68,6 +92,23 @@ const route = useRoute();
 const gameId = ref(null);
 const playerCount = ref(0);
 const players = ref([]);
+
+const sortingStarted = ref(false);
+const placedPlayers = ref([]);
+const sortedPlayers = ref([]);
+
+watch(sortingStarted, (newVal) => {
+  if (newVal) {
+    placedPlayers.value = players.value.length > 0 ? [players.value[0]] : [];
+    sortedPlayers.value = placedPlayers.value;
+  }
+});
+
+const localPlayerId = localStorage.getItem('playerId');
+const isHost = computed(() => {
+  const me = players.value.find(p => p.id === localPlayerId);
+  return me?.isHost || false;
+});
 
 onMounted(async () => {
   gameId.value = route.params.gameId;
@@ -134,6 +175,10 @@ const reloadPlayers = async () => {
 };
 const onListUpdated = () => {
   console.log("Neue Reihenfolge nach Drag:", players.value.map(p => p.name));
+};
+
+const startGame = () => {
+  sortingStarted.value = true;
 };
 </script>
 
