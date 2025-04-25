@@ -79,7 +79,7 @@ onMounted(async () => {
     if (docSnap.exists()) {
       const playersData = docSnap.data().players;
       players.value = playersData || [];
-      playerCount.value = players.value.length;
+      playerCount.value = players.value.filter(p => p.estimation !== undefined).length;
     } else {
       console.error("Room-Dokument nicht gefunden.");
     }
@@ -90,7 +90,7 @@ onMounted(async () => {
         const playersData = snapshot.data().players;
         if (playersData) {
           players.value = playersData;
-          playerCount.value = playersData.length;
+          playerCount.value = playersData.filter(p => p.estimation !== undefined).length;
         }
       }
     });
@@ -122,7 +122,7 @@ const reloadPlayers = async () => {
     if (docSnap.exists()) {
       const playersData = docSnap.data().players;
       players.value = playersData || [];
-      playerCount.value = players.value.length;
+      playerCount.value = players.value.filter(p => p.estimation !== undefined).length;
       console.log("Spieler neu geladen:", players.value);
       alert("Spieler erfolgreich neu geladen!");
     } else {
@@ -135,7 +135,6 @@ const reloadPlayers = async () => {
 const onListUpdated = () => {
   console.log("Neue Reihenfolge nach Drag:", players.value.map(p => p.name));
 };
-//http://localhost:8100/estimation/AZZI/2
 </script>
 
 <style scoped>
