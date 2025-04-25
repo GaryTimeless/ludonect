@@ -10,6 +10,9 @@
       <div style="padding: 16px; text-align: center">
         <p>Hier würde später das Reordering passieren.</p>
       </div>
+      <ion-text v-if="sortingStarted" color="primary" class="info-text">
+        Spiel gestartet – du bist Spieler: {{ currentPlayerName }}
+      </ion-text>
       
       <!-- Anzeige der Anzahl der Spieler -->
       <ion-text class="info-text" color="medium">
@@ -48,13 +51,27 @@
       >
       <div v-if="sortingStarted" style="padding: 16px">
         <h3>Sortiere Spieler:</h3>
-        <VueDraggable v-model="sortedPlayers" item-key="id" :disabled="true">
+        <VueDraggable
+          v-model="sortedPlayers"
+          item-key="id"
+          :disabled="localPlayerId !== activePlayer?.id"
+        >
           <ion-item v-for="player in placedPlayers" :key="player.id">
             <ion-label>
               {{ player.name }}
             </ion-label>
           </ion-item>
         </VueDraggable>
+
+        <!-- Fertig-Button nur für den aktiven Spieler sichtbar -->
+        <ion-button
+          v-if="localPlayerId === activePlayer?.id"
+          expand="full"
+          style="margin-top: 16px"
+          @click="onFinishPlacement"
+        >
+          Fertig
+        </ion-button>
       </div>
 
     </ion-content>
@@ -97,6 +114,8 @@ const sortingStarted = ref(false);
 const placedPlayers = ref([]);
 const sortedPlayers = ref([]);
 
+const activePlayer = ref(null);
+
 watch(sortingStarted, (newVal) => {
   if (newVal) {
     placedPlayers.value = players.value.length > 0 ? [players.value[0]] : [];
@@ -110,6 +129,11 @@ const isHost = computed(() => {
   return me?.isHost || false;
 });
 
+const currentPlayerName = computed(() => {
+  const me = players.value.find(p => p.id === localPlayerId);
+  return me?.name || 'Unbekannt';
+});
+
 onMounted(async () => {
   gameId.value = route.params.gameId;
 
@@ -120,7 +144,13 @@ onMounted(async () => {
     if (docSnap.exists()) {
       const playersData = docSnap.data().players;
       players.value = playersData || [];
+      activePlayer.value = players.value.find(p => p.id === docSnap.data().activePlayerId) || null;
       playerCount.value = players.value.filter(p => p.estimation !== undefined).length;
+
+      const placedPlayerIds = docSnap.data().placedPlayers || [];
+      placedPlayers.value = players.value.filter(p => placedPlayerIds.includes(p.id));
+      sortedPlayers.value = [...placedPlayers.value];
+      sortingStarted.value = docSnap.data().sortingStarted || false;
     } else {
       console.error("Room-Dokument nicht gefunden.");
     }
@@ -131,7 +161,13 @@ onMounted(async () => {
         const playersData = snapshot.data().players;
         if (playersData) {
           players.value = playersData;
+          activePlayer.value = players.value.find(p => p.id === snapshot.data().activePlayerId) || null;
           playerCount.value = playersData.filter(p => p.estimation !== undefined).length;
+
+          const placedPlayerIds = snapshot.data().placedPlayers || [];
+          placedPlayers.value = players.value.filter(p => placedPlayerIds.includes(p.id));
+          sortedPlayers.value = [...placedPlayers.value];
+          sortingStarted.value = snapshot.data().sortingStarted || false;
         }
       }
     });
@@ -177,8 +213,37 @@ const onListUpdated = () => {
   console.log("Neue Reihenfolge nach Drag:", players.value.map(p => p.name));
 };
 
-const startGame = () => {
+const startGame = async () => {
   sortingStarted.value = true;
+
+  const finalOrder = [...players.value];
+  placedPlayers.value = [finalOrder[0]];
+  sortedPlayers.value = [...placedPlayers.value];
+  activePlayer.value = finalOrder.length > 1 ? finalOrder[1] : null;
+
+  const roomRef = doc(db, `rooms/${gameId.value}`);
+  await updateDoc(roomRef, {
+    activePlayerId: activePlayer.value?.id || null,
+    placedPlayers: placedPlayers.value.map(p => p.id),
+    sortingStarted: true,
+  });
+};
+//asdasd
+const onFinishPlacement = async () => {
+  console.log("Fertig geklickt von:", activePlayer.value?.name);
+  if (!activePlayer.value) return;
+
+  placedPlayers.value.push(activePlayer.value);
+  sortedPlayers.value = [...placedPlayers.value];
+
+  const nextPlayer = players.value.find(p => !placedPlayers.value.includes(p));
+  activePlayer.value = nextPlayer || null;
+
+  const roomRef = doc(db, `rooms/${gameId.value}`);
+  await updateDoc(roomRef, {
+    activePlayerId: activePlayer.value?.id || null,
+    placedPlayers: placedPlayers.value.map(p => p.id),
+  });
 };
 </script>
 
