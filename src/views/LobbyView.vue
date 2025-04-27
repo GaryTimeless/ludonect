@@ -8,16 +8,32 @@
   
       <ion-content class="ion-padding">
         <div v-if="!roomCode">
-          <ion-button expand="block" @click="createRoom">Neuen Raum erstellen</ion-button>
-          <ion-item>
-            <ion-label position="floating">Raumcode eingeben</ion-label>
-            <ion-input v-model="joinCode" :maxlength="4" @ionInput="onJoinCodeInput" />
-          </ion-item>
-          <ion-item>
-            <ion-label position="floating">Dein Name</ion-label>
-            <ion-input v-model="playerName" :maxlength="20" />
-          </ion-item>
-          <ion-button expand="block" :disabled="!joinCode || !playerName" @click="joinRoom">Beitreten</ion-button>
+          <template v-if="mode === 'start'">
+            <ion-button expand="block" @click="mode = 'create'">Neuen Raum erstellen</ion-button>
+            <ion-button expand="block" @click="mode = 'join'">Existierenden Raum beitreten</ion-button>
+          </template>
+  
+          <template v-else-if="mode === 'create'">
+            <ion-item>
+              <ion-label position="floating">Dein Name</ion-label>
+              <ion-input v-model="playerName" :maxlength="20" />
+            </ion-item>
+            <ion-button expand="block" :disabled="!playerName" @click="createRoom">Raum erstellen</ion-button>
+            <ion-button expand="block" @click="mode = 'start'" color="medium">Zurück</ion-button>
+          </template>
+  
+          <template v-else-if="mode === 'join'">
+            <ion-item>
+              <ion-label position="floating">Raumcode eingeben</ion-label>
+              <ion-input v-model="joinCode" :maxlength="4" @ionInput="onJoinCodeInput" />
+            </ion-item>
+            <ion-item>
+              <ion-label position="floating">Dein Name</ion-label>
+              <ion-input v-model="playerName" :maxlength="20" />
+            </ion-item>
+            <ion-button expand="block" :disabled="!joinCode || !playerName" @click="joinRoom">Beitreten</ion-button>
+            <ion-button expand="block" @click="mode = 'start'" color="medium">Zurück</ion-button>
+          </template>
         </div>
   
         <div v-else>
@@ -28,12 +44,11 @@
               {{ player.name }}
             </ion-item>
           </ion-list>
-          <ion-button expand="block" :disabled="!canStartGame" @click="startGame">Spiel starten</ion-button>
+          <ion-button v-if="isLocalPlayerHost" expand="block" :disabled="!canStartGame" @click="startGame">
+            Spiel starten
+          </ion-button>
           <ion-button expand="block" @click="addBot">Bot hinzufügen</ion-button>
         </div>
-        <ion-button expand="block" color="medium" @click="testFirestoreWrite">
-          🔌 Firestore-Verbindung testen
-        </ion-button>
       </ion-content>
     </ion-page>
   </template>
@@ -78,8 +93,15 @@
   const joinCode = ref('')
   const playerName = ref('')
   const players = ref<Player[]>([])
-  
+  const mode = ref<'start' | 'create' | 'join'>('start');
+
   const canStartGame = computed(() => players.value.length >= 2)
+
+  const isLocalPlayerHost = computed(() => {
+    const playerId = localStorage.getItem('playerId');
+    const currentPlayer = players.value.find(p => p.id === playerId);
+    return currentPlayer?.isHost || false;
+  });
 
   async function createRoom() {
     if (!playerName.value.trim()) { alert('Bitte gib einen Namen ein'); return; }
@@ -224,20 +246,5 @@
 
   function onJoinCodeInput(event: any) {
     joinCode.value = event.target.value.toUpperCase()
-  }
-
-  async function testFirestoreWrite() {
-    try {
-      const testRef = doc(db, 'test', 'ping')
-      await setDoc(testRef, {
-        timestamp: Timestamp.now(),
-        message: 'Testverbindung erfolgreich'
-      })
-      console.log('[Test] Firestore-Schreibvorgang erfolgreich.')
-      alert('Testverbindung zu Firestore erfolgreich!')
-    } catch (error) {
-      console.error('[Test] Fehler beim Schreiben in Firestore:', error)
-      alert('Fehler beim Testen der Firestore-Verbindung. Siehe Konsole für Details.')
-    }
   }
   </script>
