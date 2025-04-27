@@ -8,7 +8,7 @@
 
     <ion-content>
       <div style="padding: 16px; text-align: center">
-        <p>Hier würde später das Reordering passieren.</p>
+        <FunButton />
       </div>
       <ion-text v-if="sortingStarted" color="primary" class="info-text">
         Spiel gestartet – du bist Spieler: {{ currentPlayerName }}
@@ -104,6 +104,7 @@
 </template>
 
 <script setup>
+import FunButton from '@/components/FunButton.vue';
 import { ref, onMounted, computed, } from "vue";
 import { useRoute } from "vue-router";
 import {

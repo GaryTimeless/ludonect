@@ -21,7 +21,6 @@
             <ion-button expand="block" :disabled="!playerName" @click="createRoom">Raum erstellen</ion-button>
             <ion-button expand="block" @click="mode = 'start'" color="medium">Zurück</ion-button>
           </template>
-  
           <template v-else-if="mode === 'join'">
             <ion-item>
               <ion-label position="floating">Raumcode eingeben</ion-label>
@@ -33,6 +32,7 @@
             </ion-item>
             <ion-button expand="block" :disabled="!joinCode || !playerName" @click="joinRoom">Beitreten</ion-button>
             <ion-button expand="block" @click="mode = 'start'" color="medium">Zurück</ion-button>
+
           </template>
         </div>
   
@@ -48,6 +48,7 @@
             Spiel starten
           </ion-button>
           <ion-button expand="block" @click="addBot">Bot hinzufügen</ion-button>
+          <FunButton />
         </div>
       </ion-content>
     </ion-page>
@@ -71,6 +72,7 @@
   import questions from '@/questions.json'
   import { db } from '@/firebaseConfig'
   import { doc, setDoc, updateDoc, arrayUnion, getDoc, onSnapshot, Timestamp } from 'firebase/firestore'
+  import FunButton from '@/components/FunButton.vue';
 
   const router = useRouter()
 
