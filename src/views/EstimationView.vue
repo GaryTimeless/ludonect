@@ -87,6 +87,18 @@
         </ion-button>
       </div>
 
+      <div v-if="sortingFinished" style="padding: 16px;">
+        <h3>🎉 Finale Reihenfolge:</h3>
+        <ion-list>
+          <ion-item v-for="(player, index) in placedPlayers" :key="player.id">
+            <ion-label>
+              {{ index + 1 }}. {{ player.name }}
+              <br />
+              <strong>Antwort:</strong> {{ player.estimation !== undefined ? player.estimation : 'Keine Antwort' }}
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </div>
     </ion-content>
   </ion-page>
 </template>
@@ -105,6 +117,7 @@ import {
   IonBadge,
   IonItem,
   IonLabel,
+  IonList,
   
 } from "@ionic/vue";
 import {
@@ -113,6 +126,7 @@ import {
   getDoc,
   updateDoc,
   onSnapshot,
+  limit,
 } from "firebase/firestore";
 import { VueDraggable } from "vue-draggable-plus";
 
@@ -127,6 +141,7 @@ const sortingStarted = ref(false);
 const placedPlayers = ref([]);
 
 const activePlayer = ref(null);
+const sortingFinished = ref(false);
 
 const localPlayerId = localStorage.getItem('playerId');
 const isHost = computed(() => {
@@ -171,6 +186,7 @@ onMounted(async () => {
           const placedPlayerIds = snapshot.data().placedPlayers || [];
           placedPlayers.value = players.value.filter(p => placedPlayerIds.includes(p.id));
           sortingStarted.value = snapshot.data().sortingStarted || false;
+          sortingFinished.value = snapshot.data().sortingFinished || false;
         }
       }
     });
@@ -258,7 +274,16 @@ const onFinishPlacement = async () => {
   } else {
     console.log("Alle Spieler wurden platziert. 🎉");
   }
+  if (!activePlayer.value) {
+  sortingFinished.value = true;
 
+  const roomRef = doc(db, `rooms/${gameId.value}`);
+  await updateDoc(roomRef, {
+    sortingFinished: true,
+  });
+  console.log("Das Spiel ist abgeschlossen, alle Spieler platziert!");
+  return;
+}
   const roomRef = doc(db, `rooms/${gameId.value}`);
   await updateDoc(roomRef, {
     activePlayerId: activePlayer.value?.id || null,
