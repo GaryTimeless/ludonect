@@ -11,9 +11,7 @@
           <template v-if="mode === 'start'">
             <ion-button expand="block" @click="mode = 'create'">Neuen Raum erstellen</ion-button>
             <ion-button expand="block" @click="mode = 'join'">Existierenden Raum beitreten</ion-button>
-            <ion-button expand="block" color="danger" @click="resetDatabase">
-            🔥 Datenbank zurücksetzen
-          </ion-button>
+            <DBDelete />
           </template>
   
           <template v-else-if="mode === 'create'">
@@ -79,7 +77,7 @@
   import { db } from '@/firebaseConfig'
   import { doc, setDoc, updateDoc, arrayUnion, getDoc, onSnapshot, Timestamp } from 'firebase/firestore'
   import FunButton from '@/components/FunButton.vue';
-  import { getFirestore, collection, getDocs, deleteDoc } from "firebase/firestore";
+import DBDelete from '@/components/DBDelete.vue';
 
   const router = useRouter()
 
@@ -257,29 +255,4 @@
     joinCode.value = event.target.value.toUpperCase()
   }
 
-  async function resetDatabase() {
-    if (!confirm("Willst du wirklich alle Spiele und Räume löschen? Das kann nicht rückgängig gemacht werden!")) {
-      return;
-    }
-
-    const db = getFirestore();
-
-    try {
-      const gamesSnapshot = await getDocs(collection(db, 'games'));
-      for (const docSnap of gamesSnapshot.docs) {
-        await deleteDoc(doc(db, 'games', docSnap.id));
-      }
-
-      const roomsSnapshot = await getDocs(collection(db, 'rooms'));
-      for (const docSnap of roomsSnapshot.docs) {
-        await deleteDoc(doc(db, 'rooms', docSnap.id));
-      }
-
-      alert('Alle Spiele und Räume wurden erfolgreich gelöscht.');
-      console.log('Reset der Datenbank abgeschlossen.');
-    } catch (error) {
-      console.error('Fehler beim Löschen:', error);
-      alert('Fehler beim Löschen der Daten. Details in der Konsole.');
-    }
-  }
   </script>
