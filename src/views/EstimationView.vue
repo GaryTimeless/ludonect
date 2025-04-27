@@ -20,20 +20,33 @@
       </ion-text>
       <!-- Anzeige der Spieler Namen -->
       <div v-if="players.length > 0" style="padding: 16px">
-        <h3>Spieler:</h3>
+        <h3>Spieler: {{currentPlayerName}}</h3>
+        <ion-text v-if="localPlayerId === activePlayer?.id" color="success" class="info-text">
+          🎯 Du bist jetzt an der Reihe!
+        </ion-text>
         <VueDraggable
           v-model="players"
           :key="players.map(p => p.id).join('-')"
           item-key="id"
           @update="onListUpdated"
           :disabled="!isHost"
+          tag="transition-group"
+          :component-data="{
+            name: 'fade',
+            type: 'transition',
+            mode: 'out-in'
+          }"
         >
-          <ion-item v-for="player in players.filter(p => p.estimation !== undefined)" :key="player.id">
-            <ion-label :style="{ color: isHost ? 'inherit' : 'gray' }">
+          <ion-item
+            v-for="player in players.filter(p => p.estimation !== undefined)"
+            :key="player.id"
+            :style="{ backgroundColor: player.id === activePlayer?.id ? '#d0f0c0' : 'inherit' }"
+          >
+            <ion-label>
               {{ players.filter(p => p.estimation !== undefined).indexOf(player) + 1 }}. {{ player.name }}
               <br />
-              <small v-if="player.isHost">Host</small>
-              <small v-else>Player</small>
+              <ion-badge color="primary" v-if="player.isHost" style="margin-top: 4px;">Host</ion-badge>
+              <ion-badge color="medium" v-else style="margin-top: 4px;">Player</ion-badge>
             </ion-label>
           </ion-item>
         </VueDraggable>
@@ -52,9 +65,9 @@
       <div v-if="sortingStarted" style="padding: 16px">
         <h3>Sortiere Spieler:</h3>
         <VueDraggable
-          v-model="sortedPlayers"
+          v-model="placedPlayers"
           item-key="id"
-          :disabled="localPlayerId !== activePlayer?.id"
+          :disabled="localPlayerId !== activePlayer?.id || placedPlayers.length <= 1"
         >
           <ion-item v-for="player in placedPlayers" :key="player.id">
             <ion-label>
@@ -89,7 +102,7 @@ import {
   IonContent,
   IonButton,
   IonText,
-  
+  IonBadge,
   IonItem,
   IonLabel,
   
@@ -112,16 +125,8 @@ const players = ref([]);
 
 const sortingStarted = ref(false);
 const placedPlayers = ref([]);
-const sortedPlayers = ref([]);
 
 const activePlayer = ref(null);
-
-watch(sortingStarted, (newVal) => {
-  if (newVal) {
-    placedPlayers.value = players.value.length > 0 ? [players.value[0]] : [];
-    sortedPlayers.value = placedPlayers.value;
-  }
-});
 
 const localPlayerId = localStorage.getItem('playerId');
 const isHost = computed(() => {
@@ -149,7 +154,6 @@ onMounted(async () => {
 
       const placedPlayerIds = docSnap.data().placedPlayers || [];
       placedPlayers.value = players.value.filter(p => placedPlayerIds.includes(p.id));
-      sortedPlayers.value = [...placedPlayers.value];
       sortingStarted.value = docSnap.data().sortingStarted || false;
     } else {
       console.error("Room-Dokument nicht gefunden.");
@@ -166,7 +170,6 @@ onMounted(async () => {
 
           const placedPlayerIds = snapshot.data().placedPlayers || [];
           placedPlayers.value = players.value.filter(p => placedPlayerIds.includes(p.id));
-          sortedPlayers.value = [...placedPlayers.value];
           sortingStarted.value = snapshot.data().sortingStarted || false;
         }
       }
@@ -217,9 +220,12 @@ const startGame = async () => {
   sortingStarted.value = true;
 
   const finalOrder = [...players.value];
-  placedPlayers.value = [finalOrder[0]];
-  sortedPlayers.value = [...placedPlayers.value];
+
+  placedPlayers.value = finalOrder.length > 1 ? [finalOrder[0], finalOrder[1]] : [finalOrder[0]];
   activePlayer.value = finalOrder.length > 1 ? finalOrder[1] : null;
+
+  console.log("StartGame -> PlacedPlayers:", placedPlayers.value.map(p => p.name));
+  console.log("StartGame -> ActivePlayer:", activePlayer.value?.name);
 
   const roomRef = doc(db, `rooms/${gameId.value}`);
   await updateDoc(roomRef, {
@@ -231,13 +237,27 @@ const startGame = async () => {
 //asdasd
 const onFinishPlacement = async () => {
   console.log("Fertig geklickt von:", activePlayer.value?.name);
+  
   if (!activePlayer.value) return;
 
-  placedPlayers.value.push(activePlayer.value);
-  sortedPlayers.value = [...placedPlayers.value];
-
   const nextPlayer = players.value.find(p => !placedPlayers.value.includes(p));
+
+  if (nextPlayer) {
+    placedPlayers.value.push(nextPlayer);
+  }
+
+  console.log("Aktuelle Reihenfolge nach Platzierung:");
+  placedPlayers.value.forEach((p, index) => {
+    console.log(`${index + 1}. ${p.name}`);
+  });
+
   activePlayer.value = nextPlayer || null;
+
+  if (activePlayer.value) {
+    console.log("Nächster aktiver Spieler:", activePlayer.value.name);
+  } else {
+    console.log("Alle Spieler wurden platziert. 🎉");
+  }
 
   const roomRef = doc(db, `rooms/${gameId.value}`);
   await updateDoc(roomRef, {
@@ -256,5 +276,15 @@ ion-reorder-group {
   text-align: center;
   margin: 12px 0;
   font-size: 16px;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.5s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
 </style>
