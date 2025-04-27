@@ -104,7 +104,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, } from "vue";
 import { useRoute } from "vue-router";
 import {
   IonPage,
@@ -126,7 +126,6 @@ import {
   getDoc,
   updateDoc,
   onSnapshot,
-  limit,
 } from "firebase/firestore";
 import { VueDraggable } from "vue-draggable-plus";
 
