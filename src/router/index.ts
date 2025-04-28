@@ -1,18 +1,24 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
-import LobbyView from '../views/LobbyView.vue'
-import QuestionView from '../views/QuestionView.vue'
-import EstimationView from '../views/EstimationView.vue'
-import RevealView from '../views/RevealView.vue'
+import LandingPageView from '../views/LandingPageView.vue';
+import LobbyView from '../views/LobbyView.vue';
+import QuestionView from '../views/QuestionView.vue';
+import EstimationView from '../views/EstimationView.vue';
+import RevealView from '../views/RevealView.vue';
 
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    redirect: '/home'
+    name: 'Landing',
+    component: LandingPageView
   },
   {
     path: '/home',
-    name: 'Home',
+    redirect: '/'
+  },
+  {
+    path: '/lobby',
+    name: 'Lobby',
     component: LobbyView
   },
   {
@@ -30,11 +36,11 @@ const routes: Array<RouteRecordRaw> = [
     name: 'reveal',
     component: RevealView
   }
-]
+];
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
-})
+});
 
-export default router
+export default router;
