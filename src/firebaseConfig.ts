@@ -18,4 +18,4 @@ export const firebaseApp = app
 
 // Export Firestore DB
 export const db = getFirestore(app)
-setLogLevel('debug')
+setLogLevel('silent')

@@ -50,7 +50,6 @@
           <ion-button v-if="isLocalPlayerHost" expand="block" :disabled="!canStartGame" @click="startGame">
             Spiel starten
           </ion-button>
-          <ion-button expand="block" @click="addBot">Bot hinzufügen</ion-button>
           
           <FunButton />
         </div>
@@ -123,6 +122,9 @@ import DBDelete from '@/components/DBDelete.vue';
     
     
     localStorage.setItem('playerId', player.id);
+    if (!localStorage.getItem('playerName')) {
+      localStorage.setItem('playerName', player.name);
+    }
 
     players.value = [player]
 
@@ -149,6 +151,9 @@ import DBDelete from '@/components/DBDelete.vue';
     
     
     localStorage.setItem('playerId', player.id);
+    if (!localStorage.getItem('playerName')) {
+      localStorage.setItem('playerName', player.name);
+    }
 
     const roomRef = doc(db, 'rooms', code)
     const roomSnap = await getDoc(roomRef)
@@ -240,15 +245,6 @@ import DBDelete from '@/components/DBDelete.vue';
 
     console.log(`[startGame] Navigiere zu: /question/${code}/${question.id}`);
     router.push(`/question/${code}/${question.id}`);
-  }
-
-  function addBot() {
-    const botId = `npc-${players.value.length}`
-    players.value.push({
-      id: botId,
-      name: `Bot ${players.value.length}`,
-      isHost: false
-    })
   }
 
   function onJoinCodeInput(event: any) {
