@@ -50,8 +50,6 @@
           <ion-button v-if="isLocalPlayerHost" expand="block" :disabled="!canStartGame" @click="startGame">
             Spiel starten
           </ion-button>
-          <ion-button expand="block" @click="addBot">Bot hinzufügen</ion-button>
-          
           <FunButton />
         </div>
       </ion-content>
@@ -240,15 +238,6 @@ import DBDelete from '@/components/DBDelete.vue';
 
     console.log(`[startGame] Navigiere zu: /question/${code}/${question.id}`);
     router.push(`/question/${code}/${question.id}`);
-  }
-
-  function addBot() {
-    const botId = `npc-${players.value.length}`
-    players.value.push({
-      id: botId,
-      name: `Bot ${players.value.length}`,
-      isHost: false
-    })
   }
 
   function onJoinCodeInput(event: any) {
