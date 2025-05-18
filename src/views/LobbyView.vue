@@ -43,11 +43,15 @@
           <h2>Raumcode: <strong>{{ roomCode }}</strong></h2>
           <p>Spieler:</p>
           <ion-list>
-            <ion-item v-for="player in players" :key="player.id">
-              {{ player.name }}
+            <ion-item v-for="player in playersInRoom" :key="player.id">
+              <ion-label>
+                {{ player.name }}
+                <span v-if="player.id === currentPlayerId"> (Du)</span>
+              </ion-label>
+              <ion-icon slot="end" name="home" v-if="player.isHost"></ion-icon>
             </ion-item>
           </ion-list>
-          <ion-button v-if="isLocalPlayerHost" expand="block" :disabled="!canStartGame" @click="startGame">
+          <ion-button v-if="showStartGameButton" expand="block" @click="startGame">
             Spiel starten
           </ion-button>
           
@@ -58,18 +62,19 @@
   </template>
   
   <script setup lang="ts">
-  import {
-    IonPage,
-    IonHeader,
-    IonToolbar,
-    IonTitle,
-    IonContent,
-    IonButton,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonList
-  } from '@ionic/vue'
+import {
+  IonPage,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonButton,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonIcon,
+  IonList
+} from '@ionic/vue'
   import { ref, computed } from 'vue'
   import { useRouter } from 'vue-router'
   import questions from '@/questions.json'
@@ -98,16 +103,11 @@ import DBDelete from '@/components/DBDelete.vue';
   const roomCode = ref('')
   const joinCode = ref('')
   const playerName = ref('')
-  const players = ref<Player[]>([])
   const mode = ref<'start' | 'create' | 'join'>('start');
 
-  const canStartGame = computed(() => players.value.length >= 2)
-
-  const isLocalPlayerHost = computed(() => {
-    const playerId = localStorage.getItem('playerId');
-    const currentPlayer = players.value.find(p => p.id === playerId);
-    return currentPlayer?.isHost || false;
-  });
+  const showStartGameButton = ref(false);
+  const playersInRoom = ref<Player[]>([]);
+  const currentPlayerId = ref(localStorage.getItem('playerId') || '');
 
   async function createRoom() {
     if (!playerName.value.trim()) { alert('Bitte gib einen Namen ein'); return; }
@@ -126,15 +126,24 @@ import DBDelete from '@/components/DBDelete.vue';
       localStorage.setItem('playerName', player.name);
     }
 
-    players.value = [player]
-
-    const roomRef = doc(db, 'rooms', code)
-    await setDoc(roomRef, {
+    const sessionRef = doc(db, 'gameSessions', code)
+    await setDoc(sessionRef, {
       createdAt: Timestamp.now(),
-      players: [player]
+      updatedAt: Timestamp.now(),
+      phaseUpdatedAt: Timestamp.now(),
+      hostId: player.id,
+      state: 'waiting',
+      usedQuestionIds: [],
+      players: [
+        {
+          ...player,
+          joinedAt: Timestamp.now()
+        }
+      ]
     })
     
     listenToRoom(code)
+    listenToGame(code)
     console.log('[createRoom] Raum erstellt mit Code:', code)
   }
   
@@ -155,12 +164,16 @@ import DBDelete from '@/components/DBDelete.vue';
       localStorage.setItem('playerName', player.name);
     }
 
-    const roomRef = doc(db, 'rooms', code)
-    const roomSnap = await getDoc(roomRef)
+    const sessionRef = doc(db, 'gameSessions', code)
+    const roomSnap = await getDoc(sessionRef)
 
     if (roomSnap.exists()) {
-      await updateDoc(roomRef, {
-        players: arrayUnion(player)
+      await updateDoc(sessionRef, {
+        updatedAt: Timestamp.now(),
+        players: arrayUnion({
+          ...player,
+          joinedAt: Timestamp.now()
+        })
       })
       console.log('[joinRoom] Beigetreten zu Raum:', code)
     } else {
@@ -173,11 +186,12 @@ import DBDelete from '@/components/DBDelete.vue';
   }
   
   function listenToRoom(code: string) {
-    const roomRef = doc(db, 'rooms', code)
-    onSnapshot(roomRef, (docSnap) => {
+    const sessionRef = doc(db, 'gameSessions', code)
+    onSnapshot(sessionRef, (docSnap) => {
       if (docSnap.exists()) {
-        players.value = docSnap.data().players || []
-        console.log('[listenToRoom] Spieler im Raum:', docSnap.data().players)
+        const data = docSnap.data();
+        playersInRoom.value = data.players || [];
+        console.log('[listenToRoom] Spieler im Raum:', playersInRoom.value);
       }
     })
   }
@@ -190,6 +204,7 @@ import DBDelete from '@/components/DBDelete.vue';
 
       if (!docSnap.exists()) {
         console.warn('%clistenToGame: Dokument existiert nicht!', 'color: orange; font-weight: bold;');
+        showStartGameButton.value = false;
         return;
       }
 
@@ -197,8 +212,8 @@ import DBDelete from '@/components/DBDelete.vue';
       console.log('[listenToGame] Daten empfangen:', data);
 
       const playerId = localStorage.getItem('playerId');
-      const isHost = players.value.find(p => p.id === playerId)?.isHost;
-      console.log('[listenToGame] Spieler-ID:', playerId, '| Host:', isHost);
+      const isHost = data.hostId === playerId;
+      showStartGameButton.value = isHost && data.currentRound?.phase === 'answering';
 
       if (!isHost) {
         console.log('%c[listenToGame] Weiterleitung zu Frage...', 'color: green; font-weight: bold;', `/question/${code}/${data.currentQuestion}`);
@@ -225,6 +240,28 @@ import DBDelete from '@/components/DBDelete.vue';
       return;
     }
 
+    const roomRef = doc(db, 'rooms', code);
+    const roomSnap = await getDoc(roomRef);
+    if (!roomSnap.exists()) {
+      alert('Raum existiert nicht!');
+      console.warn('[startGame] Raum existiert nicht:', code);
+      return;
+    }
+    const roomData = roomSnap.data();
+    const roomPlayers = roomData.players || [];
+
+    if (roomPlayers.length < 2) {
+      alert('Mindestens zwei Spieler sind erforderlich, um das Spiel zu starten.');
+      return;
+    }
+
+    const playerId = localStorage.getItem('playerId');
+    const currentPlayer = roomPlayers.find((p: any) => p.id === playerId);
+    if (!currentPlayer?.isHost) {
+      alert('Nur der Host kann das Spiel starten.');
+      return;
+    }
+
     const question = getRandomQuestion();
     console.log('[startGame] Gewählte Frage:', question);
 
@@ -239,8 +276,19 @@ import DBDelete from '@/components/DBDelete.vue';
 
     await setDoc(gameRef, {
       createdAt: Timestamp.now(),
-      phase: 'question',
-      currentQuestion: question.id
+      state: "running",
+      hostId: playerId,
+      players: roomPlayers,
+      usedQuestionIds: [question.id],
+      currentRound: {
+        questionId: question.id,
+        phase: "answering",
+        answers: {},
+        estimationOrder: [],
+        estimations: {},
+        points: {}
+      },
+      totalScores: Object.fromEntries(roomPlayers.map((p: any) => [p.id, 0]))
     });
 
     console.log(`[startGame] Navigiere zu: /question/${code}/${question.id}`);
