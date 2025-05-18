@@ -158,7 +158,7 @@ onMounted(async () => {
   gameId.value = route.params.gameId;
 
   try {
-    const roomRef = doc(db, `rooms/${gameId.value}`);
+    const roomRef = doc(db, 'gameSessions', gameId.value);
     const docSnap = await getDoc(roomRef);
 
     if (docSnap.exists()) {
@@ -199,7 +199,7 @@ onMounted(async () => {
 // Funktion um die Änderungen zu speichern
 const submitReorder = async () => {
   try {
-    const roomRef = doc(db, `rooms/${gameId.value}`);
+    const roomRef = doc(db, 'gameSessions', gameId.value);
     await updateDoc(roomRef, {
       players: players.value,
     });
@@ -212,7 +212,7 @@ const submitReorder = async () => {
 // Funktion um die Spieler neu zu laden
 const reloadPlayers = async () => {
   try {
-    const roomRef = doc(db, `rooms/${gameId.value}`);
+    const roomRef = doc(db, 'gameSessions', gameId.value);
     const docSnap = await getDoc(roomRef);
 
     if (docSnap.exists()) {
@@ -243,7 +243,7 @@ const startGame = async () => {
   console.log("StartGame -> PlacedPlayers:", placedPlayers.value.map(p => p.name));
   console.log("StartGame -> ActivePlayer:", activePlayer.value?.name);
 
-  const roomRef = doc(db, `rooms/${gameId.value}`);
+  const roomRef = doc(db, 'gameSessions', gameId.value);
   await updateDoc(roomRef, {
     activePlayerId: activePlayer.value?.id || null,
     placedPlayers: placedPlayers.value.map(p => p.id),
@@ -277,14 +277,14 @@ const onFinishPlacement = async () => {
   if (!activePlayer.value) {
   sortingFinished.value = true;
 
-  const roomRef = doc(db, `rooms/${gameId.value}`);
+  const roomRef = doc(db, 'gameSessions', gameId.value);
   await updateDoc(roomRef, {
     sortingFinished: true,
   });
   console.log("Das Spiel ist abgeschlossen, alle Spieler platziert!");
   return;
 }
-  const roomRef = doc(db, `rooms/${gameId.value}`);
+  const roomRef = doc(db, 'gameSessions', gameId.value);
   await updateDoc(roomRef, {
     activePlayerId: activePlayer.value?.id || null,
     placedPlayers: placedPlayers.value.map(p => p.id),
