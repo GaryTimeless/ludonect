@@ -274,7 +274,7 @@ function listenToGame(code: string) {
       data.players.length >= 2 &&
       data.state === "waiting";
     // Nicht-Hosts direkt zur Frage weiterleiten, sobald state auf 'running' wechselt
-    if (!amIHost && data.state === "running") {
+    if (data.state === "running") {
       router.push(`/question/${code}/${data.currentRound.questionId}`);
     }
   });
@@ -329,24 +329,17 @@ async function startGame() {
     return;
   }
 
-  const gameRef = doc(db, "games", code);
-  console.log("[startGame] Spiel wird angelegt unter ID:", code);
-
-  await setDoc(gameRef, {
-    createdAt: Timestamp.now(),
-    state: "running",
-    hostId: playerId,
-    players: roomPlayers,
-    usedQuestionIds: [question.id],
+  // use the previously declared sessionRef
+  await updateDoc(sessionRef, {
+    state: 'running',
+    usedQuestionIds: arrayUnion(question.id),
     currentRound: {
       questionId: question.id,
-      phase: "answering",
+      phase: 'answering',
       answers: {},
-      estimationOrder: [],
-      estimations: {},
-      points: {},
+      estimations: {}
     },
-    totalScores: Object.fromEntries(roomPlayers.map((p: any) => [p.id, 0])),
+    phaseUpdatedAt: Timestamp.now()
   });
 
   console.log(`[startGame] Navigiere zu: /question/${code}/${question.id}`);
