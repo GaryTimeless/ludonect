@@ -256,7 +256,8 @@ function listenToRoom(code: string) {
 }
 
 function listenToGame(code: string) {
-  // Hör auf das Session-Dokument in gameSessions
+  // State of the session from the previous snapshot
+  let previousState: string | null = null;
   const sessionRef = doc(db, "gameSessions", code);
   onSnapshot(sessionRef, (snap) => {
     if (!snap.exists()) {
@@ -267,16 +268,17 @@ function listenToGame(code: string) {
     const data = snap.data();
     const playerId = currentPlayerId.value;
     const amIHost = data.hostId === playerId;
-    // Button nur anzeigen, wenn ich Host bin, mindestens 2 Spieler da sind und state == 'waiting'
+    // Zeige Start-Button nur in Lobby (waiting) bei Host mit >=2 Spielern
     showStartGameButton.value =
       amIHost &&
       Array.isArray(data.players) &&
       data.players.length >= 2 &&
       data.state === "waiting";
-    // Nicht-Hosts direkt zur Frage weiterleiten, sobald state auf 'running' wechselt
-    if (data.state === "running") {
+    // Navigiere zur Frage nur beim Übergang auf 'running'
+    if (previousState !== "running" && data.state === "running") {
       router.push(`/question/${code}/${data.currentRound.questionId}`);
     }
+    previousState = data.state;
   });
 }
 

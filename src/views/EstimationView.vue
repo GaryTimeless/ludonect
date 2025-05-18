@@ -16,7 +16,7 @@
       
       <!-- Anzeige der Anzahl der Spieler -->
       <ion-text class="info-text" color="medium">
-        {{ playerCount }} / {{ players.length }} estimations received
+        {{ playerCount }} / {{ players.length }} answers received
       </ion-text>
       <!-- Anzeige der Spieler Namen -->
       <div v-if="players.length > 0" style="padding: 16px">
@@ -52,16 +52,15 @@
         </VueDraggable>
       </div>
 
-      <ion-button v-if="isHost && !sortingStarted" expand="full" @click="submitReorder"
-        >Reihenfolge Speichern</ion-button
-      >
-      <ion-button expand="full" @click="reloadPlayers"
-      >Daten neu laden</ion-button
-      >
-      
-      <ion-button v-if="isHost && !sortingStarted" expand="full" @click="startGame"
-        >Spiel starten</ion-button
-      >
+      <ion-button v-if="isHost && !sortingStarted" expand="full" @click="submitReorder">
+        Reihenfolge Speichern
+      </ion-button>
+      <ion-button expand="full" @click="reloadPlayers">
+        Daten neu laden
+      </ion-button>
+      <ion-button v-if="isHost && !sortingStarted" expand="full" @click="startGame">
+        Spiel starten
+      </ion-button>
       <div v-if="sortingStarted" style="padding: 16px">
         <h3>Sortiere Spieler:</h3>
         <VueDraggable
@@ -103,10 +102,10 @@
   </ion-page>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import FunButton from '@/components/FunButton.vue';
 import { ref, onMounted, computed, } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import {
   IonPage,
   IonHeader,
@@ -127,20 +126,29 @@ import {
   getDoc,
   updateDoc,
   onSnapshot,
+  Timestamp,
 } from "firebase/firestore";
 import { VueDraggable } from "vue-draggable-plus";
 
+interface Player {
+  id: string;
+  name: string;
+  isHost: boolean;
+  estimation?: number;
+}
 
 const db = getFirestore();
 const route = useRoute();
-const gameId = ref(null);
+const router = useRouter();
+const questionId = Number(route.params.questionId);
+const gameId = ref<string>(route.params.gameId as string);
 const playerCount = ref(0);
-const players = ref([]);
+const players = ref<Player[]>([]);
 
 const sortingStarted = ref(false);
-const placedPlayers = ref([]);
+const placedPlayers = ref<Player[]>([]);
 
-const activePlayer = ref(null);
+const activePlayer = ref<Player | null>(null);
 const sortingFinished = ref(false);
 
 const localPlayerId = localStorage.getItem('playerId');
@@ -155,39 +163,70 @@ const currentPlayerName = computed(() => {
 });
 
 onMounted(async () => {
-  gameId.value = route.params.gameId;
+  gameId.value = route.params.gameId as string;
 
   try {
     const roomRef = doc(db, 'gameSessions', gameId.value);
     const docSnap = await getDoc(roomRef);
 
     if (docSnap.exists()) {
-      const playersData = docSnap.data().players;
-      players.value = playersData || [];
-      activePlayer.value = players.value.find(p => p.id === docSnap.data().activePlayerId) || null;
-      playerCount.value = players.value.filter(p => p.estimation !== undefined).length;
-
-      const placedPlayerIds = docSnap.data().placedPlayers || [];
+      const data = docSnap.data();
+      const playersData = data.players || [];
+      const answersMap = data.currentRound?.answers || {};
+      players.value = playersData.map((p: Player) => ({
+        ...p,
+        estimation: answersMap[p.id]?.estimationValue
+      }));
+      playerCount.value = Object.keys(answersMap).length;
+      activePlayer.value = players.value.find(p => p.id === data.activePlayerId) || null;
+      const placedPlayerIds = data.placedPlayers || [];
       placedPlayers.value = players.value.filter(p => placedPlayerIds.includes(p.id));
-      sortingStarted.value = docSnap.data().sortingStarted || false;
+      sortingStarted.value = data.sortingStarted || false;
+      sortingFinished.value = data.sortingFinished || false;
     } else {
       console.error("Room-Dokument nicht gefunden.");
     }
 
-    // Hinzufügen des Listeners, um Änderungen in Echtzeit zu verfolgen
-    onSnapshot(roomRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const playersData = snapshot.data().players;
-        if (playersData) {
-          players.value = playersData;
-          activePlayer.value = players.value.find(p => p.id === snapshot.data().activePlayerId) || null;
-          playerCount.value = playersData.filter(p => p.estimation !== undefined).length;
+    let previousPhase: string | null = null;
 
-          const placedPlayerIds = snapshot.data().placedPlayers || [];
-          placedPlayers.value = players.value.filter(p => placedPlayerIds.includes(p.id));
-          sortingStarted.value = snapshot.data().sortingStarted || false;
-          sortingFinished.value = snapshot.data().sortingFinished || false;
+    // Hinzufügen des Listeners, um Änderungen in Echtzeit zu verfolgen
+    onSnapshot(roomRef, async (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+
+        const phase = data.currentRound?.phase;
+        if (previousPhase !== phase && phase === 'reviewing') {
+          router.push(`/reveal/${gameId.value}/${questionId}`);
         }
+        previousPhase = phase;
+
+        const playersData = data.players || [];
+        const answersMap = data.currentRound?.answers || {};
+        players.value = playersData.map((p: Player) => ({
+          ...p,
+          estimation: answersMap[p.id]?.estimationValue
+        }));
+        playerCount.value = Object.keys(answersMap).length;
+        activePlayer.value = players.value.find(p => p.id === data.activePlayerId) || null;
+        const placedPlayerIds = data.placedPlayers || [];
+        placedPlayers.value = players.value.filter(p => placedPlayerIds.includes(p.id));
+        sortingStarted.value = data.sortingStarted || false;
+        sortingFinished.value = data.sortingFinished || false;
+
+        // --- Automatically advance phase if all players have answered ---
+        const me = players.value.find(p => p.id === localPlayerId);
+        const isCurrentHost = me?.isHost || false;
+        if (
+          isCurrentHost &&
+          data.currentRound?.phase === 'answering' &&
+          Object.keys(answersMap).length === data.players.length
+        ) {
+          await updateDoc(roomRef, {
+            'currentRound.phase': 'reviewing',
+            phaseUpdatedAt: Timestamp.now(),
+          });
+        }
+        // ---------------------------------------------------------------
       }
     });
   } catch (error) {
