@@ -27,9 +27,9 @@ async function resetDatabase() {
   const db = getFirestore();
 
   try {
-    const gamesSnapshot = await getDocs(collection(db, 'games'));
+    const gamesSnapshot = await getDocs(collection(db, 'gameSessions'));
     for (const docSnap of gamesSnapshot.docs) {
-      await deleteDoc(doc(db, 'games', docSnap.id));
+      await deleteDoc(doc(db, 'gameSessions', docSnap.id));
     }
 
     const roomsSnapshot = await getDocs(collection(db, 'rooms'));
