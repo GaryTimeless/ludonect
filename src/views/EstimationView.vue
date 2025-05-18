@@ -18,6 +18,7 @@
       <ion-text class="info-text" color="medium">
         {{ playerCount }} / {{ players.length }} answers received
       </ion-text>
+
       <!-- Anzeige der Spieler Namen -->
       <div v-if="players.length > 0" style="padding: 16px">
         <h3>Spieler: {{currentPlayerName}}</h3>
@@ -175,7 +176,7 @@ onMounted(async () => {
       const answersMap = data.currentRound?.answers || {};
       players.value = playersData.map((p: Player) => ({
         ...p,
-        estimation: answersMap[p.id]?.estimationValue
+        estimation: answersMap[p.id]
       }));
       playerCount.value = Object.keys(answersMap).length;
       activePlayer.value = players.value.find(p => p.id === data.activePlayerId) || null;
@@ -204,7 +205,7 @@ onMounted(async () => {
         const answersMap = data.currentRound?.answers || {};
         players.value = playersData.map((p: Player) => ({
           ...p,
-          estimation: answersMap[p.id]?.estimationValue
+          estimation: answersMap[p.id]
         }));
         playerCount.value = Object.keys(answersMap).length;
         activePlayer.value = players.value.find(p => p.id === data.activePlayerId) || null;
