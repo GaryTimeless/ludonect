@@ -33,7 +33,7 @@ import {
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import questions from '@/questions.json'
-import { getFirestore, doc, updateDoc, Timestamp } from 'firebase/firestore';
+import { getFirestore, doc, updateDoc, Timestamp, getDoc } from 'firebase/firestore';
 
 console.log("Welcome to QuestionView")
 const route = useRoute()
@@ -56,8 +56,17 @@ const questionText = ref('')
 const min = ref(0)
 const max = ref(100)
 const answer = ref(50)
+interface Player {
+  id: string;
+  name: string;
+  isHost: boolean;
+  estimation?: boolean;
+}
 
-onMounted(() => {
+const players = ref<Player[]>([])
+
+
+onMounted(async () => {
   console.log('[Debug] Suche Frage mit ID:', questionId, '| Typ:', typeof questionId)
   const question = questions.find(q => q.id === questionId)
   console.log('[Debug] Gefundene Frage:', question)
@@ -70,6 +79,13 @@ onMounted(() => {
     console.warn('Fehlende oder ungültige gameId/questionId – Weiterleitung zur Lobby.')
     router.push(`/lobby/${gameId}`)
   }
+
+  const dbRef = doc(db, 'gameSessions', gameId);
+  const docSnap = await getDoc(dbRef);
+  if (docSnap.exists()) {
+    const data = docSnap.data();
+    players.value = data.players;
+  }
 })
 
 async function submitAnswer() {
@@ -77,20 +93,31 @@ async function submitAnswer() {
   console.log('Spielername (lokal):', userName);
   localStorage.setItem(`answer-${gameId}-${questionId}`, answer.value.toString());
 
-  // Update the answer in the gameSessions document
-  const sessionRef = doc(db, 'gameSessions', gameId);
   const playerId = localStorage.getItem('playerId');
   if (!playerId) {
     console.error('Keine lokale Player-ID gefunden.');
     return;
   }
+  // Update the answer in the gameSessions document
+  const sessionRef = doc(db, 'gameSessions', gameId);
   // Write answer under currentRound.answers
-  await updateDoc(sessionRef, {
-    [`currentRound.answers.${playerId}`]: {
-      answerValue: answer.value,
-      answeredAt: Timestamp.now()
-    }
-  });
+  // estimation: true zeigt nur, dass der Spieler eine Antwort abgegeben hat (reine Anzeige-Logik, keine echten Werte)
+  try {
+    await updateDoc(sessionRef, {
+      [`currentRound.answers.${playerId}`]: {
+        answerValue: answer.value,
+        answeredAt: Timestamp.now()
+      },
+      players: players.value.map((p) =>
+        p.id === playerId
+          ? { ...p, estimation: true }
+          : p
+      )
+    });
+    console.log("Antwort erfolgreich gespeichert.");
+  } catch (error) {
+    console.error("Fehler beim Speichern der Antwort:", error);
+  }
 
   router.push(`/estimation/${gameId}/${questionId}`);
 }
