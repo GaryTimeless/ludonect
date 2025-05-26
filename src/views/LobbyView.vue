@@ -16,6 +16,7 @@
             >Existierenden Raum beitreten</ion-button
           >
           <DBDelete />
+          <LocalStorageDelete />
         </template>
 
         <template v-else-if="mode === 'create'">
@@ -108,6 +109,7 @@ import {
 } from "firebase/firestore";
 import FunButton from "@/components/FunButton.vue";
 import DBDelete from "@/components/DBDelete.vue";
+import LocalStorageDelete from "@/components/localStorageDelete.vue";
 
 // Helper to abstract storage (fallback to sessionStorage if localStorage is unavailable)
 function setStorage(key: string, value: string) {
