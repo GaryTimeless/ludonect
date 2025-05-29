@@ -94,8 +94,8 @@
         @click="startGame"
       >
         Spiel starten
-      <!-- </ion-button>
-      <ion-button @click="FinishedViewCompundingFunc" expand="full">
+      </ion-button>
+      <!--<ion-button @click="FinishedViewCompundingFunc" expand="full">
         Entry
       </ion-button> -->
 
