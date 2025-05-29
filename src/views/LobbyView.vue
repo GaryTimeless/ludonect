@@ -179,6 +179,8 @@ async function createRoom() {
   };
 
   setStorage("playerId", player.id);
+  setStorage("isHost", "true");
+  
   currentPlayerId.value = player.id;
   if (!getStorage("playerName")) {
     setStorage("playerName", player.name);
