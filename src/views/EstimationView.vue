@@ -278,7 +278,7 @@ onMounted(async () => {
       const data = docSnap.data();
       const temp = data.players;
 
-      console.log(" das sind data.players daten: ", temp);
+      console.log(" [onMounted] das sind data.players daten: ", temp);
 
       // STEP 4: Spieler lokal setzen
       players.value = data.players || [];
@@ -363,13 +363,13 @@ onMounted(async () => {
           activePlayer.value
         );
 
-        watchEffect(() => {
-          if (data.currentRound?.sortingStarted) {
-            console.log(
-              "[LISTENER] sortingStarted ist TRUE – Sortierphase beginnt"
-            );
-          }
-        });
+        //5. playerDaten aktualisieren - wegen der Reihenfolge (answer: true)
+        players.value = data.players
+        console.log("[LISTENER] players wurde aktualisiert", players.value);
+        
+        
+        
+        
       }
     });
   } catch (error) {
