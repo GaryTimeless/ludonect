@@ -99,7 +99,7 @@
       <ion-button expand="full" @click="startGame"> Spiel starten </ion-button>
 
       <ion-button expand="full" @click="testUpdate">
-        Test: Update sortingStarted = true
+        Test: on_Finished_Placement()
       </ion-button>
 
       <!-- -------------- -->
@@ -107,8 +107,14 @@
       <!-- -------------- -->
       <div v-if="sortingStarted && !sortingFinished" style="padding: 16px">
         <h3>Sortiere Spieler:</h3>
-        <p>{{ "lokaler Spieler: " + localPlayerId }}</p>
-        <p>{{ "Aktiver Spieler: " + activePlayer?.id }}</p>
+        <p>
+          {{ "lokaler Spieler: " + localPlayerId + " - " + currentPlayerName }}
+        </p>
+        <p>
+          {{
+            "Aktiver Spieler: " + activePlayer?.id + " - " + activePlayer?.name
+          }}
+        </p>
         <p>{{ "Sorting Startet: " + sortingStarted }}</p>
 
         <!-- MOVE BUTTONS -->
@@ -332,7 +338,7 @@ onMounted(async () => {
 
         // 2. wenn eine EstimationOrder bereits existiert, wird sie hier lokal gespeichert.
         const orderIds = data.currentRound?.estimationOrder || [];
-        console.log("[LISTENER] orderIds:", orderIds);
+        console.log("[LISTENER] orderIds from DB:", orderIds);
         // 2.1 aus den IDs werden playerObjects gemacht
         order.value = orderIds
           .map((id: string) => players.value.find((p) => p.id === id))
@@ -405,41 +411,6 @@ const submitReorder = async () => {
 // -------------
 // START GAME
 // -------------
-// const startGame = async () => {
-//   //1.Spiel vorbereitung
-//   sortingStarted.value = true;
-
-//   console.log(
-//     "[StartGame] -> PlacedPlayers:",
-//     placedPlayers.value.map((p) => p.name)
-//   );
-
-//   //Alle Spieler werden in eine const Order gespeichert
-//   order.value = [...players.value];
-//   order.value.push(players.value[0]); // Spieler p0 kommt nochmal ans Ende, laut Spielregeln
-//   console.log(
-//     "[StartGame] order.value:",
-//     order.value.map((p) => p.name)
-//   );
-
-//   const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-//   console.log("[StartGame] prompt zur manuellen Prüfung von order :", input);
-
-//   //Spieler order[0] - p0 beginnt und somit aktiver Spieler
-//   activePlayer.value = order.value.length > 1 ? order.value[0] : null;
-//   console.log("[StartGame] activePlayer.value:", activePlayer.value);
-
-//   // activer spieler legt sein plättchen
-//   placedPlayers.value = order.value.length > 0 ? [order.value[0]] : [];
-//   console.log("[StartGame] placedPlayers.value:", placedPlayers.value);
-
-//   const roomRef = doc(db, "gameSessions", gameId.value);
-//   await updateDoc(roomRef, {
-//     "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
-//     "currentRound.activePlayerId": activePlayer.value?.id || null,
-//     "currentRound.sortingStarted": true,
-//     "currentRound.estimationOrder": order.value.map((p) => p.id),
-//   });
 
 const startGame = async () => {
   // 1.Spiel vorbereitung
@@ -482,150 +453,205 @@ const startGame = async () => {
   );
 };
 
-//---------
-// p0 Spielzug
-//---------
-// sinnbildlich Spielt der erste spieler p0 sein plättchen aus
-// placedPlayers.value = order.value.length > 0 ? [order.value[0]] : [];
-// //nachdem der erste Spieler gesetzt hat und keine auswahl hat die Reihenfolge zu ändern ist er fertig.
-// //damit fällt er aus der OrderArray raus
-// order.value = order.value.slice(1);
-// // sinnbildlich ist der nächste spieler p1 damit auch der aktive Spieler
-// // OrderArray = [p1,p2,p0]
-// activePlayer.value = order.value.length > 1 ? order.value[0] : null;
-
-//   console.log(
-//     "[StartGame] END -> PlacedPlayers:",
-//     placedPlayers.value.map((p) => p.name)
-//   );
-//   console.log("[StartGame] -> ActivePlayer:", activePlayer.value?.name);
-//   //da der erste Spieler fertig ist, triggern wir manuell die onFinishPlacement Funktion
-//   // onFinishPlacement();
-// };
-
 // -------------
 // FINISH PLACEMENT
 // -------------
 const onFinishPlacement = async () => {
-  console.log("Fertig geklickt von:", activePlayer.value?.name);
+  //**
+  // Drehbuch
+  // 1. lokale änderungen an placedPlayers in die DB gespeichert
+  // 2. Nächster Spieler ist an der Reihe.-> order aus der DB holen und .slice(1) + upload.
+  // 3. aktiver Spieler ist dann order[0] -> Activer spieler local ändern + upload
+  // 4. der aktive spieler leht sein Plättchen in die Tischmitte -> placedPlayer.push(Order[0]) + upload
+  //  */
+  console.log("[FINISED TURN]  Fertig geklickt von:", activePlayer.value?.name);
 
-  // spieler hat ggf änderungen in der reihenfolge on placedPlayers vorgenommen
+  // 1. spieler hat ggf änderungen in der reihenfolge on placedPlayers vorgenommen
   const roomRef = doc(db, "gameSessions", gameId.value);
   await updateDoc(roomRef, {
     "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
   });
+  console.log(
+    "[FINISED TURN] lokale änderungen an placedPlayers in die DB gespeichert:",
+    placedPlayers.value.map((p) => p.name)
+  );
+
+  // 2. Nächster Spieler ist an der Reihe.
+  const freshData = await getDoc(roomRef);
+  order.value = freshData.data()?.currentRound?.estimationOrder;
+
+  console.log("[FINISED TURN] Order aus der DB geholt", order.value);
+
+  order.value = order.value.slice(1);
+
+  console.log("[FINISED TURN] order lokal aktualisiert", order.value);
+  console.log("[FINISED TURN] update von order -> START");
+  // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+  // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
+
+  await updateDoc(roomRef, {
+    "currentRound.estimationOrder": order.value,
+  });
+  console.log("[FINISED TURN] update von order -> END");
+
+  // 3. Aktiver Spieler wird aktualisiert
+  activePlayer.value = order.value.length > 1 ? order.value[0] : null;
+
+  console.log(
+    "[FINISED TURN] activePlayer wurde lokal aktualisiert",
+    activePlayer.value
+  );
+
+  console.log("[FINISED TURN] update von activePlayerId -> START");
+  // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+  // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
+
+  await updateDoc(roomRef, {
+    "currentRound.activePlayerId": activePlayer.value?.id || null,
+  });
+  console.log("[FINISED TURN] update von activePlayer -> END");
+
+  // 4. Der aktive Spieler legt sein Plättchen in die Tischmitte
   if (order.value.length > 0) {
-    // aktueller Spieler hat gespielt
-    order.value = order.value.slice(1);
-    //neuer aktueller Spieler wird zugewiesen
-    activePlayer.value = order.value.length > 1 ? order.value[0] : null;
-    // neuer aktiver Spieler fügt sein Plättchen hinzu
-    placedPlayers.value = order.value.length > 0 ? [order.value[0]] : [];
-    console.log(
-      "placedPlayer wurde hinzugefügt",
-      placedPlayers.value.map((p) => p.name)
-    );
+  placedPlayers.value.push(order.value[0]);
+}
+  console.log(
+    "[FINISED TURN] placedPlayer wurde lokal aktualisiert",
+    placedPlayers.value);
+  
+    console.log("[FINISED TURN] update von placedPlayer -> START");
+  const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+  console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
 
-    const testSnapBefore = await getDoc(roomRef);
-    console.log(
-      "[DEBUG] aktueller Stand von currentRound VOR UPDATE:",
-      testSnapBefore.data()?.currentRound
-    );
+  await updateDoc(roomRef, {
+    "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
+  });
+  console.log("[FINISED TURN] update von activePlayer -> END");
 
-    await updateDoc(roomRef, {
-      "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
-      "currentRound.estimationOrder": order.value.map((p) => p.id),
-      "currentRound.activePlayerId": activePlayer.value?.id || null,
-    });
 
-    const testSnapAFTER = await getDoc(roomRef);
-    console.log(
-      "[DEBUG] aktueller Stand von currentRound: NACH UPDATE",
-      testSnapAFTER.data()?.currentRound
-    );
-    console.log(
-      "placedPlayer wurde in der DB aktualisiert",
-      placedPlayers.value.map((p) => p.name)
-    );
 
-    console.log(
-      "order wurde in der DB aktualisiert",
-      order.value.map((p) => p.name)
-    );
-
-    console.log(
-      "activePlayer wurde in der DB aktualisiert",
-      activePlayer.value?.name
-    );
-  } else {
-    console.log(
-      "Order ist leer -> ",
-      order.value.map((p) => p.name)
-    );
-    activePlayer.value = players.value[0] || null;
-    sortingStarted.value = false;
-    sortingFinished.value = true;
-    await updateDoc(roomRef, {
-      "currentRound.sortingStarted": false,
-      "currentRound.sortingFinished": true,
-    });
-    console.log("DB update");
-  }
-
-  // der aktuelle Spieler legt sein plättchen aus
-
-  // TODO hier liegt ein gedanklicher fehler vor. eigentlich würde ich jetzt Order[0] entfernen. aber wenn ich das richtig verstehe, hat p0 seinen Zug gemacht und p2 ist jetzt dran.
-  // das bedeutet, ich habe die rekursion hie rnoch nicht richzig zu ende gedacht.
-  // wenn ich fertig bin, passiert: onFinishedPlacement.
-  // - update die position der "plättchen" an alle -
-  // - activer spieler fliegt aus order[] raus.
-  // - neuer aktiver spieler wird gesetzt.
-  // - nächstes plättchen wird gesetzt.
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-  //
-
-  // // 2. Determine next player
-  // const unplaced = players.value.filter(
-  //   (p) => !placedPlayers.value.some((pp) => pp.id === p.id)
-  // );
-  // //players [player0, player1, player2]
-  // //placedPalyer [player0, player1]
-  // //unplaced [player2] -> quasi als gefilterte players Liste.
-
-  // //order [player0, player1, player2, player0]
-
-  // if (unplaced.length > 0) {
-  //   const next = unplaced[0];
-  //   placedPlayers.value.push(next);
-  //   activePlayer.value = next;
-  //   console.log("Nächster aktiver Spieler:", next.name);
-  //   console.log(
-  //     "Aktuelle Reihenfolge nach Platzierung:",
-  //     placedPlayers.value.map((p) => p.name).join(" → ")
-  //   );
-
-  // 3. Update with new active player and full order
-  // await updateDoc(roomRef, {
-  //   activePlayerId: next.id,
-  //   placedPlayers: placedPlayers.value.map((p) => p.id),
-  // });
-  // return;
-  //}
-
-  // all done
-  // sortingFinished.value = true;
-  // console.log("Alle Spieler wurden platziert. 🎉");
-  // await updateDoc(roomRef, {
-  //   sortingFinished: true,
-  //   placedPlayers: placedPlayers.value.map((p) => p.id),
-  // });
 };
+
+// const onFinishPlacement = async () => {
+//   console.log("Fertig geklickt von:", activePlayer.value?.name);
+
+//   // spieler hat ggf änderungen in der reihenfolge on placedPlayers vorgenommen
+//   const roomRef = doc(db, "gameSessions", gameId.value);
+//   await updateDoc(roomRef, {
+//     "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
+//   });
+//   if (order.value.length > 0) {
+//     // aktueller Spieler hat gespielt
+//     order.value = order.value.slice(1);
+//     //neuer aktueller Spieler wird zugewiesen
+//     activePlayer.value = order.value.length > 1 ? order.value[0] : null;
+//     // neuer aktiver Spieler fügt sein Plättchen hinzu
+//     placedPlayers.value = order.value.length > 0 ? [order.value[0]] : [];
+//     console.log(
+//       "placedPlayer wurde hinzugefügt",
+//       placedPlayers.value.map((p) => p.name)
+//     );
+
+//     const testSnapBefore = await getDoc(roomRef);
+//     console.log(
+//       "[DEBUG] aktueller Stand von currentRound VOR UPDATE:",
+//       testSnapBefore.data()?.currentRound
+//     );
+
+//     await updateDoc(roomRef, {
+//       "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
+//       "currentRound.estimationOrder": order.value.map((p) => p.id),
+//       "currentRound.activePlayerId": activePlayer.value?.id || null,
+//     });
+
+//     const testSnapAFTER = await getDoc(roomRef);
+//     console.log(
+//       "[DEBUG] aktueller Stand von currentRound: NACH UPDATE",
+//       testSnapAFTER.data()?.currentRound
+//     );
+//     console.log(
+//       "placedPlayer wurde in der DB aktualisiert",
+//       placedPlayers.value.map((p) => p.name)
+//     );
+
+//     console.log(
+//       "order wurde in der DB aktualisiert",
+//       order.value.map((p) => p.name)
+//     );
+
+//     console.log(
+//       "activePlayer wurde in der DB aktualisiert",
+//       activePlayer.value?.name
+//     );
+//   } else {
+//     console.log(
+//       "Order ist leer -> ",
+//       order.value.map((p) => p.name)
+//     );
+//     activePlayer.value = players.value[0] || null;
+//     sortingStarted.value = false;
+//     sortingFinished.value = true;
+//     await updateDoc(roomRef, {
+//       "currentRound.sortingStarted": false,
+//       "currentRound.sortingFinished": true,
+//     });
+//     console.log("DB update");
+//   }
+
+// der aktuelle Spieler legt sein plättchen aus
+
+// TODO hier liegt ein gedanklicher fehler vor. eigentlich würde ich jetzt Order[0] entfernen. aber wenn ich das richtig verstehe, hat p0 seinen Zug gemacht und p2 ist jetzt dran.
+// das bedeutet, ich habe die rekursion hie rnoch nicht richzig zu ende gedacht.
+// wenn ich fertig bin, passiert: onFinishedPlacement.
+// - update die position der "plättchen" an alle -
+// - activer spieler fliegt aus order[] raus.
+// - neuer aktiver spieler wird gesetzt.
+// - nächstes plättchen wird gesetzt.
+//
+//
+//
+//
+//
+//
+//
+//
+
+// // 2. Determine next player
+// const unplaced = players.value.filter(
+//   (p) => !placedPlayers.value.some((pp) => pp.id === p.id)
+// );
+// //players [player0, player1, player2]
+// //placedPalyer [player0, player1]
+// //unplaced [player2] -> quasi als gefilterte players Liste.
+
+// //order [player0, player1, player2, player0]
+
+// if (unplaced.length > 0) {
+//   const next = unplaced[0];
+//   placedPlayers.value.push(next);
+//   activePlayer.value = next;
+//   console.log("Nächster aktiver Spieler:", next.name);
+//   console.log(
+//     "Aktuelle Reihenfolge nach Platzierung:",
+//     placedPlayers.value.map((p) => p.name).join(" → ")
+//   );
+
+// 3. Update with new active player and full order
+// await updateDoc(roomRef, {
+//   activePlayerId: next.id,
+//   placedPlayers: placedPlayers.value.map((p) => p.id),
+// });
+// return;
+//}
+
+// all done
+// sortingFinished.value = true;
+// console.log("Alle Spieler wurden platziert. 🎉");
+// await updateDoc(roomRef, {
+//   sortingFinished: true,
+//   placedPlayers: placedPlayers.value.map((p) => p.id),
+// });
+// };
 
 // -------------
 // Move Button Funktion
@@ -651,12 +677,9 @@ function movePlayer(direction: number) {
 
 // Removed handlePlayerClick function
 
-const testUpdate = async () => {
-  const roomRef = doc(db, "gameSessions", gameId.value);
-  await updateDoc(roomRef, {
-    "currentRound.sortingStarted": true,
-  });
-  console.log("[Test] sortingStarted = true gesetzt");
+const testUpdate = () => {
+  onFinishPlacement();
+  console.log("onFinishedPlacement wurde aufgerufen");
 };
 </script>
 
