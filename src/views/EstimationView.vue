@@ -96,11 +96,9 @@
         Spiel starten
       </ion-button>
 
-      <ion-button expand="full" @click="startGame"> Spiel starten </ion-button>
+    
 
-      <ion-button expand="full" @click="testUpdate">
-        Test: on_Finished_Placement()
-      </ion-button>
+      
 
       <!-- -------------- -->
       <!-- SPIEL STARTEN -->
@@ -239,6 +237,7 @@ const placedPlayers = ref<Player[]>([]);
 
 const activePlayer = ref<Player | null>(null);
 const sortingFinished = ref(false);
+const finishedGame = ref(false)
 
 const localPlayerId = localStorage.getItem("playerId");
 // const localName = localStorage.getItem('playerName');
@@ -300,8 +299,8 @@ onMounted(async () => {
         placedPlayerIds.includes(p.id)
       );
       // STEP 8: Statusflags setzen
-      sortingStarted.value = data.currentRound?.sortingStarted || false;
-      sortingFinished.value = data.currentRound?.sortingFinished || false;
+      sortingStarted.value = data.sortingStarted || false;
+      sortingFinished.value = data.sortingFinished || false;
     } else {
       console.error("Room-Dokument nicht gefunden.");
     }
@@ -364,11 +363,18 @@ onMounted(async () => {
         );
 
         //5. playerDaten aktualisieren - wegen der Reihenfolge (answer: true)
-        players.value = data.players
+        players.value = data.players;
         console.log("[LISTENER] players wurde aktualisiert", players.value);
-        
-        
-        
+        // aktualisiere PlayerCount let
+        const answersMap = data.currentRound?.answers || {};
+        playerCount.value = Object.keys(answersMap).length;
+        console.log("[LISTENER] playerCount wurde aktualisiert", playerCount.value);
+        // 6. sorting finished aus der DB 
+        sortingFinished.value = data.sortingFinished || false;
+        console.log(
+          "[LISTENER] sortingFinished wurde aktualisiert",
+          sortingFinished.value
+        );
         
       }
     });
@@ -459,77 +465,95 @@ const startGame = async () => {
 const onFinishPlacement = async () => {
   //**
   // Drehbuch
-  // 1. lokale änderungen an placedPlayers in die DB gespeichert
+  // 1. Lokale änderungen an placedPlayers in die DB gespeichert
   // 2. Nächster Spieler ist an der Reihe.-> order aus der DB holen und .slice(1) + upload.
-  // 3. aktiver Spieler ist dann order[0] -> Activer spieler local ändern + upload
-  // 4. der aktive spieler leht sein Plättchen in die Tischmitte -> placedPlayer.push(Order[0]) + upload
+  // 3. Aktiver Spieler ist dann order[0] -> Activer spieler local ändern + upload
+  // 4. Der aktive spieler leht sein Plättchen in die Tischmitte -> placedPlayer.push(Order[0]) + upload
+  // 4.1 AUSNAHME: der erste Spieler ist 2 mal dran, aber keine zwei plättchen.
+  // 5. wenn alle Spieler gespielt haben, wird das ergebnis gezeigt.
   //  */
   console.log("[FINISED TURN]  Fertig geklickt von:", activePlayer.value?.name);
-
-  // 1. spieler hat ggf änderungen in der reihenfolge on placedPlayers vorgenommen
   const roomRef = doc(db, "gameSessions", gameId.value);
-  await updateDoc(roomRef, {
-    "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
-  });
-  console.log(
-    "[FINISED TURN] lokale änderungen an placedPlayers in die DB gespeichert:",
-    placedPlayers.value.map((p) => p.name)
-  );
+  if (!finishedGame.value) {
+    // 1. spieler hat ggf änderungen in der reihenfolge on placedPlayers vorgenommen
+    await updateDoc(roomRef, {
+      "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
+    });
+    console.log(
+      "[FINISED TURN] lokale änderungen an placedPlayers in die DB gespeichert:",
+      placedPlayers.value.map((p) => p.name)
+    );
 
-  // 2. Nächster Spieler ist an der Reihe.
-  const freshData = await getDoc(roomRef);
-  order.value = freshData.data()?.currentRound?.estimationOrder;
+    // 2. Nächster Spieler ist an der Reihe.
+    const freshData = await getDoc(roomRef);
+    order.value = freshData.data()?.currentRound?.estimationOrder;
 
-  console.log("[FINISED TURN] Order aus der DB geholt", order.value);
+    console.log("[FINISED TURN] Order aus der DB geholt", order.value);
 
-  order.value = order.value.slice(1);
+    order.value = order.value.slice(1);
 
-  console.log("[FINISED TURN] order lokal aktualisiert", order.value);
-  console.log("[FINISED TURN] update von order -> START");
-  // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-  // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
+    console.log("[FINISED TURN] order lokal aktualisiert", order.value);
+    console.log("[FINISED TURN] update von order -> START");
+    // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+    // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
 
-  await updateDoc(roomRef, {
-    "currentRound.estimationOrder": order.value,
-  });
-  console.log("[FINISED TURN] update von order -> END");
+    await updateDoc(roomRef, {
+      "currentRound.estimationOrder": order.value,
+    });
+    console.log("[FINISED TURN] update von order -> END");
+    console.log("Check for LastRound -> players", players.value);
+    
 
-  // 3. Aktiver Spieler wird aktualisiert
-  activePlayer.value = order.value.length > 1 ? order.value[0] : null;
+    // 3. Aktiver Spieler wird aktualisiert
+    activePlayer.value = order.value.length > 0 ? order.value[0] : players.value[0];
 
-  console.log(
-    "[FINISED TURN] activePlayer wurde lokal aktualisiert",
-    activePlayer.value
-  );
+    console.log(
+      "[FINISED TURN] activePlayer wurde lokal aktualisiert",
+      activePlayer.value
+    );
 
-  console.log("[FINISED TURN] update von activePlayerId -> START");
-  // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-  // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
+    console.log("[FINISED TURN] update von activePlayerId -> START");
+    // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+    // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
 
-  await updateDoc(roomRef, {
-    "currentRound.activePlayerId": activePlayer.value?.id || null,
-  });
-  console.log("[FINISED TURN] update von activePlayer -> END");
+    await updateDoc(roomRef, {
+      "currentRound.activePlayerId": activePlayer.value?.id || null,
+    });
+    console.log("[FINISED TURN] update von activePlayer -> END");
 
-  // 4. Der aktive Spieler legt sein Plättchen in die Tischmitte
-  if (order.value.length > 0) {
-  placedPlayers.value.push(order.value[0]);
-}
-  console.log(
-    "[FINISED TURN] placedPlayer wurde lokal aktualisiert",
-    placedPlayers.value);
+    // 4. Der aktive Spieler legt sein Plättchen in die Tischmitte
+    if (order.value.length > 1) {
+      placedPlayers.value.push(order.value[0]);
+      console.log(
+        "[FINISED TURN] placedPlayer wurde lokal aktualisiert",
+        placedPlayers.value
+      );
+
+      console.log("[FINISED TURN] update von placedPlayer -> START");
+      // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+      // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
+
+      await updateDoc(roomRef, {
+        "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
+      });
+      console.log("[FINISED TURN] update von activePlayer -> END");
+    } else {
+      console.log("[FINISED TURN] Startspieler darf letzten Zug machen.");
+      finishedGame.value = true;
+    const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+    console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
+    }
+    console.log("[FINISED TURN] RETURNING");
+    return;
+  }
   
-    console.log("[FINISED TURN] update von placedPlayer -> START");
-  const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-  console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
-
+  console.log("[FINISED TURN] Alle Spieler wurden platziert. 🎉");
+  console.log("[FINISED TURN] update von sortingFinished & sortingStarted -> START");
   await updateDoc(roomRef, {
-    "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
+    sortingFinished: true,
+    sortingStarted: false
   });
-  console.log("[FINISED TURN] update von activePlayer -> END");
-
-
-
+  console.log("update von sortingFinished & sortingStarted -> END");
 };
 
 // const onFinishPlacement = async () => {
