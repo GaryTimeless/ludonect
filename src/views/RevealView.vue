@@ -1,5 +1,3 @@
-
-
 <template>
   <ion-page>
     <ion-header>
@@ -23,36 +21,59 @@
   </ion-page>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { doc, onSnapshot, updateDoc, getFirestore } from 'firebase/firestore'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonList, IonItem, IonLabel, IonButton
 } from '@ionic/vue'
 
-import { getFirestore, collection, getDocs, doc, updateDoc } from 'firebase/firestore'
+interface Player {
+  id: string
+  name: string
+  points?: number
+}
+interface SortedPlayer extends Player {
+  answer: number | null
+}
 
 const db = getFirestore()
-// const gameId = 'test-room'
-const players = ref([])
-const sortedPlayers = ref([])
+const route = useRoute()
+const router = useRouter()
+const gameId = route.params.gameId as string
+const questionId = Number(route.params.questionId)
+const gameRef = doc(db, 'gameSessions', gameId)
 
-async function loadAnswers() {
-  const snapshot = await getDocs(collection(db, 'games', gameId, 'players'))
-  players.value = snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }))
-  // Sort by actual answer (ascending)
-  sortedPlayers.value = [...players.value].sort((a, b) => a.answer - b.answer)
-}
-
-function goToNextRound() {
-  const gameRef = doc(db, 'games', gameId)
-  updateDoc(gameRef, { phase: 'question' }) // Trigger next question phase
-}
+const players = ref<Player[]>([])
+const sortedPlayers = ref<SortedPlayer[]>([])
 
 onMounted(() => {
-  loadAnswers()
+  onSnapshot(gameRef, (snapshot) => {
+    if (!snapshot.exists()) return
+    const data = snapshot.data() as any
+    // Pull players array from currentRound
+    players.value = data.currentRound?.players || []
+    // Merge in each player's answer and sort
+    const answersMap = data.currentRound?.answers || {}
+    sortedPlayers.value = players.value.map(p => ({
+      ...p,
+      answer: answersMap[p.id]?.answerValue ?? null,
+      points: p.points
+    })).sort((a, b) => (a.answer ?? 0) - (b.answer ?? 0))
+  })
 })
+
+async function goToNextRound() {
+  await updateDoc(gameRef, {
+    'currentRound.estimations.phase': 'answering',
+    'currentRound.estimations.questionId': questionId + 1,
+    'currentRound.sortingStarted': false,
+    'currentRound.sortingFinished': false,
+    'currentRound.answers': {},
+    'currentRound.placedPlayers': []
+  })
+  router.push(`/game/${gameId}/${questionId + 1}`)
+}
 </script>
