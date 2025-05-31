@@ -113,6 +113,7 @@
           }}
         </p>
         <p>{{ "Sorting Startet: " + sortingStarted }}</p>
+        <p>{{ "Sorting Finished: " + sortingFinished }}</p>
 
         <!-- MOVE BUTTONS -->
         <div
@@ -243,7 +244,7 @@ const placedPlayers = ref<Player[]>([]);
 
 const activePlayer = ref<Player | null>(null);
 const sortingFinished = ref(false);
-const finishedGame = ref(false);
+const secondTurnStartPlayer = ref(false);
 const finishedViewAnswerValue = ref<FinishedViewCompunding[]>([]);
 
 const localPlayerId = localStorage.getItem("playerId");
@@ -325,7 +326,7 @@ onMounted(async () => {
        * Wenn nicht, wird kein Update gemacht
        */
 
-      console.log("[LISTENER] onSnapshot wurde getriggert");
+      console.log("[LISTENER START] onSnapshot wurde getriggert");
 
       // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
       // console.log("[LISTENER] Prüfe VOR snapshot :", input);
@@ -338,25 +339,28 @@ onMounted(async () => {
         // Der Host hat "spiel Starten" geklicked.
         sortingStarted.value = data.currentRound?.sortingStarted || false;
         console.log(
-          "[LISTENER]sortingStarted wurde aktualisiert",
+          "[LISTENER 1]sortingStarted wurde aktualisiert",
           sortingStarted.value
         );
 
         // 2. wenn eine EstimationOrder bereits existiert, wird sie hier lokal gespeichert.
         const orderIds = data.currentRound?.estimationOrder || [];
-        console.log("[LISTENER] orderIds from DB:", orderIds);
+        console.log("[LISTENER 2] orderIds from DB:", orderIds);
         // 2.1 aus den IDs werden playerObjects gemacht
         order.value = orderIds
           .map((id: string) => players.value.find((p) => p.id === id))
           .filter((p: any): p is Player => !!p);
-        console.log(" [LISTENER] order.value wurde aktualisiert", order.value);
+        console.log(
+          " [LISTENER 3] order.value wurde aktualisiert",
+          order.value
+        );
         //3. wenn es bereits Spieler in placedPlayers gibt, werden sie hier lokal gespeichert
         //3.1 aus den IDs werden playerObjects gemacht
         placedPlayers.value = (data.currentRound?.placedPlayers || [])
           .map((id: string) => players.value.find((p) => p.id === id))
           .filter((p: any): p is Player => !!p);
         console.log(
-          "[LISTENER] placedPlayers wurde aktualisiert",
+          "[LISTENER 4] placedPlayers wurde aktualisiert",
           placedPlayers.value
         );
         // 4. wenn es einen activePlayer gibt, dann wird er hier lokal gespeichert.
@@ -365,26 +369,45 @@ onMounted(async () => {
             (p) => p.id === data.currentRound?.activePlayerId
           ) || null;
         console.log(
-          "[LISTENER] activePlayer wurde aktualisiert",
+          "[LISTENER 5] activePlayer wurde aktualisiert",
           activePlayer.value
         );
 
         //5. playerDaten aktualisieren - wegen der Reihenfolge (answer: true)
         players.value = data.players;
-        console.log("[LISTENER] players wurde aktualisiert", players.value);
+        console.log("[LISTENER 6] players wurde aktualisiert", players.value);
         // aktualisiere PlayerCount let
         const answersMap = data.currentRound?.answers || {};
         playerCount.value = Object.keys(answersMap).length;
         console.log(
-          "[LISTENER] playerCount wurde aktualisiert",
+          "[LISTENER 7] playerCount wurde aktualisiert",
           playerCount.value
         );
         // 6. sorting finished aus der DB
-        sortingFinished.value = data.sortingFinished || false;
+        sortingFinished.value = data.currentRound?.sortingFinished || false;
         console.log(
-          "[LISTENER] sortingFinished wurde aktualisiert",
+          "[LISTENER 8] sortingFinished wurde aktualisiert",
           sortingFinished.value
         );
+        console.log(
+          "[LISTENER 9] secondTurnStartPlayer wurde aktualisiert",
+          secondTurnStartPlayer.value
+        );
+        if (sortingFinished.value) {
+          await FinishedViewCompundingFunc();
+          console.log(
+            " [FLAST TURN 999] FinishedViewCompundingFunc() triggerd"
+          );
+        }
+        // 7. secondTurnStartPlayer aus der DB
+        secondTurnStartPlayer.value =
+          data.currentRound?.secondTurnStartPlayer || false;
+        console.log(
+          "[LISTENER 10] secondTurnStartPlayer wurde aktualisiert",
+          secondTurnStartPlayer.value
+        );
+
+        console.log("[Listener LAST] ENDE aller aktualisierungen");
       }
     });
   } catch (error) {
@@ -443,8 +466,8 @@ const startGame = async () => {
     order.value.map((p) => p.name)
   );
 
-  const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-  console.log("[StartGame] prompt zur manuellen Prüfung von order :", input);
+  // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+  // console.log("[StartGame] prompt zur manuellen Prüfung von order :", input);
 
   //Spieler order[0] - p0 beginnt und ist somit aktiver Spieler
   activePlayer.value = order.value.length > 1 ? order.value[0] : null;
@@ -481,15 +504,39 @@ const onFinishPlacement = async () => {
   // 4.1 AUSNAHME: der erste Spieler ist 2 mal dran, aber keine zwei plättchen.
   // 5. wenn alle Spieler gespielt haben, wird das ergebnis gezeigt.
   //  */
-  console.log("[FINISED TURN]  Fertig geklickt von:", activePlayer.value?.name);
+  console.log(
+    "[FINISED TURN 00]  Fertig geklickt von:",
+    activePlayer.value?.name
+  );
   const roomRef = doc(db, "gameSessions", gameId.value);
-  if (!finishedGame.value) {
+  console.log(
+    "[FINISED TURN 000] sortingFinished value:",
+    sortingFinished.value
+  );
+  console.log(
+    "[FINISED TURN 000] secondTurnStartPlayer value:",
+    secondTurnStartPlayer.value
+  );
+
+
+  if (activePlayer.value?.id == players.value[0].id && secondTurnStartPlayer.value) {
+    sortingFinished.value = true;
+    console.log(
+      "[LAST TRUN 000] sortingFinished wurde aktualisiert auf true",
+      sortingFinished.value
+    );
+    await updateDoc(roomRef, {
+      "currentRound.sortingFinished": sortingFinished.value,
+    });
+  }
+
+  if (!sortingFinished.value) {
     // 1. spieler hat ggf änderungen in der reihenfolge on placedPlayers vorgenommen
     await updateDoc(roomRef, {
       "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
     });
     console.log(
-      "[FINISED TURN] lokale änderungen an placedPlayers in die DB gespeichert:",
+      "[FINISED TURN 01] lokale änderungen an placedPlayers in die DB gespeichert:",
       placedPlayers.value.map((p) => p.name)
     );
 
@@ -497,75 +544,94 @@ const onFinishPlacement = async () => {
     const freshData = await getDoc(roomRef);
     order.value = freshData.data()?.currentRound?.estimationOrder;
 
-    console.log("[FINISED TURN] Order aus der DB geholt", order.value);
+    console.log("[FINISED TURN 02] Order aus der DB geholt", order.value);
 
     order.value = order.value.slice(1);
 
-    console.log("[FINISED TURN] order lokal aktualisiert", order.value);
-    console.log("[FINISED TURN] update von order -> START");
+    console.log("[FINISED TURN 03] order lokal aktualisiert", order.value);
+    console.log("[FINISED TURN 04] update von order -> START");
     // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
     // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
 
     await updateDoc(roomRef, {
       "currentRound.estimationOrder": order.value,
     });
-    console.log("[FINISED TURN] update von order -> END");
-    console.log("Check for LastRound -> players", players.value);
+    console.log("[FINISED TURN 05] update von order -> END");
 
     // 3. Aktiver Spieler wird aktualisiert
     activePlayer.value =
       order.value.length > 0 ? order.value[0] : players.value[0];
 
     console.log(
-      "[FINISED TURN] activePlayer wurde lokal aktualisiert",
+      "[FINISED TURN 06] activePlayer wurde lokal aktualisiert",
       activePlayer.value
     );
 
-    console.log("[FINISED TURN] update von activePlayerId -> START");
+    console.log("[FINISED TURN 07] update von activePlayerId -> START");
     // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
     // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
 
     await updateDoc(roomRef, {
       "currentRound.activePlayerId": activePlayer.value?.id || null,
     });
-    console.log("[FINISED TURN] update von activePlayer -> END");
+    console.log("[FINISED TURN 08] update von activePlayer -> END");
 
     // 4. Der aktive Spieler legt sein Plättchen in die Tischmitte
     if (order.value.length > 1) {
       placedPlayers.value.push(order.value[0]);
       console.log(
-        "[FINISED TURN] placedPlayer wurde lokal aktualisiert",
+        "[FINISED TURN 09] placedPlayer wurde lokal aktualisiert",
         placedPlayers.value
       );
 
-      console.log("[FINISED TURN] update von placedPlayer -> START");
+      console.log("[FINISED TURN 11] update von placedPlayer -> START");
       // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
       // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
 
       await updateDoc(roomRef, {
         "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
       });
-      console.log("[FINISED TURN] update von activePlayer -> END");
+      console.log("[FINISED TURN 12] update von activePlayer -> END");
     } else {
-      console.log("[FINISED TURN] Startspieler darf letzten Zug machen.");
-      finishedGame.value = true;
+      // wenn order => [p0], weil order>1 = false
+      console.log("[FLAST TURN 101] Startspieler darf letzten Zug machen.");
+      console.log("[FLAST TURN 102] update von secondTurnStartPlayer -> START");
+
+      secondTurnStartPlayer.value = true;
+      await updateDoc(roomRef, {
+        "currentRound.secondTurnStartPlayer": secondTurnStartPlayer.value,
+      });
+      console.log("[FLAST TURN 103] update von sortingFinished -> END");
       const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-      console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
+      console.log("[FLAST TURN 104] Prüfe VOR update DB? :", input);
     }
-    console.log("[FINISED TURN] RETURNING");
+    console.log("[FINISED TURN 13] RETURNING");
     return;
   }
 
-  console.log("[FINISED TURN] Alle Spieler wurden platziert. 🎉");
+  console.log("[FLAST TURN 105] Update lokal changes placedPlayer -> START");
+
+  await updateDoc(roomRef, {
+    "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
+  });
   console.log(
-    "[FINISED TURN] update von sortingFinished & sortingStarted -> START"
+    "[FLAST TURN 106] lokale änderungen an placedPlayers in die DB gespeichert:",
+    placedPlayers.value.map((p) => p.name)
+  );
+
+  console.log("[FLAST TURN 107] Update lokal changes placedPlayer -> END");
+  console.log("[FLAST TURN 108] Alle Spieler wurden platziert. 🎉");
+  console.log(
+    "[FLAST TURN 109] update von sortingFinished & sortingStarted -> START"
   );
   await updateDoc(roomRef, {
-    sortingFinished: true,
-    sortingStarted: false,
+    "currentRound.sortingFinished": sortingFinished.value,
+    "currentRound.sortingStarted": sortingStarted.value,
   });
   FinishedViewCompundingFunc();
-  console.log("update von sortingFinished & sortingStarted -> END");
+  console.log(
+    "[FLAST TURN 110] update von sortingFinished & sortingStarted -> END"
+  );
 };
 
 // -------------
@@ -589,7 +655,9 @@ function movePlayer(direction: number) {
     placedPlayers.value.map((p) => p.name)
   );
 }
-
+//TODO  alle Werte müssen in die Listener geupdated werden >.>
+// der letzte Spieler muss iwie zweimal fertig klicken
+// sonst ok
 async function FinishedViewCompundingFunc() {
   console.log("[FinishedView] Funktion gestartet");
 
@@ -627,7 +695,10 @@ async function FinishedViewCompundingFunc() {
   console.log("[FinishedView] Gemappte Ergebnisliste:", mapped);
 
   finishedViewAnswerValue.value = mapped;
-  console.log("[FinishedView] Ergebnisliste gesetzt:", finishedViewAnswerValue.value);
+  console.log(
+    "[FinishedView] Ergebnisliste gesetzt:",
+    finishedViewAnswerValue.value
+  );
 }
 </script>
 
