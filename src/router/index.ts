@@ -4,7 +4,7 @@ import LandingPageView from '../views/LandingPageView.vue';
 import LobbyView from '../views/LobbyView.vue';
 import QuestionView from '../views/QuestionView.vue';
 import EstimationView from '../views/EstimationView.vue';
-import RevealView from '../views/RevealView.vue';
+import PrepareNextRound from "@/views/PrepareNextRound.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -32,10 +32,10 @@ const routes: Array<RouteRecordRaw> = [
     component: EstimationView
   },
   {
-    path: '/reveal/:gameId',
-    name: 'reveal',
-    component: RevealView
-  }
+    path: "/prepare/:gameId",
+    name: "PrepareNextRound",
+    component: PrepareNextRound,
+  },
 ];
 
 const router = createRouter({

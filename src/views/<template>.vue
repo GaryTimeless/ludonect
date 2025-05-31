@@ -251,8 +251,6 @@ const playerCount = ref(0);
 const players = ref<Player[]>([]);
 
 const sortingStarted = ref(false);
-
-const PrepNextRound = ref(false);
 const placedPlayers = ref<Player[]>([]);
 
 const activePlayer = ref<Player | null>(null);
@@ -419,13 +417,6 @@ onMounted(async () => {
           "[LISTENER 10] secondTurnStartPlayer wurde aktualisiert",
           secondTurnStartPlayer.value
         );
-
-        PrepNextRound.value = data.currentRound?.PrepNextRound || false;
-        if (PrepNextRound.value) {
-          console.log("[LISTENER 11] PrepNextRound wurde aktualisiert", PrepNextRound.value);
-          
-          router.push(`/prepare/${gameId.value}`);
-        }
 
         console.log("[Listener LAST] ENDE aller aktualisierungen");
       }
