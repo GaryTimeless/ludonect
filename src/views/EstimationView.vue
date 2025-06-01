@@ -284,6 +284,8 @@ const placedPlayerObjects = computed(() =>
     .filter((p): p is Player => !!p)
 );
 
+let unsubscribeFn: () => void;
+
 onMounted(async () => {
   // STEP 1: Game ID aus der Route extrahieren
   gameId.value = route.params.gameId as string;
@@ -331,7 +333,7 @@ onMounted(async () => {
     //------------
 
     // Hinzufügen des Listeners, um Änderungen in Echtzeit zu verfolgen
-    onSnapshot(roomRef, async (snapshot) => {
+    unsubscribeFn = onSnapshot(roomRef, async (snapshot) => {
       // 🔁 Dieser Listener wird bei jedem DB-Update getriggert
 
       /*
@@ -729,10 +731,11 @@ const goToPrepareNextRound = async () => {
       "currentRound.PrepNextRound": true,
     });
   }
-    
-
-
+  
+  
+  
   router.push(`/prepare/${gameId.value}`);
+  unsubscribeFn?.();
 };
 </script>
 
