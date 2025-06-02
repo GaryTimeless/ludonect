@@ -629,8 +629,8 @@ const onFinishPlacement = async () => {
         "currentRound.secondTurnStartPlayer": secondTurnStartPlayer.value,
       });
       console.log("[FLAST TURN 103] update von sortingFinished -> END");
-      const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-      console.log("[FLAST TURN 104] Prüfe VOR update DB? :", input);
+      // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+      // console.log("[FLAST TURN 104] Prüfe VOR update DB? :", input);
     }
     console.log("[FINISED TURN 13] RETURNING");
     return;

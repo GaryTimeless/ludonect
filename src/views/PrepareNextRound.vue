@@ -180,7 +180,7 @@ const resetCurrentRound = async () => {
     );
   }
 
-  alert("currentRound wurde bereinigt.");
+  console.log("currentRound wurde bereinigt.");
 };
 
 const startNextRound = async () => {
@@ -204,8 +204,8 @@ const startNextRound = async () => {
   console.log("prepaire URL");
   const previewUrl = `/question/${gameId.value}/${newQuestion.id}`;
   console.log("[PREPAIRE 10]prepaire URL: ", previewUrl);
-  const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-  console.log("[LISTENER] Prüfe VOR router.push :", input);
+//   const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+//   console.log("[LISTENER] Prüfe VOR router.push :", input);
   console.log("[PREPAIRE 11] weiterleitung -> Start: ");
 
   router.push(`/question/${gameId.value}/${newQuestion.id}`);
