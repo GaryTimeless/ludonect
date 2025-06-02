@@ -41,18 +41,11 @@
             </li>
           </ul>
         </div>
-
-        <ion-button expand="block" @click="UploadData">
-          🧹 UploadData
-        </ion-button>
         <ion-button expand="block" @click="resetCurrentRound">
           🧹 currentRound bereinigen
         </ion-button>
         <ion-button expand="block" color="secondary" @click="startNextRound">
-          ➕ Neue Frage laden
-        </ion-button>
-        <ion-button expand="block" color="tertiary" @click="goToGameView">
-          ▶️ Weiter zur nächsten Spielrunde
+          ➕ Neue Frage laden & ▶️ Weiter zur nächsten Spielrunde
         </ion-button>
       </div>
       <div class="p-4" v-else>
@@ -78,10 +71,9 @@ import {
   getFirestore,
   getDoc,
   updateDoc,
-  serverTimestamp,
-  deleteField,
+  onSnapshot,
 } from "firebase/firestore";
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { useRoute } from "vue-router";
 import {
@@ -97,6 +89,7 @@ const router = useRouter();
 const route = useRoute();
 const gameId = ref<string>(route.params.gameId as string);
 const currentRound = ref<any>({});
+let unsubscribeFn: (() => void) | null = null;
 
 const players = ref<any[]>([]);
 const localPlayerId = localStorage.getItem("playerId");
@@ -104,6 +97,7 @@ const isHost = computed(() => {
   const me = players.value.find((p) => p.id === localPlayerId);
   return me?.isHost || false;
 });
+const phase = ref("");
 
 onMounted(async () => {
   const roomRef = doc(db, "gameSessions", gameId.value);
@@ -111,6 +105,32 @@ onMounted(async () => {
   currentRound.value = snap.data()?.currentRound || {};
   players.value = snap.data()?.players || [];
   gameId.value = route.params.gameId as string;
+  phase.value = currentRound.value.phase;
+  
+
+  unsubscribeFn = onSnapshot(roomRef, (docSnap) => {
+    const updated = docSnap.data();
+    const questionId = updated?.currentRound?.questionId;
+    phase.value = updated?.currentRound?.phase;
+
+    if (
+      !isHost.value &&
+      phase.value === "question" &&
+      questionId &&
+      route.name !== "QuestionView"
+    ) {
+      console.log("[PREPARE] push to QuestionVIew");
+
+      router.push(`/question/${gameId.value}/${questionId}`);
+    }
+  });
+});
+
+onBeforeUnmount(() => {
+  if (unsubscribeFn) {
+    unsubscribeFn();
+    console.log("[PREPARE] Unsubscribed on leave");
+  }
 });
 
 const resetCurrentRound = async () => {
@@ -122,7 +142,7 @@ const resetCurrentRound = async () => {
     "currentRound.sortingFinished": false,
     "currentRound.sortingStarted": false,
     "currentRound.secondTurnStartPlayer": false,
-    // "currentRound.phase": "answering",
+    "currentRound.PrepNextRound": false,
   });
   console.log("[PREPAIRE 01]currentRound wurde bereinigt.");
   console.log("[PREPAIRE 02]currentRound.answers wurde bereinigt.");
@@ -130,8 +150,16 @@ const resetCurrentRound = async () => {
   console.log("[PREPAIRE 04]currentRound.placedPlayers wurde bereinigt.");
   console.log("[PREPAIRE 05]currentRound.sortingFinished wurde bereinigt.");
   console.log("[PREPAIRE 06]currentRound.sortingStarted wurde bereinigt.");
-  console.log("[PREPAIRE 07]currentRound.secondTurnStartPlayer wurde bereinigt.");
+  console.log(
+    "[PREPAIRE 07]currentRound.secondTurnStartPlayer wurde bereinigt."
+  );
   console.log("[PREPAIRE 08]currentRound.phase wurde bereinigt.");
+  console.log(
+    "[PREPAIRE 09]currentRound.hasHostConfirmedNextRound wurde bereinigt."
+  );
+  console.log(
+    "[PREPAIRE 10]currentRound.hasHostConfirmedNextRound wurde bereinigt."
+  );
 
   const docSnap = await getDoc(roomRef);
   if (docSnap.exists()) {
@@ -147,46 +175,39 @@ const resetCurrentRound = async () => {
       players: updatedPlayers,
     });
 
-    console.log("[PREPAIRE 09] players[] wurde aktualisiert (estimation auf false gesetzt).");
+    console.log(
+      "[PREPAIRE 10] players[] wurde aktualisiert (estimation auf false gesetzt)."
+    );
   }
 
   alert("currentRound wurde bereinigt.");
 };
 
-const UploadData = async () => {
-  const roomRef = doc(db, "gameSessions", gameId.value);
-  await updateDoc(roomRef, {
-    // "currentRound.answers": {},
-    // "currentRound.estimations": {},
-    "currentRound.estimationOrder": [],
-    // "currentRound.placedPlayers": [],
-    // "currentRound.sortingFinished": false,
-    // "currentRound.sortingStarted": false,
-    // "currentRound.secondTurnStartPlayer": false,
-    // "currentRound.phase": "answering",
-    // "currentRound.phaseUpdatedAt": serverTimestamp(),
-    // "players.estiation": false
-  });
-  alert("currentRound wurde bereinigt.");
-};
-
 const startNextRound = async () => {
-  //   const roomRef = doc(db, "gameSessions", gameId.value);
-  //   const snap = await getDoc(roomRef);
-  //   const data = snap.data();
-  //   const used = data?.usedQuestionIds || [];
-  //   const allQuestions = [...]; // z.B. importierte Fragebank
-  //     const unused = allQuestions.filter((q) => !used.includes(q.id));
-  //    if (unused.length === 0) return alert("Keine Fragen mehr verfügbar.");
-  //   const newQuestion = unused[Math.floor(Math.random() * unused.length)];
-  //   await updateDoc(roomRef, {
-  //     "currentRound.questionId": newQuestion.id,
-  //     usedQuestionIds: [...used, newQuestion.id],
-  //   });
-  //   alert("Neue Frage gesetzt: " + newQuestion.id);
-};
+  const roomRef = doc(db, "gameSessions", gameId.value);
+  const snap = await getDoc(roomRef);
+  const data = snap.data();
+  const used = data?.usedQuestionIds || [];
+  const questionsLibary = await fetch("./src/questions.json");
 
-const goToGameView = () => {
-  router.push("/Frage"); // oder wie deine nächste Spielseite heißt
+  //   /Users/gschenk/Dev/Ludonect/ludonect/src/questions.json
+  const allQuestions = await questionsLibary.json();
+  const unused = allQuestions.filter((q: any) => !used.includes(q.id));
+  if (unused.length === 0) return alert("Keine Fragen mehr verfügbar.");
+  const newQuestion = unused[Math.floor(Math.random() * unused.length)];
+  await updateDoc(roomRef, {
+    "currentRound.questionId": newQuestion.id,
+    usedQuestionIds: [...used, newQuestion.id],
+    "currentRound.phase": "question",
+  });
+  alert("Neue Frage gesetzt: " + newQuestion.id);
+  console.log("prepaire URL");
+  const previewUrl = `/question/${gameId.value}/${newQuestion.id}`;
+  console.log("[PREPAIRE 10]prepaire URL: ", previewUrl);
+  const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+  console.log("[LISTENER] Prüfe VOR router.push :", input);
+  console.log("[PREPAIRE 11] weiterleitung -> Start: ");
+
+  router.push(`/question/${gameId.value}/${newQuestion.id}`);
 };
 </script>

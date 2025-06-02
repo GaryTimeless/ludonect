@@ -79,13 +79,13 @@ const players = ref<Player[]>([]);
 
 onMounted(async () => {
   console.log(
-    "[Debug] Suche Frage mit ID:",
+    "[QUESTIONVIEW] Suche Frage mit ID:",
     questionId,
     "| Typ:",
     typeof questionId
   );
   const question = questions.find((q) => q.id === questionId);
-  console.log("[Debug] Gefundene Frage:", question);
+  console.log("[QUESTIONVIEW] Gefundene Frage:", question);
 
   if (question) {
     questionText.value = question.text;
@@ -107,8 +107,8 @@ onMounted(async () => {
 });
 
 async function submitAnswer() {
-  console.log("Antwort abgesendet:", answer.value);
-  console.log("Spielername (lokal):", userName);
+  console.log(" [QUESTIONVIEW] Antwort abgesendet:", answer.value);
+  console.log(" [QUESTIONVIEW] Spielername (lokal):", userName);
   localStorage.setItem(
     `answer-${gameId}-${questionId}`,
     answer.value.toString()
@@ -130,7 +130,6 @@ async function submitAnswer() {
     if (p.id === playerId) {
   return { ...p, estimation: true };
 } else {
-  console.log("estimation update Fehlgeschlagen:", p);
   return p;
 }
   });
@@ -142,13 +141,15 @@ async function submitAnswer() {
         answeredAt: Timestamp.now(),
       },
       players: updatedPlayers,
+      "currentRound.phase": "estimation",
+
     });
     console.log("Antwort erfolgreich gespeichert.");
     // Debug: Nach Update erneut Spieler aus der DB holen
     const updatedSnap = await getDoc(sessionRef);
     if (updatedSnap.exists()) {
       const updatedData = updatedSnap.data();
-      console.log("Spieler nach dem Speichern:", updatedData.players);
+      console.log(" [QUESTIONVIEW] Spieler nach dem Speichern:", updatedData.players);
     } else {
       console.warn("Fehler: Session-Dokument nach Update nicht gefunden.");
     }
@@ -157,5 +158,7 @@ async function submitAnswer() {
   }
 
   router.push(`/estimation/${gameId}/${questionId}`);
+  console.log("[QUESTIONVIEW] Weiterleitung zur EstimationView");
+  
 }
 </script>

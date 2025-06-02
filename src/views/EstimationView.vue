@@ -186,13 +186,9 @@
             </ion-label>
           </ion-item>
         </ion-list>
-        <ion-button
-        v-if="isHost"
-        expand="full"
-        @click="goToPrepareNextRound"
-      >
-        Prepare Next Round
-      </ion-button>
+        <ion-button v-if="isHost" expand="full" @click="goToPrepareNextRound">
+          Prepare Next Round
+        </ion-button>
       </div>
     </ion-content>
   </ion-page>
@@ -201,7 +197,7 @@
 <script setup lang="ts">
 import FunButton from "@/components/FunButton.vue";
 import VueDraggable from "vuedraggable";
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, onBeforeUnmount } from "vue";
 import { useRoute } from "vue-router";
 import { useRouter } from "vue-router";
 import {
@@ -225,7 +221,6 @@ import {
   onSnapshot,
 } from "firebase/firestore";
 
-
 interface Player {
   id: string;
   name: string;
@@ -239,8 +234,6 @@ interface FinishedViewCompunding {
   answerValue: string;
 }
 const router = useRouter();
-
-
 
 const db = getFirestore();
 const route = useRoute();
@@ -259,6 +252,8 @@ const activePlayer = ref<Player | null>(null);
 const sortingFinished = ref(false);
 const secondTurnStartPlayer = ref(false);
 const finishedViewAnswerValue = ref<FinishedViewCompunding[]>([]);
+
+let unsubscribeFn: (() => void) | null = null;
 
 const localPlayerId = localStorage.getItem("playerId");
 // const localName = localStorage.getItem('playerName');
@@ -284,12 +279,12 @@ const placedPlayerObjects = computed(() =>
     .filter((p): p is Player => !!p)
 );
 
-let unsubscribeFn: () => void;
-
 onMounted(async () => {
   // STEP 1: Game ID aus der Route extrahieren
   gameId.value = route.params.gameId as string;
 
+  // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+  // console.log("[LISTENER] Prüfe VOR aufbau onMounted :", input);
   try {
     // STEP 2: Firestore-Dokument für die Spielsession holen
     const roomRef = doc(db, "gameSessions", gameId.value);
@@ -424,8 +419,16 @@ onMounted(async () => {
 
         PrepNextRound.value = data.currentRound?.PrepNextRound || false;
         if (PrepNextRound.value) {
-          console.log("[LISTENER 11] PrepNextRound wurde aktualisiert", PrepNextRound.value);
-          
+          console.log(
+            "[LISTENER 11] PrepNextRound wurde aktualisiert",
+            PrepNextRound.value
+          );
+          if (!isHost.value) {
+            unsubscribeFn?.();
+            console.log(
+              "[LISTENER 11.1] unsubscribeFn() wurde aufgerufen (Client, nicht Host)"
+            );
+          }
           router.push(`/prepare/${gameId.value}`);
         }
 
@@ -540,8 +543,10 @@ const onFinishPlacement = async () => {
     secondTurnStartPlayer.value
   );
 
-
-  if (activePlayer.value?.id == players.value[0].id && secondTurnStartPlayer.value) {
+  if (
+    activePlayer.value?.id == players.value[0].id &&
+    secondTurnStartPlayer.value
+  ) {
     sortingFinished.value = true;
     console.log(
       "[LAST TRUN 000] sortingFinished wurde aktualisiert auf true",
@@ -729,14 +734,24 @@ const goToPrepareNextRound = async () => {
   if (docSnap.exists()) {
     await updateDoc(roomRef, {
       "currentRound.PrepNextRound": true,
+      "currentRound.phase": "prepaire",
     });
   }
-  
-  
-  
+
+  console.log("[FinishedView] unsubscribe -> Start");
+
   router.push(`/prepare/${gameId.value}`);
   unsubscribeFn?.();
 };
+
+onBeforeUnmount(() => {
+  console.log("[FinishedView] Unsubscribe called (onBeforeUnmount)");
+
+  if (unsubscribeFn) {
+    unsubscribeFn();
+    console.log("[Estimation] Unsubscribed on leave");
+  }
+});
 </script>
 
 <style scoped>
