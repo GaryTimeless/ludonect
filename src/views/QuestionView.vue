@@ -38,7 +38,8 @@ import {
 } from "@ionic/vue";
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import questions from "@/questions.json";
+import { inject } from "vue";
+
 import {
   getFirestore,
   doc,
@@ -48,6 +49,7 @@ import {
 } from "firebase/firestore";
 
 console.log("Welcome to QuestionView");
+const questions = inject("questions", []) as any[];
 const route = useRoute();
 const router = useRouter();
 

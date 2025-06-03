@@ -84,6 +84,10 @@ import {
   IonContent,
   IonButton,
 } from "@ionic/vue";
+import { inject } from "vue";
+
+const questions = inject("questions") as any[];
+
 const db = getFirestore();
 const router = useRouter();
 const route = useRoute();
@@ -188,11 +192,13 @@ const startNextRound = async () => {
   const snap = await getDoc(roomRef);
   const data = snap.data();
   const used = data?.usedQuestionIds || [];
-  const questionsLibary = await fetch("./src/questions.json");
+  // const questionsLibary = await fetch("./src/questions.json");
 
-  //   /Users/gschenk/Dev/Ludonect/ludonect/src/questions.json
-  const allQuestions = await questionsLibary.json();
-  const unused = allQuestions.filter((q: any) => !used.includes(q.id));
+  // //   /Users/gschenk/Dev/Ludonect/ludonect/src/questions.json
+  // const allQuestions = await questionsLibary.json();
+  // const unused = allQuestions.filter((q: any) => !used.includes(q.id));
+
+  const unused = questions.filter((q: any) => !used.includes(q.id));
   if (unused.length === 0) return alert("Keine Fragen mehr verfügbar.");
   const newQuestion = unused[Math.floor(Math.random() * unused.length)];
   await updateDoc(roomRef, {
