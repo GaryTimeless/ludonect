@@ -7,36 +7,30 @@
     </ion-header>
 
     <ion-content>
-      <div style="padding: 16px; text-align: center">
-        <FunButton />
-      </div>
       <ion-text v-if="sortingStarted" color="primary" class="info-text">
         Spiel gestartet – du bist Spieler: {{ currentPlayerName }}
       </ion-text>
 
       <!-- Anzeige der Anzahl der Spieler -->
       <ion-text class="info-text" color="medium">
-        {{ playerCount }} / {{ players.length }} answers received
+        {{ playerCount }} / {{ players.length }} haben bereits geantwortet
       </ion-text>
 
       <!-- Anzeige der Spieler Namen um eine Reihenfolge zu bestimmen -->
       <div v-if="players.length > 0" style="padding: 16px">
         <h3>Spieler: {{ currentPlayerName }}</h3>
-        <ion-text
-          v-if="localPlayerId === activePlayer?.id"
-          color="success"
-          class="info-text"
-        >
-          🎯 Du bist jetzt an der Reihe!
-        </ion-text>
-        <p>zeige Daten aus localen PLAYER</p>
+
+        <!-- 
+        DEV 
+        -->
+        <!-- <p>zeige Daten aus localen PLAYER</p>
         <p>Spieleranzahl: {{ players.length }}</p>
         <ul>
           <li v-for="player in players" :key="player.id">
             {{ player.name }} – ID: {{ player.id }} – Antwort:
             {{ player.estimation }}
           </li>
-        </ul>
+        </ul> -->
 
         <!-- ----------------------------- -->
         <!-- SPIEER Reihenfolge bestimmen  -->
@@ -79,7 +73,13 @@
           </template>
         </VueDraggable>
       </div>
-
+      <p class="info-text">Hier wird die Spielerreihenfolge bestimmt</p>
+      <p v-if="!sortingStarted" class="info-text">
+        Warte bitte auf den Host um weiter zu machen
+      </p>
+      <div style="padding: 16px; text-align: center">
+        <FunButton />
+      </div>
       <ion-button
         v-if="isHost && !sortingStarted"
         expand="full"
@@ -103,8 +103,31 @@
       <!-- SPIEL STARTEN -->
       <!-- -------------- -->
       <div v-if="sortingStarted && !sortingFinished" style="padding: 16px">
-        <h3>Sortiere Spieler:</h3>
-        <p>
+        <p class="info-text">
+          in der Tabelle unten werden alle Spieler (entsprechend der Reihenfolge
+          oben) <br />nach und nach ihren Namen sortieren
+        </p>
+        <ion-text
+          v-if="localPlayerId === activePlayer?.id"
+          color="success"
+          class="info-text"
+        >
+          🎯 Du bist jetzt an der Reihe!
+        </ion-text>
+        <ion-text v-else color="medium" class="info-text">
+          ⏳ Bitte warte, bis du an der Reihe bist.
+        </ion-text>
+        <div v-if="currentQuestion" class="mb-4">
+          <h2 class="text-md font-semibold text-gray-700">Aktuelle Frage:</h2>
+          <p class="text-lg italic text-blue-800">
+            {{ currentQuestion.text }}
+          </p>
+        </div>
+        <!-- 
+        DEV 
+        -->
+
+        <!-- <p>
           {{ "lokaler Spieler: " + localPlayerId + " - " + currentPlayerName }}
         </p>
         <p>
@@ -113,7 +136,7 @@
           }}
         </p>
         <p>{{ "Sorting Startet: " + sortingStarted }}</p>
-        <p>{{ "Sorting Finished: " + sortingFinished }}</p>
+        <p>{{ "Sorting Finished: " + sortingFinished }}</p> -->
 
         <!-- MOVE BUTTONS -->
         <div
@@ -130,24 +153,25 @@
         </div>
 
         <!-- 
-        PLACEDPLAyERS 
+        DEV
+        PLACEDPLAYERS 
         Aktuelle Reihenfolge der platzierten Spieler anzeigen 
         -->
-        <h3 style="margin-top: 24px">Spielerreihenfolge laut placedPlayer:</h3>
+        <!-- <h3 style="margin-top: 24px">Spielerreihenfolge laut placedPlayer:</h3>
         <ul style="text-align: left; padding: 0 16px">
           <li v-for="player in placedPlayerObjects" :key="player.id">
             {{ player.name }}
           </li>
-        </ul>
+        </ul> -->
 
         <!-- Reihenfolge aus players (order) anzeigen -->
-        <h3 style="margin-top: 24px">Spielerreihenfolge laut Order:</h3>
+        <!-- <h3 style="margin-top: 24px">Spielerreihenfolge laut Order:</h3>
         <ul style="text-align: left; padding: 0 16px">
           <li v-for="player in order" :key="player.id">
             {{ player.name }}
           </li>
         </ul>
-        <p>{{ "order array: " + order }}</p>
+        <p>{{ "order array: " + order }}</p> -->
 
         <!-- Liste der spieler um die Antwort zu sortieren -->
         <ion-list>
@@ -197,7 +221,7 @@
 <script setup lang="ts">
 import FunButton from "@/components/FunButton.vue";
 import VueDraggable from "vuedraggable";
-import { ref, onMounted, computed, onBeforeUnmount } from "vue";
+import { ref, onMounted, computed, onBeforeUnmount, inject } from "vue";
 import { useRoute } from "vue-router";
 import { useRouter } from "vue-router";
 import {
@@ -252,6 +276,13 @@ const activePlayer = ref<Player | null>(null);
 const sortingFinished = ref(false);
 const secondTurnStartPlayer = ref(false);
 const finishedViewAnswerValue = ref<FinishedViewCompunding[]>([]);
+const currentRound = ref<any | null>(null);
+const questions = inject("questions", []) as any[];
+const currentQuestion = computed(() => {
+  if (!questions || !currentRound.value?.questionId) return null;
+  return questions.find((q) => q.id === currentRound.value.questionId);
+});
+console.log("current Question", currentQuestion);
 
 let unsubscribeFn: (() => void) | null = null;
 
@@ -294,7 +325,7 @@ onMounted(async () => {
       // STEP 3: Daten aus dem Dokument extrahieren
       const data = docSnap.data();
       const temp = data.players;
-
+      currentRound.value = data.currentRound;
       console.log(" [onMounted] das sind data.players daten: ", temp);
 
       // STEP 4: Spieler lokal setzen
@@ -514,6 +545,8 @@ const startGame = async () => {
     "[StartGame] END -> PlacedPlayers:",
     placedPlayers.value.map((p) => p.name)
   );
+  console.log("unnessesaryFunction");
+  unnessesaryFunction();
 };
 
 // -------------
@@ -661,6 +694,10 @@ const onFinishPlacement = async () => {
   );
 };
 
+function unnessesaryFunction(){
+  console.log("inFinishedPlacement ausgeführt")
+  onFinishPlacement()
+}
 // -------------
 // Move Button Funktion
 // -------------

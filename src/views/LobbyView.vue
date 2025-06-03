@@ -15,8 +15,8 @@
           <ion-button expand="block" @click="mode = 'join'"
             >Existierenden Raum beitreten</ion-button
           >
-          <DBDelete />
-          <LocalStorageDelete />
+          <DBDelete style="padding-top: 20%; width: 50%; margin: auto;"/>
+          <LocalStorageDelete style="width: 50%; margin: auto;"/>
         </template>
 
         <template v-else-if="mode === 'create'">
