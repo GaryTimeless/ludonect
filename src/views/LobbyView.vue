@@ -52,7 +52,7 @@
           <ion-button expand="block" :disabled="!playerName" @click="createRoom"
             >Raum erstellen</ion-button
           >
-          <ion-button expand="block" @click="mode = 'start'" color="medium"
+          <ion-button expand="block" @click="mode = 'start'" color="medium" class="inner-button"
             >Zurück</ion-button
           >
         </template>
@@ -75,7 +75,7 @@
             @click="joinRoom"
             >Beitreten</ion-button
           >
-          <ion-button expand="block" @click="mode = 'start'" color="medium"
+          <ion-button expand="block" @click="mode = 'start'" color="medium" class="inner-button"
             >Zurück</ion-button
           >
         </template>
@@ -414,12 +414,12 @@ ion-content {
 ion-button {
   --background: #59981a;
   --color: #edffcc;
-  --border-radius: 9px;
+  --border-radius: 18px;
   --box-shadow: none;
   --border-width: 0;
   width: 100%;
   min-height: 40px;
-  font-size: 0.95rem;
+  font-size: 0.97rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   padding: 0;
@@ -428,9 +428,10 @@ ion-button {
 }
 
 ion-button[color="medium"] {
-  --background: #d1d8ce;
-  --color: #385028;
+  --background: #91a095; /* Ein sanftes, modernes Grau-Grün */
+  --color: #fff;
 }
+
 
 ion-button:active {
   transform: scale(0.97);
@@ -450,12 +451,29 @@ ion-button:active {
 ion-item {
   --background: transparent;
   --color: #385028;
-  font-size: 1.06rem;
-  margin-bottom: 12px;
+  font-size: 1.08rem;
+  margin-bottom: 18px;
+  margin-top: 18px;
+  --border-radius: 18px;
+  /* Für mehr Luft oben/unten am Input: */
+  padding-top: 8px;
+  padding-bottom: 6px;
 }
 
 ion-input {
   --color: #385028;
+  padding-top: 10px !important;
+  font-size: 1.1rem;
+}
+ion-label {
+  font-size: 1.05rem; /* Etwas größer */
+  padding-bottom: 6px;
+  padding-left: 2px;
+  color: #385028;
+}
+
+.inner-button {
+  margin-top: 14px;
 }
 ion-toolbar {
   --background: #59981a;
@@ -468,6 +486,7 @@ ion-toolbar {
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: 'Tenor Sans', Arial, sans-serif;
 }
 
 ion-title {
@@ -501,10 +520,15 @@ ion-header {
     --border-radius: 9px;
   }
 }
-</style>
-  .fade-enter-active, .fade-leave-active {
+
+body {
+  font-family: 'Tenor Sans', Arial, sans-serif;
+}
+ .fade-enter-active, .fade-leave-active {
     transition: opacity 0.18s;
   }
   .fade-enter-from, .fade-leave-to {
     opacity: 0;
   }
+</style>
+ 
