@@ -7,16 +7,41 @@
     </ion-header>
 
     <ion-content class="ion-padding">
+      <div class="lobby-header">
+        <img
+          src="@/assets/ludonect_combo.png"
+          alt="Ludonect Logo"
+          class="ludonect-logo"
+        />
+      </div>
       <div v-if="!roomCode">
         <template v-if="mode === 'start'">
-          <ion-button expand="block" @click="mode = 'create'"
-            >Neuen Raum erstellen</ion-button
-          >
-          <ion-button expand="block" @click="mode = 'join'"
-            >Existierenden Raum beitreten</ion-button
-          >
-          <DBDelete style="padding-top: 20%; width: 50%; margin: auto;"/>
-          <LocalStorageDelete style="width: 50%; margin: auto;"/>
+          <div class="lobby-buttons">
+            <ion-button expand="block" @click="mode = 'create'">
+              Neuen Raum erstellen
+            </ion-button>
+            <ion-button expand="block" @click="mode = 'join'">
+              Trete Raum bei
+            </ion-button>
+          </div>
+          <div style="margin-top: 32px; text-align: center;">
+            <ion-button
+              expand="block"
+              fill="outline"
+              size="small"
+              color="medium"
+              @click="showAdvanced = !showAdvanced"
+              style="margin-bottom: 10px;"
+            >
+              {{ showAdvanced ? 'Weniger anzeigen' : 'Admin Options' }}
+            </ion-button>
+            <transition name="fade">
+              <div v-if="showAdvanced">
+                <DBDelete style="width: 60%; margin: 16px auto;" />
+                <LocalStorageDelete style="width: 60%; margin: 0 auto;" />
+              </div>
+            </transition>
+          </div>
         </template>
 
         <template v-else-if="mode === 'create'">
@@ -81,6 +106,7 @@
 </template>
 
 <script setup lang="ts">
+const showAdvanced = ref(false);
 import {
   IonPage,
   IonHeader,
@@ -180,7 +206,7 @@ async function createRoom() {
 
   setStorage("playerId", player.id);
   setStorage("isHost", "true");
-  
+
   currentPlayerId.value = player.id;
   if (!getStorage("playerName")) {
     setStorage("playerName", player.name);
@@ -337,15 +363,15 @@ async function startGame() {
 
   // use the previously declared sessionRef
   await updateDoc(sessionRef, {
-    state: 'running',
+    state: "running",
     usedQuestionIds: arrayUnion(question.id),
     currentRound: {
       questionId: question.id,
-      phase: 'answering',
+      phase: "answering",
       answers: {},
-      estimations: {}
+      estimations: {},
     },
-    phaseUpdatedAt: Timestamp.now()
+    phaseUpdatedAt: Timestamp.now(),
   });
 
   console.log(`[startGame] Navigiere zu: /question/${code}/${question.id}`);
@@ -356,3 +382,129 @@ function onJoinCodeInput(event: any) {
   joinCode.value = event.target.value.toUpperCase();
 }
 </script>
+<style scoped>
+.lobby-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 32px;
+  margin-bottom: 40px;
+}
+
+.ludonect-logo {
+  width: 320px;
+  max-width: 92vw;
+  margin-bottom: 0;
+}
+
+ion-content {
+  --background: var(--ion-background-color, #edffcc);
+}
+
+.lobby-buttons {
+  width: 100%;
+  max-width: 250px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+ion-button {
+  --background: #59981a;
+  --color: #edffcc;
+  --border-radius: 9px;
+  --box-shadow: none;
+  --border-width: 0;
+  width: 100%;
+  min-height: 40px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0;
+  margin: 0;
+  transition: transform 0.08s;
+}
+
+ion-button[color="medium"] {
+  --background: #d1d8ce;
+  --color: #385028;
+}
+
+ion-button:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 450px) {
+  .lobby-buttons {
+    max-width: 90vw;
+  }
+  ion-button {
+    font-size: 0.93rem;
+    min-height: 36px;
+    --border-radius: 18px;
+  }
+}
+
+ion-item {
+  --background: transparent;
+  --color: #385028;
+  font-size: 1.06rem;
+  margin-bottom: 12px;
+}
+
+ion-input {
+  --color: #385028;
+}
+ion-toolbar {
+  --background: #59981a;
+  --color: #edffcc;
+  --min-height: 54px;
+  --padding-start: 0;
+  --padding-end: 0;
+  box-shadow: none;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+ion-title {
+  font-family: 'Inter', Arial, sans-serif;  /* oder dein gewünschter Font */
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #edffcc;
+  text-align: center;
+  letter-spacing: 0.01em;
+  padding: 0;
+  margin: 0;
+}
+
+/* Optional: Abstand zum oberen Bildschirmrand auf Mobilgeräten */
+ion-header {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 450px) {
+  .ludonect-logo {
+    width: 210px;
+  }
+  .lobby-header {
+    margin-top: 16px;
+    margin-bottom: 24px;
+  }
+  ion-button {
+    font-size: 1rem;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    --border-radius: 9px;
+  }
+}
+</style>
+  .fade-enter-active, .fade-leave-active {
+    transition: opacity 0.18s;
+  }
+  .fade-enter-from, .fade-leave-to {
+    opacity: 0;
+  }
