@@ -13,6 +13,7 @@
           alt="Ludonect Logo"
           class="ludonect-logo"
         />
+        <!-- <p> play.connect.grow</p> -->
       </div>
       <div v-if="!roomCode">
         <template v-if="mode === 'start'">
@@ -419,12 +420,13 @@ ion-button {
   --border-width: 0;
   width: 100%;
   min-height: 40px;
-  font-size: 0.97rem;
+  font-size: 0.90rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   padding: 0;
   margin: 0;
   transition: transform 0.08s;
+  font-family: 'Tenor Sans', Arial, sans-serif;
 }
 
 ion-button[color="medium"] {
@@ -437,7 +439,7 @@ ion-button:active {
   transform: scale(0.97);
 }
 
-@media (max-width: 450px) {
+@media (max-width: 150px) {
   .lobby-buttons {
     max-width: 90vw;
   }
@@ -472,6 +474,11 @@ ion-label {
   color: #385028;
 }
 
+p {
+  font-family: 'Tenor Sans', Arial, sans-serif;
+  color: #385028;
+}
+
 .inner-button {
   margin-top: 14px;
 }
@@ -490,7 +497,7 @@ ion-toolbar {
 }
 
 ion-title {
-  font-family: 'Inter', Arial, sans-serif;  /* oder dein gewünschter Font */
+  font-family: 'Tenor Sans', Arial, sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
   color: #edffcc;
@@ -505,22 +512,6 @@ ion-header {
   margin-bottom: 8px;
 }
 
-@media (max-width: 450px) {
-  .ludonect-logo {
-    width: 210px;
-  }
-  .lobby-header {
-    margin-top: 16px;
-    margin-bottom: 24px;
-  }
-  ion-button {
-    font-size: 1rem;
-    padding-top: 14px;
-    padding-bottom: 14px;
-    --border-radius: 9px;
-  }
-}
-
 body {
   font-family: 'Tenor Sans', Arial, sans-serif;
 }
@@ -530,5 +521,25 @@ body {
   .fade-enter-from, .fade-leave-to {
     opacity: 0;
   }
+
+  @media (prefers-color-scheme: dark) {
+  :root {
+    --ion-background-color: #edffcc !important;
+    --ion-toolbar-background: #59981a !important;
+    --ion-color-primary: #59981a !important;
+    --ion-color-primary-contrast: #edffcc !important;
+    --ion-color-medium: #91a095 !important;
+    /* Alle weiteren Farben */
+  }
+
+  body,
+  ion-content,
+  ion-toolbar,
+  .lobby-header,
+  .ludonect-logo {
+    background: #edffcc !important;
+    color: #385028 !important;
+  }
+}
 </style>
  
