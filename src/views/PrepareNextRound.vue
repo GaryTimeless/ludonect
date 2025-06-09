@@ -214,7 +214,7 @@ const startNextRound = async () => {
     usedQuestionIds: [...used, newQuestion.id],
     "currentRound.phase": "question",
   });
-  alert("Neue Frage gesetzt: " + newQuestion.id);
+  // alert("Neue Frage gesetzt: " + newQuestion.id);
   console.log("prepaire URL");
   const previewUrl = `/question/${gameId.value}/${newQuestion.id}`;
   console.log("[PREPAIRE 10]prepaire URL: ", previewUrl);
