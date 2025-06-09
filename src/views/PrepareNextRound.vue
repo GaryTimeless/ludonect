@@ -60,10 +60,11 @@
                 Der Host bereitet die nächste Runde vor.
               </p>
               <img
-                src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNDltM3ZibjJjNm11cDJzNDd6bWlrd3ZzaXJyMWI5MmxtZWt3c2tuMSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/oOxSXI5D2cvc6kYSvw/giphy.gif"
+                src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmwxcjQ3NzR3Nm5wdWd1bjJqZTJteWMxenFubnM2a2ZpMGw5enJzOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WFyqujMJoxIn9qSTf5/giphy.gif"
                 alt="Warten auf Host"
                 style="max-width: 80%; height: auto; border-radius: 8px"
               />
+
             </div>
           </div>
         </div>
