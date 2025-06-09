@@ -1,15 +1,15 @@
 <template>
-    <div style="text-align: center; margin-top: 16px;">
-      <ion-button expand="block" color="tertiary" @click="onClick">
-        Drück mich, wenn du ungeduldig bist!
-      </ion-button>
-      <div v-if="funMessage" style="margin-top: 8px;">
-        <ion-text color="medium">
-          {{ funMessage }} ({{ funClickCount }} Klicks)
-        </ion-text>
-      </div>
+  <div class="fun-button-wrapper">
+    <ion-button expand="block" class="fun-button" @click="onClick">
+      Drück mich, wenn du ungeduldig bist!
+    </ion-button>
+    <div v-if="funMessage" class="fun-message">
+      <ion-text color="medium">
+        {{ funMessage }} ({{ funClickCount }} Klicks)
+      </ion-text>
     </div>
-  </template>
+  </div>
+</template>
   
   <script setup lang="ts">
   import { ref } from 'vue';
@@ -70,3 +70,43 @@
     funMessage.value = funMessages[randomIndex];
   }
   </script>
+
+<style scoped>
+.fun-button-wrapper {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.fun-button {
+  --background: #d7e770;
+  --color: #385028;
+  --border-radius: 18px;
+  --box-shadow: none;
+  --border-width: 0;
+  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.01em;
+  transition: transform 0.1s;
+  min-height: 40px;
+  margin-bottom: 0;
+}
+.fun-button:active {
+  transform: scale(0.97);
+}
+
+.fun-message {
+  margin-top: 10px;
+  color: #385028;
+  font-size: 1.01rem;
+  font-family: 'Tenor Sans', Arial, sans-serif;
+  opacity: 0.9;
+}
+
+@media (prefers-color-scheme: dark) {
+  .fun-button {
+    --background: #d7e770 !important;
+    --color: #385028 !important;
+  }
+}
+</style>

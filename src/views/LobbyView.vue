@@ -15,6 +15,9 @@
         />
         <!-- <p> play.connect.grow</p> -->
       </div>
+      <!-- ------------- -->
+      <!-- Play Buttons  -->
+      <!-- ------------- -->
       <div v-if="!roomCode">
         <template v-if="mode === 'start'">
           <div class="lobby-buttons">
@@ -25,82 +28,169 @@
               Trete Raum bei
             </ion-button>
           </div>
-          <div style="margin-top: 32px; text-align: center;">
+          <!-- -------------- -->
+          <!-- How to Play    -->
+          <!-- -------------- -->
+          <ion-button
+            expand="block"
+            fill="outline"
+            size="small"
+            color="medium"
+            @click="showHowToPlay = !showHowToPlay"
+            style="margin-bottom: 10px"
+          >
+            {{ showHowToPlay ? "Weniger anzeigen" : "How to Play" }}
+          </ion-button>
+          <transition name="fade">
+            <div v-if="showHowToPlay">
+              <div class="how-to-play">
+                <strong>So funktioniert Ludonect:</strong>
+
+                <ol>
+                  <li>Raum erstellen oder beitreten</li>
+                  <li>
+                    Jede*r beantwortet eine Frage geheim<br />
+                    <small
+                      >(Einigt euch grob, wie die Frage zu verstehen
+                      ist.)</small
+                    >
+                  </li>
+                  <li>
+                    Schätzt ein, wie die Antworten der Gruppe zueinander passen
+                  </li>
+                  <li>Antworten werden aufgedeckt und gemeinsam besprochen</li>
+                  <li>Nächste Runde!</li>
+                </ol>
+
+                <div class="example-questions">
+                  <div><strong>Beispiel-Fragen:</strong></div>
+                  <ul>
+                    <li>
+                      Wie oft schaust du Dokus?<br />
+                      <span class="example-scale"
+                        >0 = gar nicht | 100 = lieber als alles andere</span
+                      >
+                    </li>
+                    <li>
+                      Wie spontan bist du?<br />
+                      <span class="example-scale"
+                        >0 = gar nicht | 100 = Wer hat Bock auf ein Eis?</span
+                      >
+                    </li>
+                    <li>
+                      Wie gerne würdest du für einen Tag unsichtbar sein?<br />
+                      <span class="example-scale"
+                        >0 = gar nicht | 100 = muhahahaha</span
+                      >
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </transition>
+          <!-- -------------- -->
+          <!-- Admin Options  -->
+          <!-- -------------- -->
+          <div style="margin-top: 32px; text-align: center">
             <ion-button
               expand="block"
               fill="outline"
               size="small"
               color="medium"
               @click="showAdvanced = !showAdvanced"
-              style="margin-bottom: 10px;"
+              style="margin-bottom: 10px"
             >
-              {{ showAdvanced ? 'Weniger anzeigen' : 'Admin Options' }}
+              {{ showAdvanced ? "Weniger anzeigen" : "Admin Options" }}
             </ion-button>
             <transition name="fade">
               <div v-if="showAdvanced">
-                <DBDelete style="width: 60%; margin: 16px auto;" />
-                <LocalStorageDelete style="width: 60%; margin: 0 auto;" />
+                <DBDelete style="width: 60%; margin: 16px auto" />
+                <LocalStorageDelete style="width: 60%; margin: 0 auto" />
               </div>
             </transition>
           </div>
         </template>
-
+        <!-- --------------- -->
+        <!-- Raum erstellen  -->
+        <!-- --------------- -->
         <template v-else-if="mode === 'create'">
-          <ion-item>
-            <ion-label position="floating">Dein Name</ion-label>
-            <ion-input v-model="playerName" :maxlength="20" />
-          </ion-item>
-          <ion-button expand="block" :disabled="!playerName" @click="createRoom"
-            >Raum erstellen</ion-button
-          >
-          <ion-button expand="block" @click="mode = 'start'" color="medium" class="inner-button"
-            >Zurück</ion-button
-          >
+          <div class="lobby-room-wrapper">
+            <ion-item>
+              <ion-label position="floating">Dein Name</ion-label>
+              <ion-input v-model="playerName" :maxlength="20" />
+            </ion-item>
+            <ion-button
+              expand="block"
+              :disabled="!playerName"
+              @click="createRoom"
+              >Raum erstellen</ion-button
+            >
+            <ion-button
+              expand="block"
+              @click="mode = 'start'"
+              color="medium"
+              class="inner-button"
+              >Zurück</ion-button
+            >
+          </div>
         </template>
+        <!-- ---------- -->
+        <!-- Join Room  -->
+        <!-- ---------- -->
         <template v-else-if="mode === 'join'">
-          <ion-item>
-            <ion-label position="floating">Raumcode eingeben</ion-label>
-            <ion-input
-              v-model="joinCode"
-              :maxlength="4"
-              @ionInput="onJoinCodeInput"
-            />
-          </ion-item>
-          <ion-item>
-            <ion-label position="floating">Dein Name</ion-label>
-            <ion-input v-model="playerName" :maxlength="20" />
-          </ion-item>
-          <ion-button
-            expand="block"
-            :disabled="!joinCode || !playerName"
-            @click="joinRoom"
-            >Beitreten</ion-button
-          >
-          <ion-button expand="block" @click="mode = 'start'" color="medium" class="inner-button"
-            >Zurück</ion-button
-          >
+          <div class="lobby-room-wrapper">
+            <ion-item>
+              <ion-label position="floating">Raumcode eingeben</ion-label>
+              <ion-input
+                v-model="joinCode"
+                :maxlength="4"
+                @ionInput="onJoinCodeInput"
+              />
+            </ion-item>
+            <ion-item>
+              <ion-label position="floating">Dein Name</ion-label>
+              <ion-input v-model="playerName" :maxlength="20" />
+            </ion-item>
+            <ion-button
+              expand="block"
+              :disabled="!joinCode || !playerName"
+              @click="joinRoom"
+              >Beitreten</ion-button
+            >
+            <ion-button
+              expand="block"
+              @click="mode = 'start'"
+              color="medium"
+              class="inner-button"
+              >Zurück</ion-button
+            >
+          </div>
         </template>
       </div>
-
+      <!-- ----------------------------- -->
+      <!-- After Login / echte Lobby  -->
+      <!-- ----------------------------- -->
       <div v-else>
-        <h2>
-          Raumcode: <strong>{{ roomCode }}</strong>
-        </h2>
-        <p>Spieler (Du: {{ localPlayerName }}):</p>
-        <ion-list>
-          <ion-item v-for="player in playersInRoom" :key="player.id">
-            <ion-label>
-              {{ player.name }}
-              <span v-if="player.id === currentPlayerId"> (Du)</span>
-            </ion-label>
-            <ion-icon slot="end" name="home" v-if="player.isHost"></ion-icon>
-          </ion-item>
-        </ion-list>
-        <ion-button v-if="canStartGame" expand="block" @click="startGame">
-          Spiel starten
-        </ion-button>
+        <div class="lobby-room-wrapper">
+          <h2 class="room-code">
+            Raumcode: <strong>{{ roomCode }}</strong>
+          </h2>
+          <p class="player-label">Spieler (Du: {{ localPlayerName }}):</p>
+          <ion-list>
+            <ion-item v-for="player in playersInRoom" :key="player.id">
+              <ion-label>
+                {{ player.name }}
+                <span v-if="player.id === currentPlayerId"> (Du)</span>
+              </ion-label>
+              <ion-icon slot="end" name="home" v-if="player.isHost"></ion-icon>
+            </ion-item>
+          </ion-list>
+          <ion-button v-if="canStartGame" expand="block" @click="startGame">
+            Spiel starten
+          </ion-button>
 
-        <FunButton />
+          <FunButton />
+        </div>
       </div>
     </ion-content>
   </ion-page>
@@ -108,6 +198,7 @@
 
 <script setup lang="ts">
 const showAdvanced = ref(false);
+const showHowToPlay = ref(false);
 import {
   IonPage,
   IonHeader,
@@ -420,20 +511,19 @@ ion-button {
   --border-width: 0;
   width: 100%;
   min-height: 40px;
-  font-size: 0.90rem;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   padding: 0;
   margin: 0;
   transition: transform 0.08s;
-  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-family: "Tenor Sans", Arial, sans-serif;
 }
 
 ion-button[color="medium"] {
   --background: #91a095; /* Ein sanftes, modernes Grau-Grün */
   --color: #fff;
 }
-
 
 ion-button:active {
   transform: scale(0.97);
@@ -475,7 +565,7 @@ ion-label {
 }
 
 p {
-  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-family: "Tenor Sans", Arial, sans-serif;
   color: #385028;
 }
 
@@ -493,11 +583,11 @@ ion-toolbar {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-family: "Tenor Sans", Arial, sans-serif;
 }
 
 ion-title {
-  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-family: "Tenor Sans", Arial, sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
   color: #edffcc;
@@ -513,16 +603,18 @@ ion-header {
 }
 
 body {
-  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-family: "Tenor Sans", Arial, sans-serif;
 }
- .fade-enter-active, .fade-leave-active {
-    transition: opacity 0.18s;
-  }
-  .fade-enter-from, .fade-leave-to {
-    opacity: 0;
-  }
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.18s;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
 
-  @media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
   :root {
     --ion-background-color: #edffcc !important;
     --ion-toolbar-background: #59981a !important;
@@ -541,5 +633,83 @@ body {
     color: #385028 !important;
   }
 }
+
+.how-to-play {
+  background: #f9ffe6; /* etwas heller als dein Hauptgrün */
+  border-radius: 18px;
+  padding: 18px 16px;
+  margin: 16px auto 18px auto;
+  box-shadow: 0 2px 10px 0 #d3e9b6a0; /* zarter Schatten */
+  max-width: 400px;
+  font-family: "Tenor Sans", Arial, sans-serif;
+  color: #385028 !important;
+}
+.how-to-play strong,
+.how-to-play ol,
+.how-to-play ul,
+.how-to-play li,
+.how-to-play div,
+.how-to-play span,
+.how-to-play small {
+  color: #385028 !important;
+}
+.how-to-play .example-scale {
+  color: #91a095 !important;
+}
+.how-to-play ol {
+  margin: 8px 0 14px 18px;
+  padding: 0;
+}
+.how-to-play li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.how-to-play .example-questions ul {
+  margin-left: 0;
+  padding-left: 18px;
+}
+.example-scale {
+  font-size: 0.96em;
+  color: #91a095;
+  display: block;
+  margin-top: 2px;
+}
+
+ion-list {
+  background: #f9ffe6;
+  border-radius: 18px;
+  box-shadow: 0 2px 10px 0 #d3e9b6a0;
+  padding: 16px 0;
+  margin-bottom: 18px;
+  margin-top: 16px;
+}
+
+ion-item {
+  --background: transparent;
+  --color: #385028;
+  font-size: 1.08rem;
+  border-bottom: 1px solid #d3e9b6a0;
+  /* Kein margin, das Ion-List regelt den Rahmen */
+}
+
+.room-code {
+  color: #59981a;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.player-label {
+  color: #385028;
+  font-size: 1.08rem;
+  margin-bottom: 0;
+}
+.lobby-room-wrapper {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
 </style>
- 
