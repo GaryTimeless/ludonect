@@ -220,7 +220,7 @@ const startNextRound = async () => {
   //   const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
   //   console.log("[LISTENER] Prüfe VOR router.push :", input);
   console.log("[PREPAIRE 11] weiterleitung -> Start: ");
-
+CheckCleanDB.value = false
   router.push(`/question/${gameId.value}/${newQuestion.id}`);
 };
 </script>

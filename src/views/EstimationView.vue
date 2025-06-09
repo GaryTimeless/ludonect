@@ -151,7 +151,6 @@
                 :class="{ disabled: localPlayerId !== activePlayer?.id }"
               >
                 {{ idx + 1 }}. {{ player.name }}
-                <span v-if="player.isHost" class="host-label">(Host)</span>
               </li>
             </ul>
           </div>
@@ -170,7 +169,7 @@
         <p>{{ "Sorting Startet: " + sortingStarted }}</p>
         <p>{{ "Sorting Finished: " + sortingFinished }}</p> -->
           <p class="info-text">
-            Nutze die Pfeile um deinen Namen neu zu positionieren
+            Nutze die Pfeile um deinen Namen neu zu positionieren,<br/> wenn du an der Reihe bist
           </p>
           <!-- MOVE BUTTONS -->
           <div
@@ -1003,7 +1002,7 @@ ion-button[color="medium"] {
   max-width: 440px;
   margin: 0 auto 20px auto;
   padding: 18px 18px 12px 18px;
-  background: #f7fbe9;
+  background:#e4f9ce;
   border-radius: 14px;
   box-shadow: 0 2px 12px 0 #d3e9b633;
   text-align: center;
@@ -1028,17 +1027,23 @@ ion-button[color="medium"] {
   padding: 0;
   margin: 12px 0 0 0;
   text-align: left;
+  color: #385028;
+  
 }
 .player-order-list li.disabled {
   opacity: 0.5;
   pointer-events: none;
   cursor: not-allowed;
+  color: #385028;
 }
 .player-order-list li {
-  color: #59981a;
-  font-family: "Tenor Sans", Arial, sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #385028 !important;
+  font-family: 'Tenor Sans', Arial, sans-serif;
   font-size: 1.02rem;
-  margin: 0 0 4px 0;
+  margin: 0 0 8px 0;
 }
 .host-label {
   font-size: 0.92em;
