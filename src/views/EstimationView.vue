@@ -7,23 +7,24 @@
     </ion-header>
 
     <ion-content>
-      <ion-text v-if="sortingStarted" color="primary" class="info-text">
-        Spiel gestartet – du bist Spieler: {{ currentPlayerName }}
-      </ion-text>
+      <div class="center-wrapper">
+        <ion-text v-if="sortingStarted" color="primary" class="info-text">
+          Spiel gestartet – du bist Spieler: {{ currentPlayerName }}
+        </ion-text>
 
-      <!-- Anzeige der Anzahl der Spieler -->
-      <ion-text class="info-text" color="medium">
-        {{ playerCount }} / {{ players.length }} haben bereits geantwortet
-      </ion-text>
+        <!-- Anzeige der Anzahl der Spieler -->
+        <ion-text class="info-text" color="medium">
+          {{ playerCount }} / {{ players.length }} haben bereits geantwortet
+        </ion-text>
 
-      <!-- Anzeige der Spieler Namen um eine Reihenfolge zu bestimmen -->
-      <div v-if="players.length > 0" style="padding: 16px">
-        <h3>Spieler: {{ currentPlayerName }}</h3>
+        <!-- Anzeige der Spieler Namen um eine Reihenfolge zu bestimmen -->
+        <div v-if="players.length > 0" style="padding: 16px">
+          <h3>Spieler: {{ currentPlayerName }}</h3>
 
-        <!-- 
+          <!-- 
         DEV 
         -->
-        <!-- <p>zeige Daten aus localen PLAYER</p>
+          <!-- <p>zeige Daten aus localen PLAYER</p>
         <p>Spieleranzahl: {{ players.length }}</p>
         <ul>
           <li v-for="player in players" :key="player.id">
@@ -32,102 +33,133 @@
           </li>
         </ul> -->
 
-        <!-- ----------------------------- -->
-        <!-- SPIEER Reihenfolge bestimmen  -->
-        <!-- ----------------------------- -->
+          <!-- ----------------------------- -->
+          <!-- SPIEER Reihenfolge bestimmen  -->
+          <!-- ----------------------------- -->
 
-        <VueDraggable
-          v-model="players"
-          :key="players.map((p) => p.id).join('-')"
-          item-key="id"
-          :disabled="!isHost"
-          tag="div"
-        >
-          <template #item="{ element }">
-            <ion-item
-              v-if="element.estimation"
-              :key="element.id"
-              :style="{
-                backgroundColor:
-                  element.id === activePlayer?.id ? '#d0f0c0' : 'inherit',
-              }"
-            >
-              <ion-label>
-                {{
-                  players
-                    .filter((p) => p.estimation !== undefined)
-                    .indexOf(element) + 1
-                }}. {{ element.name }}
-                <br />
-                <ion-badge
-                  color="primary"
-                  v-if="element.isHost"
-                  style="margin-top: 4px"
-                  >Host</ion-badge
-                >
-                <ion-badge color="medium" v-else style="margin-top: 4px"
-                  >Player</ion-badge
-                >
-              </ion-label>
-            </ion-item>
-          </template>
-        </VueDraggable>
-      </div>
-      <p class="info-text">Hier wird die Spielerreihenfolge bestimmt</p>
-      <p v-if="!sortingStarted" class="info-text">
-        Warte bitte auf den Host um weiter zu machen
-      </p>
-      <div style="padding: 16px; text-align: center">
-        <FunButton />
-      </div>
-      <ion-button
-        v-if="isHost && !sortingStarted"
-        expand="full"
-        @click="submitReorder"
-      >
-        Reihenfolge Speichern
-      </ion-button>
-
-      <ion-button
-        v-if="isHost && !sortingStarted"
-        expand="full"
-        @click="startGame"
-      >
-        Spiel starten
-      </ion-button>
-      <!--<ion-button @click="FinishedViewCompundingFunc" expand="full">
+          <VueDraggable
+            v-model="players"
+            :key="players.map((p) => p.id).join('-')"
+            item-key="id"
+            :disabled="!isHost"
+            tag="div"
+          >
+            <template #item="{ element }">
+              <ion-item
+                v-if="element.estimation"
+                :key="element.id"
+                :style="{
+                  backgroundColor:
+                    element.id === activePlayer?.id ? '#d0f0c0' : 'inherit',
+                }"
+              >
+                <ion-label>
+                  {{
+                    players
+                      .filter((p) => p.estimation !== undefined)
+                      .indexOf(element) + 1
+                  }}. {{ element.name }}
+                  <br />
+                  <ion-badge
+                    color="primary"
+                    v-if="element.isHost"
+                    style="margin-top: 4px"
+                    >Host</ion-badge
+                  >
+                  <ion-badge color="medium" v-else style="margin-top: 4px"
+                    >Player</ion-badge
+                  >
+                </ion-label>
+              </ion-item>
+            </template>
+          </VueDraggable>
+        </div>
+        <p class="info-text">Hier wird die Spielerreihenfolge bestimmt</p>
+        <p v-if="!sortingStarted" class="info-text">
+          Warte bitte auf den Host um weiter zu machen
+        </p>
+        <div class="estimation-buttons-wrapper">
+          <ion-button
+            v-if="isHost && !sortingStarted"
+            expand="block"
+            @click="submitReorder"
+            style="
+              --background: #59981a;
+              --color: #edffcc;
+              --border-radius: 9px;
+              font-size: 1.19rem;
+              font-weight: 600;
+              letter-spacing: 0.03em;
+              min-height: 54px;
+              margin-top: 16px;
+            "
+          >
+            Reihenfolge Speichern
+          </ion-button>
+          <ion-button
+            v-if="isHost && !sortingStarted"
+            expand="block"
+            @click="startGame"
+            style="
+              --background: #59981a;
+              --color: #edffcc;
+              --border-radius: 9px;
+              font-size: 1.19rem;
+              font-weight: 600;
+              letter-spacing: 0.03em;
+              min-height: 54px;
+              margin-top: 16px;
+            "
+          >
+            Spiel starten
+          </ion-button>
+        </div>
+        <div style="padding: 16px; text-align: center">
+          <FunButton />
+        </div>
+        <!--<ion-button @click="FinishedViewCompundingFunc" expand="full">
         Entry
       </ion-button> -->
 
-      <!-- -------------- -->
-      <!-- SPIEL STARTEN -->
-      <!-- -------------- -->
-      <div v-if="sortingStarted && !sortingFinished" style="padding: 16px">
-        <p class="info-text">
-          in der Tabelle unten werden alle Spieler (entsprechend der Reihenfolge
-          oben) <br />nach und nach ihren Namen sortieren
-        </p>
-        <ion-text
-          v-if="localPlayerId === activePlayer?.id"
-          color="success"
-          class="info-text"
-        >
-          🎯 Du bist jetzt an der Reihe!
-        </ion-text>
-        <ion-text v-else color="medium" class="info-text">
-          ⏳ Bitte warte, bis du an der Reihe bist.
-        </ion-text>
-        <div v-if="currentQuestion" class="mb-4">
-          <h2 class="text-md font-semibold text-gray-700">Aktuelle Frage:</h2>
-          <p class="text-lg italic text-blue-800">
-            {{ currentQuestion.text }}
+        <!-- -------------- -->
+        <!-- SPIEL STARTEN -->
+        <!-- -------------- -->
+        <div v-if="sortingStarted && !sortingFinished" style="padding: 16px">
+          <p class="info-text">
+            in der Tabelle unten werden alle Spieler (entsprechend der
+            Reihenfolge oben) <br />nach und nach ihren Namen sortieren
           </p>
-        </div>
-        <!-- 
+          <ion-text
+            v-if="localPlayerId === activePlayer?.id"
+            color="success"
+            class="info-text"
+          >
+            🎯 Du bist jetzt an der Reihe!
+          </ion-text>
+          <ion-text v-else color="medium" class="info-text">
+            ⏳ Bitte warte, bis du an der Reihe bist.
+          </ion-text>
+          <div v-if="currentQuestion" class="question-wrapper">
+            <h2 class="question-title">Aktuelle Frage:</h2>
+            <p class="question-text">
+              {{ currentQuestion.text }}
+            </p>
+            <ul v-if="placedPlayerObjects.length > 0" class="player-order-list">
+              <li
+                v-for="(player, idx) in placedPlayerObjects"
+                :key="player.id"
+                :class="{ disabled: localPlayerId !== activePlayer?.id }"
+              >
+                {{ idx + 1 }}. {{ player.name }}
+                <span v-if="player.isHost" class="host-label">(Host)</span>
+              </li>
+            </ul>
+          </div>
+          <!-- 
         DEV 
         -->
 
-        <!-- <p>
+          <!-- <p>
           {{ "lokaler Spieler: " + localPlayerId + " - " + currentPlayerName }}
         </p>
         <p>
@@ -137,35 +169,36 @@
         </p>
         <p>{{ "Sorting Startet: " + sortingStarted }}</p>
         <p>{{ "Sorting Finished: " + sortingFinished }}</p> -->
+          <p class="info-text">
+            Nutze die Pfeile um deinen Namen neu zu positionieren
+          </p>
+          <!-- MOVE BUTTONS -->
+          <div
+            v-if="localPlayerId === activePlayer?.id"
+            class="move-button-row"
+          >
+            <ion-button class="icon-button" @click="movePlayer(-1)"
+              >⬆️</ion-button
+            >
+            <ion-button class="icon-button" @click="movePlayer(1)"
+              >⬇️</ion-button
+            >
+          </div>
 
-        <!-- MOVE BUTTONS -->
-        <div
-          v-if="localPlayerId === activePlayer?.id"
-          style="
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 8px;
-          "
-        >
-          <ion-button @click="movePlayer(-1)">⬆️</ion-button>
-          <ion-button @click="movePlayer(1)">⬇️</ion-button>
-        </div>
-
-        <!-- 
+          <!-- 
         DEV
         PLACEDPLAYERS 
         Aktuelle Reihenfolge der platzierten Spieler anzeigen 
         -->
-        <!-- <h3 style="margin-top: 24px">Spielerreihenfolge laut placedPlayer:</h3>
+          <!-- <h3 style="margin-top: 24px">Spielerreihenfolge laut placedPlayer:</h3>
         <ul style="text-align: left; padding: 0 16px">
           <li v-for="player in placedPlayerObjects" :key="player.id">
             {{ player.name }}
           </li>
         </ul> -->
 
-        <!-- Reihenfolge aus players (order) anzeigen -->
-        <!-- <h3 style="margin-top: 24px">Spielerreihenfolge laut Order:</h3>
+          <!-- Reihenfolge aus players (order) anzeigen -->
+          <!-- <h3 style="margin-top: 24px">Spielerreihenfolge laut Order:</h3>
         <ul style="text-align: left; padding: 0 16px">
           <li v-for="player in order" :key="player.id">
             {{ player.name }}
@@ -173,46 +206,51 @@
         </ul>
         <p>{{ "order array: " + order }}</p> -->
 
-        <!-- Liste der spieler um die Antwort zu sortieren -->
-        <ion-list>
-          <ion-item
-            v-for="(player, index) in placedPlayerObjects"
-            :key="player.id"
-            :disabled="localPlayerId !== activePlayer?.id"
-          >
-            <ion-label> {{ index + 1 }}. {{ player.name }} </ion-label>
-          </ion-item>
-        </ion-list>
+          <!-- Liste der spieler um die Antwort zu sortieren -->
+          <!-- <ion-list>
+            <ion-item
+              v-for="(player, index) in placedPlayerObjects"
+              :key="player.id"
+              :disabled="localPlayerId !== activePlayer?.id"
+            >
+              <ion-label> {{ index + 1 }}. {{ player.name }} </ion-label>
+            </ion-item>
+          </ion-list> -->
 
-        <!-- Fertig-Button nur für den aktiven Spieler sichtbar -->
-        <ion-button
-          v-if="localPlayerId === activePlayer?.id"
-          expand="full"
-          style="margin-top: 16px"
-          @click="onFinishPlacement"
-        >
-          Fertig
-        </ion-button>
-      </div>
-
-      <div v-if="sortingFinished" style="padding: 16px">
-        <h3>🎉 Finale Reihenfolge:</h3>
-        <ion-list>
-          <ion-item
-            v-for="(entry, index) in finishedViewAnswerValue"
-            :key="entry.Player.id"
+          <!-- Fertig-Button nur für den aktiven Spieler sichtbar -->
+          <div
+            class="finish-button-wrapper"
+            v-if="localPlayerId === activePlayer?.id"
           >
-            <ion-label>
-              {{ index + 1 }}. {{ entry.Player.name }}
-              <br />
-              <strong>Antwort:</strong>
-              {{ entry.answerValue ?? "Keine Antwort" }}
-            </ion-label>
-          </ion-item>
-        </ion-list>
-        <ion-button v-if="isHost" expand="full" @click="goToPrepareNextRound">
-          Prepare Next Round
-        </ion-button>
+            <ion-button
+              style="margin-top: 16px"
+              @click="onFinishPlacement"
+              class="finish-button"
+            >
+              Fertig
+            </ion-button>
+          </div>
+        </div>
+
+        <div v-if="sortingFinished" style="padding: 16px">
+          <h3>🎉 Finale Reihenfolge:</h3>
+          <ion-list>
+            <ion-item
+              v-for="(entry, index) in finishedViewAnswerValue"
+              :key="entry.Player.id"
+            >
+              <ion-label>
+                {{ index + 1 }}. {{ entry.Player.name }}
+                <br />
+                <strong>Antwort:</strong>
+                {{ entry.answerValue ?? "Keine Antwort" }}
+              </ion-label>
+            </ion-item>
+          </ion-list>
+          <ion-button v-if="isHost" expand="full" @click="goToPrepareNextRound">
+            Prepare Next Round
+          </ion-button>
+        </div>
       </div>
     </ion-content>
   </ion-page>
@@ -694,9 +732,9 @@ const onFinishPlacement = async () => {
   );
 };
 
-function unnessesaryFunction(){
-  console.log("inFinishedPlacement ausgeführt")
-  onFinishPlacement()
+function unnessesaryFunction() {
+  console.log("inFinishedPlacement ausgeführt");
+  onFinishPlacement();
 }
 // -------------
 // Move Button Funktion
@@ -792,6 +830,72 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+ion-list {
+  background: transparent;
+  max-width: 440px;
+  margin: 0 auto 16px auto;
+  border-radius: 18px;
+  padding: 0;
+  box-shadow: none;
+}
+
+ion-item {
+  --background: #e4f9ce !important; /* Helles, freundliches Grün */
+  background: #e4f9ce !important;
+  margin: 8px 0;
+  border-radius: 16px;
+  --color: #385028;
+  font-family: "Tenor Sans", Arial, sans-serif;
+  font-size: 1.07rem;
+  min-height: 42px;
+  box-shadow: 0 2px 8px 0 #d3e9b6a0;
+}
+
+ion-label {
+  color: #385028;
+  font-family: "Tenor Sans", Arial, sans-serif;
+  font-size: 1.08rem;
+  padding-left: 2px;
+  padding-bottom: 2px;
+  line-height: 1.3;
+}
+
+ion-badge {
+  font-size: 0.89rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 8px;
+  margin-left: 12px;
+  margin-top: 2px;
+  letter-spacing: 0.02em;
+}
+
+/* Info: bei dunklem Hintergrund Badge ggf. invertieren */
+ion-badge[color="primary"] {
+  --background: #59981a !important;
+  --color: #edffcc !important;
+}
+ion-badge[color="medium"] {
+  --background: #91a095 !important;
+  --color: #fff !important;
+}
+
+@media (max-width: 520px) {
+  ion-list {
+    max-width: 97vw;
+    border-radius: 12px;
+  }
+  ion-item {
+    border-radius: 10px;
+    font-size: 1.01rem;
+  }
+}
+h3,
+p.green {
+  color: #59981a;
+  font-family: "Tenor Sans", Arial, sans-serif;
+}
+
 ion-reorder-group {
   margin-bottom: 16px;
 }
@@ -800,6 +904,22 @@ ion-reorder-group {
   text-align: center;
   margin: 12px 0;
   font-size: 16px;
+  color: #59981a;
+  font-family: "Tenor Sans", Arial, sans-serif;
+}
+
+.center-wrapper {
+  max-width: 700px; /* Oder 540px, je nach Geschmack */
+  margin: 0 auto;
+  padding: 0 18px; /* für mobile etwas Abstand */
+  width: 100%;
+  box-sizing: border-box;
+}
+@media (max-width: 750px) {
+  .center-wrapper {
+    max-width: 98vw;
+    padding: 0 6px;
+  }
 }
 
 .fade-enter-active,
@@ -810,5 +930,214 @@ ion-reorder-group {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(10px);
+}
+
+ion-toolbar {
+  --background: #59981a;
+  --color: #edffcc;
+  --min-height: 54px;
+  --padding-start: 0;
+  --padding-end: 0;
+  box-shadow: none;
+  border-bottom: none;
+  font-family: "Tenor Sans", Arial, sans-serif;
+  /* display, align-items, justify-content entfernen! */
+}
+
+ion-title {
+  font-family: "Tenor Sans", Arial, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #edffcc;
+  text-align: center;
+  letter-spacing: 0.01em;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: block;
+}
+
+ion-button {
+  --background: #59981a;
+  --color: #edffcc;
+  --border-radius: 9px;
+  --box-shadow: none;
+  --border-width: 0;
+  width: 100%;
+  min-height: 54px;
+  font-size: 1.19rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0;
+  margin: 16px 0 0 0;
+  transition: transform 0.08s;
+}
+.buttons {
+  --background: #59981a !important;
+  --color: #edffcc !important;
+  --border-radius: 9px !important;
+  font-size: 1.19rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  min-height: 54px !important;
+  margin-top: 16px !important;
+  width: 100%;
+}
+
+ion-button:active {
+  transform: scale(0.97);
+}
+
+ion-button[color="medium"] {
+  --background: #91a095;
+  --color: #fff;
+}
+.estimation-buttons-wrapper {
+  max-width: 440px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.question-wrapper {
+  max-width: 440px;
+  margin: 0 auto 20px auto;
+  padding: 18px 18px 12px 18px;
+  background: #f7fbe9;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 #d3e9b633;
+  text-align: center;
+}
+.question-title {
+  color: #59981a;
+  font-family: "Tenor Sans", Arial, sans-serif;
+  font-size: 1.14rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  letter-spacing: 0.01em;
+}
+.question-text {
+  color: #385028;
+  font-size: 1.12rem;
+  font-family: "Tenor Sans", Arial, sans-serif;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+.player-order-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0 0;
+  text-align: left;
+}
+.player-order-list li.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+.player-order-list li {
+  color: #59981a;
+  font-family: "Tenor Sans", Arial, sans-serif;
+  font-size: 1.02rem;
+  margin: 0 0 4px 0;
+}
+.host-label {
+  font-size: 0.92em;
+  color: #b7d065;
+  margin-left: 5px;
+}
+
+.move-button-row {
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+  margin-bottom: 8px;
+}
+
+.icon-button {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  width: 44px;
+  height: 44px;
+  max-width: 44px;
+  max-height: 44px;
+  border-radius: 12px;
+  padding: 0;
+  font-size: 1.6rem;
+  --background: #59981a;
+  --color: #edffcc;
+  --box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.finish-button {
+  width: 200px;
+  /* ...restliche Styles */
+}
+.finish-button-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px; /* Abstand zu den Move-Buttons */
+  width: 100%; /* Breite auf 100% für flexbox zentrierung */
+}
+
+@media (max-width: 520px) {
+  .finish-button {
+    width: 100% !important;
+    min-width: 0;
+  }
+  .finish-button-wrapper {
+    padding: 0 18px;
+  }
+}
+.prepare-center-wrapper {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 0 18px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.player-list-wrapper {
+  background: #f7fbe9;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px 0 #d3e9b633;
+  margin-bottom: 18px;
+  padding: 20px 20px 10px 20px;
+  text-align: left;
+}
+.player-list-title {
+  color: #59981a;
+  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.player-order-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.player-order-list li {
+  color: #385028;
+  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-size: 1.02rem;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.host-label {
+  font-size: 0.92em;
+  color: #b7d065;
+  margin-left: 5px;
+}
+.prepare-buttons-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+  margin: 0 auto 0 auto;
+  align-items: center;
 }
 </style>

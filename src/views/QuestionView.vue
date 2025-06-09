@@ -1,25 +1,27 @@
 <template>
   <ion-page>
     <ion-header>
-      <ion-toolbar color="secondary">
+      <ion-toolbar color="primary">
         <ion-title>Frage</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content class="ion-padding">
-      <h2>{{ questionText }}</h2>
-      <ion-item>
-        <ion-label position="stacked"
-          >Deine Antwort ({{ min }}–{{ max }})</ion-label
+      <div class="question-wrapper">
+        <h2>{{ questionText }}</h2>
+        <ion-item>
+          <ion-label position="stacked"
+            >Deine Antwort ({{ min }}–{{ max }})</ion-label
+          >
+          <ion-range :min="min" :max="max" v-model="answer" />
+        </ion-item>
+        <p>
+          Deine Auswahl: <strong>{{ answer }}</strong>
+        </p>
+        <ion-button expand="block" @click="submitAnswer"
+          >Antwort absenden</ion-button
         >
-        <ion-range :min="min" :max="max" v-model="answer" />
-      </ion-item>
-      <p>
-        Deine Auswahl: <strong>{{ answer }}</strong>
-      </p>
-      <ion-button expand="block" @click="submitAnswer"
-        >Antwort absenden</ion-button
-      >
+      </div>
     </ion-content>
   </ion-page>
 </template>
@@ -164,3 +166,116 @@ async function submitAnswer() {
   
 }
 </script>
+
+<style scoped>
+ion-toolbar {
+  --background: #59981a;
+  --color: #edffcc;
+  --min-height: 54px;
+  --padding-start: 0;
+  --padding-end: 0;
+  box-shadow: none;
+  border-bottom: none;
+  font-family: "Tenor Sans", Arial, sans-serif;
+  /* display, align-items, justify-content entfernen! */
+}
+
+ion-title {
+  font-family: "Tenor Sans", Arial, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #edffcc;
+  text-align: center;
+  letter-spacing: 0.01em;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: block;
+}
+.question-wrapper {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 0 16px 32px 16px;
+  background: #f9ffe6;
+  border-radius: 18px;
+  box-shadow: 0 2px 10px 0 #d3e9b6a0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+h2 {
+  color: #59981a;
+  font-size: 1.35rem;
+  text-align: center;
+  font-family: 'Tenor Sans', Arial, sans-serif;
+  margin: 16px 0 24px 0;
+}
+
+ion-item {
+  background: transparent;
+  margin: 16px 0 10px 0;
+  border-radius: 12px;
+  --color: #385028;
+}
+
+ion-label {
+  color: #385028;
+  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-size: 1.1rem;
+}
+
+p {
+  color: #385028;
+  text-align: center;
+  font-size: 1.04rem;
+  margin: 12px 0 20px 0;
+}
+
+ion-button {
+  --background: #59981a;
+  --color: #edffcc;
+  --border-radius: 18px;
+  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+@media (max-width: 520px) {
+  .question-wrapper {
+    max-width: 95vw;
+    padding: 0 4vw 24px 4vw;
+  }
+  h2 {
+    font-size: 1.13rem;
+  }
+}
+
+
+.question-wrapper {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 0 16px 32px 16px;
+  background: #f9ffe6;
+  border-radius: 24px;
+  box-shadow: 0 2px 16px 0 #d3e9b6a0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+ion-item {
+  --background: #e4f9ce !important;
+  background: #e4f9ce !important; /* Fallback, aber Custom Property ist besser */
+  margin: 16px 0 10px 0;
+  border-radius: 18px;
+  --color: #385028;
+}
+
+ion-label {
+  color: #385028;
+  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-size: 1.1rem;
+}
+</style>
