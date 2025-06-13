@@ -1,21 +1,38 @@
-/* For information on how to create your own theme, please see:
-http://ionicframework.com/docs/theming/ */
+:root {
+  /* 🎨 Basisfarben für Light Mode */
+  --ion-color-primary: #59981a;
+  --ion-color-primary-rgb: 89, 152, 26;
+  --ion-color-primary-contrast: #edffcc;
+  --ion-color-primary-contrast-rgb: 237, 255, 204;
+  --ion-color-primary-shade: #4f8617;
+  --ion-color-primary-tint: #6aa72e;
+
+  --ion-color-medium: #91a095;
+  --ion-color-medium-contrast: #ffffff;
+
+  --ion-background-color: #edffcc;
+  --ion-text-color: #385028;
+
+  --ion-toolbar-background: #59981a;
+  --ion-toolbar-color: #edffcc;
+
+  /* Optional weitere Farben */
+  --ion-color-success: #2dd36f;
+  --ion-color-warning: #ffc409;
+  --ion-color-danger: #eb445a;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --ion-background-color: #edffcc !important;
-    --ion-toolbar-background: #59981a !important;
-    --ion-color-primary: #59981a !important;
-    --ion-color-primary-contrast: #edffcc !important;
-    --ion-color-medium: #91a095 !important;
-    /* Alle weiteren Farben */
-  }
+    /* 🌒 Farben für Dark Mode */
+    --ion-color-primary: #59981a;
+    --ion-color-primary-contrast: #edffcc;
+    --ion-color-medium: #91a095;
+    
+    --ion-background-color: #26320a;
+    --ion-text-color: #edffcc;
 
-  body,
-  ion-content,
-  ion-toolbar,
-  .lobby-header,
-  .ludonect-logo {
-    background: #edffcc !important;
-    color: #385028 !important;
+    --ion-toolbar-background: #3e660e;
+    --ion-toolbar-color: #edffcc;
   }
 }
