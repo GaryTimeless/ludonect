@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
-import LandingPageView from '../views/LandingPageView.vue';
+// import LandingPageView from '../views/LandingPageView.vue';
 import LobbyView from '../views/LobbyView.vue';
 import QuestionView from '../views/QuestionView.vue';
 import EstimationView from '../views/EstimationView.vue';
@@ -9,8 +9,8 @@ import PrepareNextRound from "@/views/PrepareNextRound.vue";
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
-    name: 'Landing',
-    component: LandingPageView
+    name: 'LobbyRoot',
+    component: LobbyView
   },
   {
     path: '/home',

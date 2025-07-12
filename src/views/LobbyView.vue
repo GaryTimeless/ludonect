@@ -1,3 +1,4 @@
+<!-- TODO Dark Mode funktioniert nicht sauber -->
 <template>
   <ion-page>
     <ion-header>

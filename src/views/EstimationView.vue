@@ -256,6 +256,12 @@
 </template>
 
 <script setup lang="ts">
+// TODO eingabe des letzten Spielers (1 spieler zum 2ten Mal wird nicht sauber synchronisiert. Zumindest nicht Online)
+// TODO Fertig Button ist in der mobile variante manchmal unnerreichbar. Generelles einfügen von space below fertig button
+// TODO Overall design needs improvement. Es sind zu viele Elemente sichtbar, die nur bedingt wichtig sind. insbesondere für neue Spieler.
+// Man sieht die reihenfolge, die erklärung, den "langweilig button" die aktuelle spieler Fläche usw. ich bin damit noch etwas unzufrieden. 
+// würde vllt reichen wenn man es anders fargbig gestlatet. 
+
 import FunButton from "@/components/FunButton.vue";
 import VueDraggable from "vuedraggable";
 import { ref, onMounted, computed, onBeforeUnmount, inject } from "vue";
@@ -538,7 +544,6 @@ const submitReorder = async () => {
     console.log("[SUBMIT REORDER] Dokument existiert nicht.");
   }
 };
-// TODO Hier weiter machen. Start game UPDATE funktioniert iwie nicht. und die onFinishedPlacement muss erstmal warten.
 // -------------
 // START GAME
 // -------------
@@ -756,9 +761,7 @@ function movePlayer(direction: number) {
     placedPlayers.value.map((p) => p.name)
   );
 }
-//TODO  alle Werte müssen in die Listener geupdated werden >.>
-// der letzte Spieler muss iwie zweimal fertig klicken
-// sonst ok
+
 async function FinishedViewCompundingFunc() {
   console.log("[FinishedView] Funktion gestartet");
 

@@ -1,3 +1,5 @@
+<!-- TODO neue LandingPage, oder die lobby page, vllt Faben -->
+
 <template>
   <ion-page>
     <ion-content>
