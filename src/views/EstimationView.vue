@@ -627,8 +627,15 @@ const onFinishPlacement = async () => {
       "[LAST TRUN 000] sortingFinished wurde aktualisiert auf true",
       sortingFinished.value
     );
+    // Save placedPlayers IDs in a temp variable before update
+    const tempPlacedIds = placedPlayers.value.map(p => p.id);
+    // Schritt 1: sortingFinished speichern
     await updateDoc(roomRef, {
       "currentRound.sortingFinished": sortingFinished.value,
+    });
+    // Schritt 2: placedPlayers aus temp erneut speichern
+    await updateDoc(roomRef, {
+      "currentRound.placedPlayers": tempPlacedIds,
     });
   }
 

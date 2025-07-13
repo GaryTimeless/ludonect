@@ -38,6 +38,12 @@ const app = createApp(App)
   .use(IonicVue)
   .use(router);
 
+// Setze Lighttheme-Hintergrundfarbe bei jedem Routenwechsel
+router.afterEach(() => {
+  document.documentElement.style.setProperty('--ion-background-color', '#edffcc');
+  document.documentElement.style.setProperty('--ion-background-color-rgb', '237, 255, 204');
+});
+
 router.isReady().then(() => {
   app.mount('#app');
 });

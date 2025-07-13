@@ -16,6 +16,7 @@
         />
         <!-- <p> play.connect.grow</p> -->
       </div>
+
       <!-- ------------- -->
       <!-- Play Buttons  -->
       <!-- ------------- -->
@@ -191,6 +192,7 @@
           </ion-button>
 
           <FunButton />
+          
         </div>
       </div>
     </ion-content>
@@ -474,6 +476,8 @@ async function startGame() {
 function onJoinCodeInput(event: any) {
   joinCode.value = event.target.value.toUpperCase();
 }
+
+
 </script>
 <style scoped>
 .lobby-header {
@@ -615,25 +619,6 @@ body {
   opacity: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ion-background-color: #edffcc !important;
-    --ion-toolbar-background: #59981a !important;
-    --ion-color-primary: #59981a !important;
-    --ion-color-primary-contrast: #edffcc !important;
-    --ion-color-medium: #91a095 !important;
-    /* Alle weiteren Farben */
-  }
-
-  body,
-  ion-content,
-  ion-toolbar,
-  .lobby-header,
-  .ludonect-logo {
-    background: #edffcc !important;
-    color: #385028 !important;
-  }
-}
 
 .how-to-play {
   background: #f9ffe6; /* etwas heller als dein Hauptgrün */
