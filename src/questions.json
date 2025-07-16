@@ -1,26 +1,308 @@
 [
-    {
-      "id": 1,
-      "text": "Wie gerne machst du Smalltalk?",
-      "min": 0,
-      "max": 100
-    },
-    {
-      "id": 2,
-      "text": "Wie viel Prozent deiner Freizeit verbringst du mit deinem Handy?",
-      "min": 0,
-      "max": 100
-    },
-    {
-      "id": 3,
-      "text": "Wie stark schätzt du deine Teamfähigkeit ein?",
-      "min": 0,
-      "max": 100
-    },
-    {
-      "id": 4,
-      "text": "Wie wichtig ist dir Pünktlichkeit?",
-      "min": 0,
-      "max": 100
-    }
-  ]
+  {
+    "id": 1,
+    "text": "Wie wichtig sind die Traditionen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 2,
+    "text": "Wie gerne sprichst du mit fremden Menschen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 3,
+    "text": "Wie gut kannst du ohne Rezept kochen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 4,
+    "text": "Wie gesund ernährst du dich normalerweise?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 5,
+    "text": "Wie sehr magst du Musicals?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 6,
+    "text": "Wie sehr magst du Karaoke?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 7,
+    "text": "Wie sehr bist du jemand, der Dinge überstürzt?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 8,
+    "text": "Wie viel Angst hast du vor dem Zahnarzt?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 9,
+    "text": "Wie ungeschickt bist du?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 10,
+    "text": "Was denkst du, wie mutig du bist?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 11,
+    "text": "Wie viel besser war alles deiner Meinung nach früher?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 12,
+    "text": "Wie sehr magst du abstrakte Kunst?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 13,
+    "text": "Wie sehr magst du Umarmungen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 14,
+    "text": "Wie gerne würdest du in eine Geheimgesellschaft eintreten?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 15,
+    "text": "Wie wählerisch bist du beim Essen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 16,
+    "text": "Wie ehrgeizig bist du im Berufsleben?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 17,
+    "text": "Wie gerne würdest du auf der ersten Marskolonie leben?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 18,
+    "text": "Wie gerne gibst du Partys bei dir zu Hause?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 19,
+    "text": "Wie gerne kochst du?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 20,
+    "text": "Wie gerne bist du im Wasser?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 21,
+    "text": "Wie gerne trainierst du deine Fitness?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 22,
+    "text": "Wie sehr kümmert es dich, was andere Menschen von dir denken?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 23,
+    "text": "Wie gut wärst du darin, eine Zombie Apokalypse zu überleben?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 24,
+    "text": "Wie sehr magst du Tiere?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 25,
+    "text": "Wie gerne tanzt du?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 26,
+    "text": "Wie sehr magst du Disney Filme?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 27,
+    "text": "Wie sehr musst du immer das letzte Wort haben?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 28,
+    "text": "Wie sehr magst du Kostümpartys?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 29,
+    "text": "Wie viel Fantasie hast du?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 30,
+    "text": "Wie offen bist du für neue Erfahrungen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 31,
+    "text": "Wie sorgfältig trennst du deinen Müll?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 32,
+    "text": "Wie sehr magst du Horrorfilme?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 33,
+    "text": "Wie schwer fällt es dir etwas wegzuwerfen, weil man es ja vielleicht noch brauchen kann?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 34,
+    "text": "Wie gerne würdest du Geheimagent werden wollen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 35,
+    "text": "Wie sehr beeinflusst das Wetter deine Stimmung?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 36,
+    "text": "Wie sehr bist du jemand, der Dinge kurz vor knapp in der Minute erledigt?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 37,
+    "text": "Wie viel läge dir daran, berühmt zu sein?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 38,
+    "text": "Wie gerne feierst du deinen Geburtstag?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 39,
+    "text": "Wie groß ist dein Interesse an einer Reality Show teilzunehmen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 40,
+    "text": "Wie wohl fühlst du dich, wenn du vor größerem Publikum sprichst?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 41,
+    "text": "Wie gerne spielst du Computerspiele?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 42,
+    "text": "Wie sehr legt die Gartenarbeit?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 43,
+    "text": "Wie sehr fährst du auf die aktuellen neuesten technischen Geräte ab?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 44,
+    "text": "Wie gerne führst du Telefongespräche?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 45,
+    "text": "Wie wichtig es dir essen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 46,
+    "text": "Wie gut ist dein Gedächtnis?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 47,
+    "text": "Wie gut kannst du mit alten Menschen umgehen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 48,
+    "text": "Wie sehr bist du bereit, dein Essen mit anderen zu teilen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 49,
+    "text": "Wie gerne würdest du einmal Fallschirmspringen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 50,
+    "text": "Wie gut kannst du mit Kindern umgehen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 51,
+    "text": "Wie gerne gehst du auf Konzerte oder Musik Festivals?",
+    "min": 0,
+    "max": 100
+  }
+]
