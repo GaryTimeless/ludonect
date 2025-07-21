@@ -329,44 +329,68 @@ async function createRoom() {
   console.log("[createRoom] Raum erstellt mit Code:", code);
 }
 
-async function joinRoom() {
+sync function joinRoom() {
   if (!playerName.value.trim()) {
     alert("Bitte gib einen Namen ein");
     return;
   }
-  const code = joinCode.value.toUpperCase();
-  roomCode.value = code;
 
-  const player: Player = {
+  const code = roomCode.value.toUpperCase();
+
+  // 1. Spielsession abrufen
+  const { data: existingSession, error } = await supabase
+    .from("game_sessions")
+    .select("*")
+    .eq("id", code)
+    .single();
+
+  if (error || !existingSession) {
+    alert("Der Raum existiert nicht");
+    return;
+  }
+
+  const newPlayer: Player = {
     id: generatePlayerId(),
-    name: playerName.value || "Du",
+    name: playerName.value,
     isHost: false,
   };
 
-  setStorage("playerId", player.id);
+  // 2. Spielerliste aktualisieren
+  const updatedPlayers = [
+    ...(existingSession.players || []),
+    {
+      ...newPlayer,
+      joinedAt: new Date(),
+    },
+  ];
+
+  const { error: updateError } = await supabase
+    .from("game_sessions")
+    .update({
+      players: updatedPlayers,
+      updated_at: new Date(),
+    })
+    .eq("id", code);
+
+  if (updateError) {
+    alert("Fehler beim Beitreten");
+    return;
+  }
+
+  // 3. Lokale Speicherung & Listener aktivieren
+  setStorage("playerId", newPlayer.id);
+  currentPlayerId.value = newPlayer.id;
+
   if (!getStorage("playerName")) {
-    setStorage("playerName", player.name);
+    setStorage("playerName", newPlayer.name);
+    localPlayerName.value = newPlayer.name;
   }
 
-  const sessionRef = doc(db, "gameSessions", code);
-  const roomSnap = await getDoc(sessionRef);
-
-  if (roomSnap.exists()) {
-    await updateDoc(sessionRef, {
-      updatedAt: Timestamp.now(),
-      players: arrayUnion({
-        ...player,
-        joinedAt: Timestamp.now(),
-      }),
-    });
-    console.log("[joinRoom] Beigetreten zu Raum:", code);
-  } else {
-    alert("Raum existiert nicht!");
-    console.warn("[joinRoom] Raum existiert nicht:", code);
-  }
+  setStorage("isHost", "false");
 
   listenToRoom(code);
   listenToGame(code);
+  console.log("[joinRoom] Spieler ist dem Raum beigetreten:", newPlayer);
 }
 
 function listenToRoom(code: string) {
