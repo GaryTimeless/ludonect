@@ -219,15 +219,7 @@ import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import questions from "@/questions.json";
 import { db } from "@/firebaseConfig";
-import {
-  doc,
-  setDoc,
-  updateDoc,
-  arrayUnion,
-  getDoc,
-  onSnapshot,
-  Timestamp,
-} from "firebase/firestore";
+import { supabase } from "@/supabaseClient";
 import FunButton from "@/components/FunButton.vue";
 import DBDelete from "@/components/DBDelete.vue";
 import LocalStorageDelete from "@/components/localStorageDelete.vue";
@@ -308,21 +300,29 @@ async function createRoom() {
     localPlayerName.value = player.name;
   }
 
-  const sessionRef = doc(db, "gameSessions", code);
-  await setDoc(sessionRef, {
-    createdAt: Timestamp.now(),
-    updatedAt: Timestamp.now(),
-    phaseUpdatedAt: Timestamp.now(),
-    hostId: player.id,
-    state: "waiting",
-    usedQuestionIds: [],
-    players: [
-      {
-        ...player,
-        joinedAt: Timestamp.now(),
-      },
-    ],
-  });
+  const { error } = await supabase.from("game_sessions").insert([
+    {
+      id: code,
+      created_at: new Date(),
+      updated_at: new Date(),
+      phase_updated_at: new Date(),
+      host_id: player.id,
+      state: "waiting",
+      used_question_ids: [],
+      players: [
+        {
+          ...player,
+          joinedAt: new Date(),
+        },
+      ],
+    },
+  ]);
+
+  if (error) {
+    console.error("[createRoom] Fehler beim Erstellen:", error);
+    alert("Fehler beim Erstellen des Raums");
+    return;
+  }
 
   listenToRoom(code);
   listenToGame(code);
