@@ -394,41 +394,55 @@ sync function joinRoom() {
 }
 
 function listenToRoom(code: string) {
-  const sessionRef = doc(db, "gameSessions", code);
-  onSnapshot(sessionRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const data = docSnap.data();
-      playersInRoom.value = data.players || [];
-      console.log("[listenToRoom] Spieler im Raum:", playersInRoom.value);
-    }
-  });
+  supabase
+    .channel(`room-${code}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${code}` },
+      (payload) => {
+        const data = payload.new;
+        if (data && data.players) {
+          playersInRoom.value = data.players;
+          console.log("[listenToRoom] Spieler im Raum:", playersInRoom.value);
+        }
+      }
+    )
+    .subscribe();
 }
 
 function listenToGame(code: string) {
-  // State of the session from the previous snapshot
   let previousState: string | null = null;
-  const sessionRef = doc(db, "gameSessions", code);
-  onSnapshot(sessionRef, (snap) => {
-    if (!snap.exists()) {
-      console.warn("[listenToGame] Session existiert nicht!");
-      showStartGameButton.value = false;
-      return;
-    }
-    const data = snap.data();
-    const playerId = currentPlayerId.value;
-    const amIHost = data.hostId === playerId;
-    // Zeige Start-Button nur in Lobby (waiting) bei Host mit >=2 Spielern
-    showStartGameButton.value =
-      amIHost &&
-      Array.isArray(data.players) &&
-      data.players.length >= 2 &&
-      data.state === "waiting";
-    // Navigiere zur Frage nur beim Übergang auf 'running'
-    if (previousState !== "running" && data.state === "running") {
-      router.push(`/question/${code}/${data.currentRound.questionId}`);
-    }
-    previousState = data.state;
-  });
+
+  supabase
+    .channel(`game-${code}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${code}` },
+      (payload) => {
+        const data = payload.new;
+        if (!data) {
+          console.warn("[listenToGame] Session nicht gefunden!");
+          showStartGameButton.value = false;
+          return;
+        }
+
+        const playerId = currentPlayerId.value;
+        const amIHost = data.host_id === playerId;
+
+        showStartGameButton.value =
+          amIHost &&
+          Array.isArray(data.players) &&
+          data.players.length >= 2 &&
+          data.state === "waiting";
+
+        if (previousState !== "running" && data.state === "running") {
+          router.push(`/question/${code}/${data.currentRound?.questionId}`);
+        }
+
+        previousState = data.state;
+      }
+    )
+    .subscribe();
 }
 
 function generateRoomCode(): string {
