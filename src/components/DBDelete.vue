@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import { getFirestore, collection, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { supabase } from "@/supabaseClient";
 import { IonButton } from '@ionic/vue';
 
 async function resetDatabase() {
@@ -24,23 +24,31 @@ async function resetDatabase() {
     return;
   }
 
-  const db = getFirestore();
-
   try {
-    const gamesSnapshot = await getDocs(collection(db, 'gameSessions'));
-    for (const docSnap of gamesSnapshot.docs) {
-      await deleteDoc(doc(db, 'gameSessions', docSnap.id));
+    console.log('🗑️ [resetDatabase] Starte Datenbank-Reset...');
+    
+    // Lösche alle Einträge aus game_session Tabelle
+    const { error: deleteError } = await supabase
+      .from('game_session')
+      .delete()
+      .neq('id', ''); // Lösche alle Einträge (id ist nie leer)
+    
+    if (deleteError) {
+      console.error('🗑️ [resetDatabase] Fehler beim Löschen:', deleteError);
+      alert('Fehler beim Löschen der Daten. Details in der Konsole.');
+      return;
     }
 
-    const roomsSnapshot = await getDocs(collection(db, 'rooms'));
-    for (const docSnap of roomsSnapshot.docs) {
-      await deleteDoc(doc(db, 'rooms', docSnap.id));
-    }
-
+    console.log('🗑️ [resetDatabase] Alle Spiele und Räume erfolgreich gelöscht.');
     alert('Alle Spiele und Räume wurden erfolgreich gelöscht.');
-    console.log('Reset der Datenbank abgeschlossen.');
+    
+    // Optional: Seite neu laden
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+    
   } catch (error) {
-    console.error('Fehler beim Löschen:', error);
+    console.error('🗑️ [resetDatabase] Fehler beim Löschen:', error);
     alert('Fehler beim Löschen der Daten. Details in der Konsole.');
   }
 }
