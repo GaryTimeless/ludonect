@@ -284,6 +284,9 @@ const currentPlayerId = ref(getStorage("playerId") || "");
 // Polling für Spieler-Updates
 let pollingInterval: NodeJS.Timeout | null = null;
 
+// Automatischer Realtime-Listener
+let realtimeChannel: any = null;
+
 // Local display name of this client
 const localPlayerName = ref(getStorage("playerName") || "");
 // True if the current client is the host
@@ -342,21 +345,19 @@ async function createRoom() {
     return;
   }
 
-  listenToRoom(code);
-  listenToGame(code);
+  startAutomaticListener(code);
   console.log("[createRoom] Raum erstellt mit Code:", code);
 }
 
 async function joinRoom() {
   console.log("[joinRoom] Funktion gestartet");
   console.log("[joinRoom] playerName:", playerName.value);
-  console.log("[joinRoom] roomCode:", roomCode.value);
   
   if (!playerName.value.trim()) {
     alert("Bitte gib einen Namen ein");
     return;
   }
-
+  
   const code = joinCode.value.toUpperCase();
   console.log("[joinRoom] Normalisierter Code:", code);
 
@@ -385,7 +386,7 @@ async function joinRoom() {
   };
   console.log("[joinRoom] Neuer Spieler erstellt:", newPlayer);
 
-  // 2. Spielerliste aktualisieren
+  // 2. Spielerliste aktualisieren lokal
   const updatedPlayers = [
     ...(existingSession.players || []),
     {
@@ -396,6 +397,7 @@ async function joinRoom() {
   console.log("[joinRoom] Aktualisierte Spielerliste:", updatedPlayers);
 
   console.log("[joinRoom] Versuche Spielerliste zu aktualisieren...");
+  console.log("[joinRoom] Sende Update an Supabase...");
   const { error: updateError } = await supabase
     .from("game_session")
     .update({
@@ -411,6 +413,8 @@ async function joinRoom() {
     alert("Fehler beim Beitreten");
     return;
   }
+  
+  console.log("[joinRoom] ✅ Update erfolgreich! Warte auf Realtime-Event...");
 
   // 3. Lokale Speicherung & Listener aktivieren
   setStorage("playerId", newPlayer.id);
@@ -423,15 +427,24 @@ async function joinRoom() {
 
   setStorage("isHost", "false");
 
-  listenToRoom(code);
-  listenToGame(code);
+  startAutomaticListener(code);
   
-  // Manuelle UI-Aktualisierung
-  playersInRoom.value = updatedPlayers;
+  // Setze roomCode für UI
   roomCode.value = code;
   
   console.log("[joinRoom] Spieler ist dem Raum beigetreten:", newPlayer);
-  console.log("[joinRoom] UI aktualisiert - Spielerliste:", playersInRoom.value);
+  console.log("[joinRoom] Warte auf Realtime-Update...");
+  
+  // Timeout: Prüfe nach 3 Sekunden, ob Realtime funktioniert
+  setTimeout(() => {
+    console.log("[joinRoom] ⏰ 3 Sekunden vergangen - Realtime-Event empfangen?");
+    console.log("[joinRoom] Aktuelle Spielerliste:", playersInRoom.value);
+    
+    if (playersInRoom.value.length < 2) {
+      console.warn("[joinRoom] ⚠️ Realtime funktioniert nicht - manuelle Aktualisierung");
+      playersInRoom.value = updatedPlayers;
+    }
+  }, 3000);
 }
 
 function listenToRoom(code: string) {
@@ -446,13 +459,34 @@ function listenToRoom(code: string) {
       'postgres_changes',
       { event: '*', schema: 'public', table: 'game_session', filter: `id=eq.${code}` },
       (payload) => {
-        console.log("[listenToRoom] Realtime Event empfangen:", payload);
+        console.log("🎯 [listenToRoom] DB AKTUALISIERT! Event empfangen:", payload);
+        console.log("🎯 [listenToRoom] Event Type:", payload.eventType);
+        console.log("🎯 [listenToRoom] Event Schema:", payload.schema);
+        console.log("🎯 [listenToRoom] Event Table:", payload.table);
+        
         const data = payload.new as GameSession | null;
         console.log("[listenToRoom] Payload data:", data);
+        
         if (data && data.players) {
           console.log("[listenToRoom] Alte Spielerliste:", playersInRoom.value);
+          console.log("[listenToRoom] Neue Spielerliste aus DB:", data.players);
+          
+          // Aktualisiere die lokale Spielerliste
           playersInRoom.value = data.players;
-          console.log("[listenToRoom] Neue Spielerliste:", playersInRoom.value);
+          
+          console.log("[listenToRoom] Spielerliste aktualisiert:", playersInRoom.value);
+          
+          // Update Start-Button Status
+          const playerId = currentPlayerId.value;
+          const amIHost = data.players.some((p: any) => p.id === playerId && p.isHost);
+          
+          showStartGameButton.value =
+            amIHost &&
+            Array.isArray(data.players) &&
+            data.players.length >= 2 &&
+            data.state === "waiting";
+            
+          console.log("[listenToRoom] Start-Button Status:", showStartGameButton.value);
         } else {
           console.warn("[listenToRoom] Keine gültigen Daten:", data);
         }
@@ -491,7 +525,7 @@ function listenToGame(code: string) {
       'postgres_changes',
       { event: '*', schema: 'public', table: 'game_session', filter: `id=eq.${code}` },
       (payload) => {
-        console.log("[listenToGame] Realtime Event empfangen:", payload);
+        console.log("🎯 [listenToGame] DB AKTUALISIERT! Event empfangen:", payload);
         const data = payload.new as GameSession | null;
         if (!data) {
           console.warn("[listenToGame] Session nicht gefunden!");
@@ -575,6 +609,81 @@ function stopPolling() {
     clearInterval(pollingInterval);
     pollingInterval = null;
     console.log("[stopPolling] Polling gestoppt");
+  }
+}
+
+// Automatischer Listener mit postgres_changes (wie Firebase onSnapshot)
+function startAutomaticListener(code: string) {
+  console.log("🔄 [startAutomaticListener] Starte postgres_changes Listener für Raum:", code);
+  
+  // Stoppe vorherige Listener
+  stopAutomaticListener();
+  
+  // Erstelle postgres_changes Channel
+  realtimeChannel = supabase
+    .channel(`room-${code}-${Date.now()}`) // Eindeutiger Channel-Name
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'game_session',
+        filter: `id=eq.${code}`
+      },
+      (payload) => {
+        console.log("🔄 [postgres_changes] UPDATE ERKANNT!");
+        console.log("🔄 [postgres_changes] Payload:", payload);
+        
+        const data = payload.new as GameSession;
+        
+        if (data && data.players) {
+          console.log("🔄 [postgres_changes] Neue Spielerliste:", data.players);
+          playersInRoom.value = data.players;
+          
+          // Update UI
+          const playerId = currentPlayerId.value;
+          const amIHost = data.players.some((p: any) => p.id === playerId && p.isHost);
+          
+          showStartGameButton.value =
+            amIHost &&
+            Array.isArray(data.players) &&
+            data.players.length >= 2 &&
+            data.state === "waiting";
+            
+          console.log("🔄 [postgres_changes] UI aktualisiert!");
+        }
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'game_session',
+        filter: `id=eq.${code}`
+      },
+      (payload) => {
+        console.log("🔄 [postgres_changes] INSERT ERKANNT!");
+      }
+    )
+    .subscribe((status) => {
+      console.log("🔄 [postgres_changes] Subscription Status:", status);
+      
+      if (status === 'SUBSCRIBED') {
+        console.log("🔄 [postgres_changes] ✅ Erfolgreich verbunden!");
+      } else {
+        console.warn("🔄 [postgres_changes] ❌ Verbindung fehlgeschlagen:", status);
+        // Fallback zu Polling
+        startPolling(code);
+      }
+    });
+}
+
+function stopAutomaticListener() {
+  if (realtimeChannel) {
+    supabase.removeChannel(realtimeChannel);
+    realtimeChannel = null;
+    console.log("🔄 [stopAutomaticListener] Automatischer Listener gestoppt");
   }
 }
 
