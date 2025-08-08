@@ -191,10 +191,7 @@
             Spiel starten
           </ion-button>
 
-          <!-- Test Realtime Button -->
-          <ion-button expand="block" @click="testRealtime" color="warning">
-            🧪 Test Realtime
-          </ion-button>
+
 
           <FunButton />
           
@@ -280,9 +277,6 @@ const mode = ref<"start" | "create" | "join">("start");
 const showStartGameButton = ref(false);
 const playersInRoom = ref<Player[]>([]);
 const currentPlayerId = ref(getStorage("playerId") || "");
-
-// Polling für Spieler-Updates
-let pollingInterval: NodeJS.Timeout | null = null;
 
 // Automatischer Realtime-Listener
 let realtimeChannel: any = null;
@@ -447,110 +441,9 @@ async function joinRoom() {
   }, 3000);
 }
 
-function listenToRoom(code: string) {
-  console.log("[listenToRoom] Listener wird gestartet für Raum:", code);
-  
-  // Stoppe vorheriges Polling
-  stopPolling();
-  
-  supabase
-    .channel(`room-${code}`)
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'game_session', filter: `id=eq.${code}` },
-      (payload) => {
-        console.log("🎯 [listenToRoom] DB AKTUALISIERT! Event empfangen:", payload);
-        console.log("🎯 [listenToRoom] Event Type:", payload.eventType);
-        console.log("🎯 [listenToRoom] Event Schema:", payload.schema);
-        console.log("🎯 [listenToRoom] Event Table:", payload.table);
-        
-        const data = payload.new as GameSession | null;
-        console.log("[listenToRoom] Payload data:", data);
-        
-        if (data && data.players) {
-          console.log("[listenToRoom] Alte Spielerliste:", playersInRoom.value);
-          console.log("[listenToRoom] Neue Spielerliste aus DB:", data.players);
-          
-          // Aktualisiere die lokale Spielerliste
-          playersInRoom.value = data.players;
-          
-          console.log("[listenToRoom] Spielerliste aktualisiert:", playersInRoom.value);
-          
-          // Update Start-Button Status
-          const playerId = currentPlayerId.value;
-          const amIHost = data.players.some((p: any) => p.id === playerId && p.isHost);
-          
-          showStartGameButton.value =
-            amIHost &&
-            Array.isArray(data.players) &&
-            data.players.length >= 2 &&
-            data.state === "waiting";
-            
-          console.log("[listenToRoom] Start-Button Status:", showStartGameButton.value);
-        } else {
-          console.warn("[listenToRoom] Keine gültigen Daten:", data);
-        }
-      }
-    )
-    .subscribe((status) => {
-      console.log("[listenToRoom] Subscription Status:", status);
-      
-      // Fallback: Wenn Realtime nicht funktioniert, starte Polling
-      if (status === 'SUBSCRIBED') {
-        console.log("[listenToRoom] Realtime erfolgreich verbunden");
-        
-        // Test: Sende ein Test-Event
-        setTimeout(() => {
-          console.log("[listenToRoom] Teste Realtime-Verbindung...");
-          supabase
-            .from("game_session")
-            .update({ updated_at: new Date() })
-            .eq("id", code);
-        }, 1000);
-        
-      } else {
-        console.warn("[listenToRoom] Realtime nicht verfügbar, starte Polling");
-        startPolling(code);
-      }
-    });
-}
 
-function listenToGame(code: string) {
-  console.log("[listenToGame] Listener wird gestartet für Raum:", code);
-  let previousState: string | null = null;
 
-  supabase
-    .channel(`game-${code}`)
-    .on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'game_session', filter: `id=eq.${code}` },
-      (payload) => {
-        console.log("🎯 [listenToGame] DB AKTUALISIERT! Event empfangen:", payload);
-        const data = payload.new as GameSession | null;
-        if (!data) {
-          console.warn("[listenToGame] Session nicht gefunden!");
-          showStartGameButton.value = false;
-          return;
-        }
 
-        const playerId = currentPlayerId.value;
-        const amIHost = data.host_id === playerId;
-
-        showStartGameButton.value =
-          amIHost &&
-          Array.isArray(data.players) &&
-          data.players.length >= 2 &&
-          data.state === "waiting";
-
-        if (previousState !== "running" && data.state === "running") {
-          router.push(`/question/${code}/${data.currentRound?.questionId}`);
-        }
-
-        previousState = data.state;
-      }
-    )
-    .subscribe();
-}
 
 function generateRoomCode(): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -559,58 +452,7 @@ function generateRoomCode(): string {
   ).join("");
 }
 
-// Polling-Funktion für Spieler-Updates
-function startPolling(code: string) {
-  console.log("[startPolling] Polling gestartet für Raum:", code);
-  
-  // Stoppe vorheriges Polling
-  if (pollingInterval) {
-    clearInterval(pollingInterval);
-  }
-  
-  pollingInterval = setInterval(async () => {
-    try {
-      const { data, error } = await supabase
-        .from("game_session")
-        .select("players, state")
-        .eq("id", code)
-        .single();
-      
-      if (error) {
-        console.warn("[polling] Fehler beim Abrufen:", error);
-        return;
-      }
-      
-      if (data?.players) {
-        console.log("[polling] Neue Spielerliste gefunden:", data.players);
-        playersInRoom.value = data.players;
-      }
-      
-      // Update Start-Button Status
-      if (data?.state) {
-        const playerId = currentPlayerId.value;
-        const amIHost = data.players?.some((p: any) => p.id === playerId && p.isHost);
-        
-        showStartGameButton.value =
-          amIHost &&
-          Array.isArray(data.players) &&
-          data.players.length >= 2 &&
-          data.state === "waiting";
-      }
-      
-    } catch (err) {
-      console.error("[polling] Fehler:", err);
-    }
-  }, 2000); // Alle 2 Sekunden
-}
 
-function stopPolling() {
-  if (pollingInterval) {
-    clearInterval(pollingInterval);
-    pollingInterval = null;
-    console.log("[stopPolling] Polling gestoppt");
-  }
-}
 
 // Automatischer Listener mit postgres_changes (wie Firebase onSnapshot)
 function startAutomaticListener(code: string) {
@@ -673,8 +515,6 @@ function startAutomaticListener(code: string) {
         console.log("🔄 [postgres_changes] ✅ Erfolgreich verbunden!");
       } else {
         console.warn("🔄 [postgres_changes] ❌ Verbindung fehlgeschlagen:", status);
-        // Fallback zu Polling
-        startPolling(code);
       }
     });
 }
@@ -687,49 +527,7 @@ function stopAutomaticListener() {
   }
 }
 
-// Test Realtime Funktion
-async function testRealtime() {
-  console.log("🧪 [testRealtime] Button geklickt!");
-  console.log("🧪 [testRealtime] Aktueller roomCode:", roomCode.value);
-  
-  if (!roomCode.value) {
-    console.warn("[testRealtime] Kein Raumcode verfügbar");
-    return;
-  }
-  
-  // Erst prüfen, ob der Raum existiert
-  console.log("🧪 [testRealtime] Prüfe ob Raum existiert...");
-  const { data: existingRoom, error: checkError } = await supabase
-    .from("game_session")
-    .select("id")
-    .eq("id", roomCode.value)
-    .single();
-  
-  console.log("🧪 [testRealtime] Raum-Check:", { existingRoom, checkError });
-  
-  if (checkError || !existingRoom) {
-    console.error("[testRealtime] Raum nicht gefunden:", roomCode.value);
-    return;
-  }
-  
-  try {
-    // Sende ein Test-Update an die Datenbank (nur existierende Spalten)
-    const { error } = await supabase
-      .from("game_session")
-      .update({ 
-        updated_at: new Date()
-      })
-      .eq("id", roomCode.value);
-    
-    if (error) {
-      console.error("[testRealtime] Fehler beim Update:", error);
-    } else {
-      console.log("🧪 [testRealtime] Test-Update gesendet!");
-    }
-  } catch (err) {
-    console.error("[testRealtime] Fehler:", err);
-  }
-}
+
 
 async function startGame() {
   const code = roomCode.value;
