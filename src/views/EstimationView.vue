@@ -280,13 +280,7 @@ import {
   IonLabel,
   IonList,
 } from "@ionic/vue";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc,
-  onSnapshot,
-} from "firebase/firestore";
+import { supabase } from "@/supabaseClient";
 
 interface Player {
   id: string;
@@ -302,7 +296,7 @@ interface FinishedViewCompunding {
 }
 const router = useRouter();
 
-const db = getFirestore();
+// Supabase client bereits importiert
 const route = useRoute();
 // const router = useRouter();
 // const questionId = Number(route.params.questionId);
@@ -360,25 +354,32 @@ onMounted(async () => {
   // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
   // console.log("[LISTENER] Prüfe VOR aufbau onMounted :", input);
   try {
-    // STEP 2: Firestore-Dokument für die Spielsession holen
-    const roomRef = doc(db, "gameSessions", gameId.value);
-    const docSnap = await getDoc(roomRef);
+    // STEP 2: Supabase-Dokument für die Spielsession holen
+    const { data: sessionData, error } = await supabase
+      .from("game_session")
+      .select("*")
+      .eq("id", gameId.value)
+      .single();
 
-    if (docSnap.exists()) {
+    if (error) {
+      console.error("Fehler beim Laden der Session:", error);
+      return;
+    }
+
+    if (sessionData) {
       // STEP 3: Daten aus dem Dokument extrahieren
-      const data = docSnap.data();
-      const temp = data.players;
-      currentRound.value = data.currentRound;
+      const temp = sessionData.players;
+      currentRound.value = sessionData.current_round;
       console.log(" [onMounted] das sind data.players daten: ", temp);
 
       // STEP 4: Spieler lokal setzen
-      players.value = data.players || [];
+      players.value = sessionData.players || [];
       // STEP 5: Antworten auslesen und playerCount ermitteln
-      const answersMap = data.currentRound?.answers || {};
+      const answersMap = sessionData.current_round?.answers || {};
       playerCount.value = Object.keys(answersMap).length;
       // STEP 6: Aktiven Spieler anhand der ID setzen
       activePlayer.value =
-        players.value.find((p) => p.id === data.currentRound?.activePlayerId) ||
+        players.value.find((p) => p.id === sessionData.current_round?.activePlayerId) ||
         null;
       console.log(
         "[onMounted] activePlayer wurde aktualisiert",
@@ -386,13 +387,13 @@ onMounted(async () => {
       );
 
       // STEP 7: Bereits gesetzte Spieler (IDs → Objekte) in placedPlayers übernehmen
-      const placedPlayerIds = data.currentRound?.placedPlayers || [];
+      const placedPlayerIds = sessionData.current_round?.placedPlayers || [];
       placedPlayers.value = players.value.filter((p) =>
         placedPlayerIds.includes(p.id)
       );
       // STEP 8: Statusflags setzen
-      sortingStarted.value = data.sortingStarted || false;
-      sortingFinished.value = data.sortingFinished || false;
+      sortingStarted.value = sessionData.current_round?.sortingStarted || false;
+      sortingFinished.value = sessionData.current_round?.sortingFinished || false;
     } else {
       console.error("Room-Dokument nicht gefunden.");
     }
@@ -401,114 +402,119 @@ onMounted(async () => {
     // Listeners
     //------------
 
-    // Hinzufügen des Listeners, um Änderungen in Echtzeit zu verfolgen
-    unsubscribeFn = onSnapshot(roomRef, async (snapshot) => {
-      // 🔁 Dieser Listener wird bei jedem DB-Update getriggert
+    // Hinzufügen des Supabase Listeners, um Änderungen in Echtzeit zu verfolgen
+    const realtimeChannel = supabase
+      .channel(`estimation-${gameId.value}-${Date.now()}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'game_session',
+          filter: `id=eq.${gameId.value}`
+        },
+        async (payload) => {
+          console.log("[LISTENER START] postgres_changes wurde getriggert");
+          
+          const data = payload.new as any;
+          if (!data) return;
 
-      /*
-       * Block: Check ob Daten da sind
-       * Wenn nicht, wird kein Update gemacht
-       */
-
-      console.log("[LISTENER START] onSnapshot wurde getriggert");
-
-      // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-      // console.log("[LISTENER] Prüfe VOR snapshot :", input);
-      if (snapshot.exists()) {
-        const data = snapshot.data() as any;
-
-        // auslöser ist die "Reihenfolge Speichern"-Button. + das Sicherstelle, dass die player in der Liste angezeigt werden.
-
-        // 1. Update sortingStarted from currentRound
-        // Der Host hat "spiel Starten" geklicked.
-        sortingStarted.value = data.currentRound?.sortingStarted || false;
-        console.log(
-          "[LISTENER 1]sortingStarted wurde aktualisiert",
-          sortingStarted.value
-        );
-
-        // 2. wenn eine EstimationOrder bereits existiert, wird sie hier lokal gespeichert.
-        const orderIds = data.currentRound?.estimationOrder || [];
-        console.log("[LISTENER 2] orderIds from DB:", orderIds);
-        // 2.1 aus den IDs werden playerObjects gemacht
-        order.value = orderIds
-          .map((id: string) => players.value.find((p) => p.id === id))
-          .filter((p: any): p is Player => !!p);
-        console.log(
-          " [LISTENER 3] order.value wurde aktualisiert",
-          order.value
-        );
-        //3. wenn es bereits Spieler in placedPlayers gibt, werden sie hier lokal gespeichert
-        //3.1 aus den IDs werden playerObjects gemacht
-        placedPlayers.value = (data.currentRound?.placedPlayers || [])
-          .map((id: string) => players.value.find((p) => p.id === id))
-          .filter((p: any): p is Player => !!p);
-        console.log(
-          "[LISTENER 4] placedPlayers wurde aktualisiert",
-          placedPlayers.value
-        );
-        // 4. wenn es einen activePlayer gibt, dann wird er hier lokal gespeichert.
-        activePlayer.value =
-          players.value.find(
-            (p) => p.id === data.currentRound?.activePlayerId
-          ) || null;
-        console.log(
-          "[LISTENER 5] activePlayer wurde aktualisiert",
-          activePlayer.value
-        );
-
-        //5. playerDaten aktualisieren - wegen der Reihenfolge (answer: true)
-        players.value = data.players;
-        console.log("[LISTENER 6] players wurde aktualisiert", players.value);
-        // aktualisiere PlayerCount let
-        const answersMap = data.currentRound?.answers || {};
-        playerCount.value = Object.keys(answersMap).length;
-        console.log(
-          "[LISTENER 7] playerCount wurde aktualisiert",
-          playerCount.value
-        );
-        // 6. sorting finished aus der DB
-        sortingFinished.value = data.currentRound?.sortingFinished || false;
-        console.log(
-          "[LISTENER 8] sortingFinished wurde aktualisiert",
-          sortingFinished.value
-        );
-        console.log(
-          "[LISTENER 9] secondTurnStartPlayer wurde aktualisiert",
-          secondTurnStartPlayer.value
-        );
-        if (sortingFinished.value) {
-          await FinishedViewCompundingFunc();
+          // 1. Update sortingStarted from currentRound
+          // Der Host hat "spiel Starten" geklicked.
+          sortingStarted.value = data.current_round?.sortingStarted || false;
           console.log(
-            " [FLAST TURN 999] FinishedViewCompundingFunc() triggerd"
+            "[LISTENER 1]sortingStarted wurde aktualisiert",
+            sortingStarted.value
           );
-        }
-        // 7. secondTurnStartPlayer aus der DB
-        secondTurnStartPlayer.value =
-          data.currentRound?.secondTurnStartPlayer || false;
-        console.log(
-          "[LISTENER 10] secondTurnStartPlayer wurde aktualisiert",
-          secondTurnStartPlayer.value
-        );
 
-        PrepNextRound.value = data.currentRound?.PrepNextRound || false;
-        if (PrepNextRound.value) {
+          // 2. wenn eine EstimationOrder bereits existiert, wird sie hier lokal gespeichert.
+          const orderIds = data.current_round?.estimationOrder || [];
+          console.log("[LISTENER 2] orderIds from DB:", orderIds);
+          // 2.1 aus den IDs werden playerObjects gemacht
+          order.value = orderIds
+            .map((id: string) => players.value.find((p) => p.id === id))
+            .filter((p: any): p is Player => !!p);
           console.log(
-            "[LISTENER 11] PrepNextRound wurde aktualisiert",
-            PrepNextRound.value
+            " [LISTENER 3] order.value wurde aktualisiert",
+            order.value
           );
-          if (!isHost.value) {
-            unsubscribeFn?.();
+          //3. wenn es bereits Spieler in placedPlayers gibt, werden sie hier lokal gespeichert
+          //3.1 aus den IDs werden playerObjects gemacht
+          placedPlayers.value = (data.current_round?.placedPlayers || [])
+            .map((id: string) => players.value.find((p) => p.id === id))
+            .filter((p: any): p is Player => !!p);
+          console.log(
+            "[LISTENER 4] placedPlayers wurde aktualisiert",
+            placedPlayers.value
+          );
+          // 4. wenn es einen activePlayer gibt, dann wird er hier lokal gespeichert.
+          activePlayer.value =
+            players.value.find(
+              (p) => p.id === data.current_round?.activePlayerId
+            ) || null;
+          console.log(
+            "[LISTENER 5] activePlayer wurde aktualisiert",
+            activePlayer.value
+          );
+
+          //5. playerDaten aktualisieren - wegen der Reihenfolge (answer: true)
+          players.value = data.players;
+          console.log("[LISTENER 6] players wurde aktualisiert", players.value);
+          // aktualisiere PlayerCount let
+          const answersMap = data.current_round?.answers || {};
+          playerCount.value = Object.keys(answersMap).length;
+          console.log(
+            "[LISTENER 7] playerCount wurde aktualisiert",
+            playerCount.value
+          );
+          // 6. sorting finished aus der DB
+          sortingFinished.value = data.current_round?.sortingFinished || false;
+          console.log(
+            "[LISTENER 8] sortingFinished wurde aktualisiert",
+            sortingFinished.value
+          );
+          console.log(
+            "[LISTENER 9] secondTurnStartPlayer wurde aktualisiert",
+            secondTurnStartPlayer.value
+          );
+          if (sortingFinished.value) {
+            await FinishedViewCompundingFunc();
             console.log(
-              "[LISTENER 11.1] unsubscribeFn() wurde aufgerufen (Client, nicht Host)"
+              " [FLAST TURN 999] FinishedViewCompundingFunc() triggerd"
             );
           }
-          router.push(`/prepare/${gameId.value}`);
-        }
+          // 7. secondTurnStartPlayer aus der DB
+          secondTurnStartPlayer.value =
+            data.current_round?.secondTurnStartPlayer || false;
+          console.log(
+            "[LISTENER 10] secondTurnStartPlayer wurde aktualisiert",
+            secondTurnStartPlayer.value
+          );
 
-        console.log("[Listener LAST] ENDE aller aktualisierungen");
-      }
-    });
+          PrepNextRound.value = data.current_round?.PrepNextRound || false;
+          if (PrepNextRound.value) {
+            console.log(
+              "[LISTENER 11] PrepNextRound wurde aktualisiert",
+              PrepNextRound.value
+            );
+            if (!isHost.value) {
+              supabase.removeChannel(realtimeChannel);
+              console.log(
+                "[LISTENER 11.1] realtimeChannel entfernt (Client, nicht Host)"
+              );
+            }
+            router.push(`/prepare/${gameId.value}`);
+          }
+
+          console.log("[Listener LAST] ENDE aller aktualisierungen");
+        }
+      )
+      .subscribe();
+
+    // unsubscribeFn für onBeforeUnmount setzen
+    unsubscribeFn = () => {
+      supabase.removeChannel(realtimeChannel);
+    };
   } catch (error) {
     console.error("Fehler beim Abrufen der Spieler:", error);
   }
@@ -520,10 +526,22 @@ onMounted(async () => {
 const submitReorder = async () => {
   try {
     // der Host hat die Reihenfolge der localen "players" variable verändert und möchte sie allen zugänglich machen.
-    const roomRef = doc(db, "gameSessions", gameId.value);
-    await updateDoc(roomRef, {
-      players: players.value,
-    });
+    const { error } = await supabase
+      .from("game_session")
+      .update({
+        players: players.value,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", gameId.value);
+    
+    if (error) {
+      console.error(
+        " [SUBMIT REORDER] Fehler beim Speichern der Schätzreihenfolge:",
+        error
+      );
+      return;
+    }
+    
     console.log(
       "[SUBMIT REORDER] Schätzreihenfolge gespeichert:",
       players.value.map((p) => p.id)
@@ -534,14 +552,18 @@ const submitReorder = async () => {
       error
     );
   }
-  const proofRef = doc(db, "gameSessions", gameId.value);
-  const proofSnap = await getDoc(proofRef);
+  
+  // Proof: Session erneut laden
+  const { data: proofData, error: proofError } = await supabase
+    .from("game_session")
+    .select("players")
+    .eq("id", gameId.value)
+    .single();
 
-  if (proofSnap.exists()) {
-    const data = proofSnap.data();
-    console.log("[SUBMIT REORDER] proof:", data.players); // ✅ Hier bekommst du die Spieler aus der DB
+  if (proofError) {
+    console.log("[SUBMIT REORDER] Fehler beim Laden der Session:", proofError);
   } else {
-    console.log("[SUBMIT REORDER] Dokument existiert nicht.");
+    console.log("[SUBMIT REORDER] proof:", proofData?.players); // ✅ Hier bekommst du die Spieler aus der DB
   }
 };
 // -------------
@@ -575,13 +597,39 @@ const startGame = async () => {
   placedPlayers.value = order.value.length > 0 ? [order.value[0]] : [];
   console.log("[StartGame] placedPlayers.value:", placedPlayers.value);
 
-  const roomRef = doc(db, "gameSessions", gameId.value);
-  await updateDoc(roomRef, {
-    "currentRound.sortingStarted": sortingStarted.value,
-    "currentRound.estimationOrder": order.value.map((p) => p.id),
-    "currentRound.activePlayerId": activePlayer.value?.id || null,
-    "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
-  });
+  // Aktuelle Session laden um current_round zu mergen
+  const { data: currentSession, error: loadError } = await supabase
+    .from("game_session")
+    .select("current_round")
+    .eq("id", gameId.value)
+    .single();
+
+  if (loadError) {
+    console.error("Fehler beim Laden der Session:", loadError);
+    return;
+  }
+
+  const existingRound = currentSession?.current_round || {};
+  const updatedRound = {
+    ...existingRound,
+    sortingStarted: sortingStarted.value,
+    estimationOrder: order.value.map((p) => p.id),
+    activePlayerId: activePlayer.value?.id || null,
+    placedPlayers: placedPlayers.value.map((p) => p.id),
+  };
+
+  const { error } = await supabase
+    .from("game_session")
+    .update({
+      current_round: updatedRound,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", gameId.value);
+
+  if (error) {
+    console.error("Fehler beim Aktualisieren der Session:", error);
+    return;
+  }
 
   console.log(
     "[StartGame] END -> PlacedPlayers:",
@@ -608,7 +656,6 @@ const onFinishPlacement = async () => {
     "[FINISED TURN 00]  Fertig geklickt von:",
     activePlayer.value?.name
   );
-  const roomRef = doc(db, "gameSessions", gameId.value);
   console.log(
     "[FINISED TURN 000] sortingFinished value:",
     sortingFinished.value
@@ -629,29 +676,82 @@ const onFinishPlacement = async () => {
     );
     // Save placedPlayers IDs in a temp variable before update
     const tempPlacedIds = placedPlayers.value.map(p => p.id);
-    // Schritt 1: sortingFinished speichern
-    await updateDoc(roomRef, {
-      "currentRound.sortingFinished": sortingFinished.value,
-    });
-    // Schritt 2: placedPlayers aus temp erneut speichern
-    await updateDoc(roomRef, {
-      "currentRound.placedPlayers": tempPlacedIds,
-    });
+    
+    // Aktuelle Session laden um current_round zu mergen
+    const { data: currentSession, error: loadError } = await supabase
+      .from("game_session")
+      .select("current_round")
+      .eq("id", gameId.value)
+      .single();
+
+    if (loadError) {
+      console.error("Fehler beim Laden der Session:", loadError);
+      return;
+    }
+
+    const existingRound = currentSession?.current_round || {};
+    const updatedRound = {
+      ...existingRound,
+      sortingFinished: sortingFinished.value,
+      placedPlayers: tempPlacedIds,
+    };
+
+    // Schritt 1 & 2: sortingFinished und placedPlayers speichern
+    const { error } = await supabase
+      .from("game_session")
+      .update({
+        current_round: updatedRound,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", gameId.value);
+
+    if (error) {
+      console.error("Fehler beim Aktualisieren der Session:", error);
+      return;
+    }
   }
 
   if (!sortingFinished.value) {
+    // Aktuelle Session laden um current_round zu mergen
+    const { data: currentSession, error: loadError } = await supabase
+      .from("game_session")
+      .select("current_round")
+      .eq("id", gameId.value)
+      .single();
+
+    if (loadError) {
+      console.error("Fehler beim Laden der Session:", loadError);
+      return;
+    }
+
+    const existingRound = currentSession?.current_round || {};
+    
     // 1. spieler hat ggf änderungen in der reihenfolge on placedPlayers vorgenommen
-    await updateDoc(roomRef, {
-      "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
-    });
+    const updatedRound1 = {
+      ...existingRound,
+      placedPlayers: placedPlayers.value.map((p) => p.id),
+    };
+
+    const { error: updateError1 } = await supabase
+      .from("game_session")
+      .update({
+        current_round: updatedRound1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", gameId.value);
+
+    if (updateError1) {
+      console.error("Fehler beim Aktualisieren der placedPlayers:", updateError1);
+      return;
+    }
+
     console.log(
       "[FINISED TURN 01] lokale änderungen an placedPlayers in die DB gespeichert:",
       placedPlayers.value.map((p) => p.name)
     );
 
     // 2. Nächster Spieler ist an der Reihe.
-    const freshData = await getDoc(roomRef);
-    order.value = freshData.data()?.currentRound?.estimationOrder;
+    order.value = existingRound?.estimationOrder || [];
 
     console.log("[FINISED TURN 02] Order aus der DB geholt", order.value);
 
@@ -659,13 +759,6 @@ const onFinishPlacement = async () => {
 
     console.log("[FINISED TURN 03] order lokal aktualisiert", order.value);
     console.log("[FINISED TURN 04] update von order -> START");
-    // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-    // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
-
-    await updateDoc(roomRef, {
-      "currentRound.estimationOrder": order.value,
-    });
-    console.log("[FINISED TURN 05] update von order -> END");
 
     // 3. Aktiver Spieler wird aktualisiert
     activePlayer.value =
@@ -676,13 +769,27 @@ const onFinishPlacement = async () => {
       activePlayer.value
     );
 
-    console.log("[FINISED TURN 07] update von activePlayerId -> START");
-    // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-    // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
+    // Alle Updates in einem Supabase-Update zusammenfassen
+    const updatedRound2 = {
+      ...existingRound,
+      estimationOrder: order.value,
+      activePlayerId: activePlayer.value?.id || null,
+    };
 
-    await updateDoc(roomRef, {
-      "currentRound.activePlayerId": activePlayer.value?.id || null,
-    });
+    const { error: updateError2 } = await supabase
+      .from("game_session")
+      .update({
+        current_round: updatedRound2,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", gameId.value);
+
+    if (updateError2) {
+      console.error("Fehler beim Aktualisieren der order/activePlayer:", updateError2);
+      return;
+    }
+
+    console.log("[FINISED TURN 05] update von order -> END");
     console.log("[FINISED TURN 08] update von activePlayer -> END");
 
     // 4. Der aktive Spieler legt sein Plättchen in die Tischmitte
@@ -694,12 +801,25 @@ const onFinishPlacement = async () => {
       );
 
       console.log("[FINISED TURN 11] update von placedPlayer -> START");
-      // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-      // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
 
-      await updateDoc(roomRef, {
-        "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
-      });
+      const updatedRound3 = {
+        ...existingRound,
+        placedPlayers: placedPlayers.value.map((p) => p.id),
+      };
+
+      const { error: updateError3 } = await supabase
+        .from("game_session")
+        .update({
+          current_round: updatedRound3,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", gameId.value);
+
+      if (updateError3) {
+        console.error("Fehler beim Aktualisieren der placedPlayers:", updateError3);
+        return;
+      }
+
       console.log("[FINISED TURN 12] update von activePlayer -> END");
     } else {
       // wenn order => [p0], weil order>1 = false
@@ -707,12 +827,26 @@ const onFinishPlacement = async () => {
       console.log("[FLAST TURN 102] update von secondTurnStartPlayer -> START");
 
       secondTurnStartPlayer.value = true;
-      await updateDoc(roomRef, {
-        "currentRound.secondTurnStartPlayer": secondTurnStartPlayer.value,
-      });
+      
+      const updatedRound4 = {
+        ...existingRound,
+        secondTurnStartPlayer: secondTurnStartPlayer.value,
+      };
+
+      const { error: updateError4 } = await supabase
+        .from("game_session")
+        .update({
+          current_round: updatedRound4,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", gameId.value);
+
+      if (updateError4) {
+        console.error("Fehler beim Aktualisieren der secondTurnStartPlayer:", updateError4);
+        return;
+      }
+
       console.log("[FLAST TURN 103] update von sortingFinished -> END");
-      // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-      // console.log("[FLAST TURN 104] Prüfe VOR update DB? :", input);
     }
     console.log("[FINISED TURN 13] RETURNING");
     return;
@@ -720,9 +854,39 @@ const onFinishPlacement = async () => {
 
   console.log("[FLAST TURN 105] Update lokal changes placedPlayer -> START");
 
-  await updateDoc(roomRef, {
-    "currentRound.placedPlayers": placedPlayers.value.map((p) => p.id),
-  });
+  // Aktuelle Session laden um current_round zu mergen
+  const { data: currentSession, error: loadError } = await supabase
+    .from("game_session")
+    .select("current_round")
+    .eq("id", gameId.value)
+    .single();
+
+  if (loadError) {
+    console.error("Fehler beim Laden der Session:", loadError);
+    return;
+  }
+
+  const existingRound = currentSession?.current_round || {};
+  const updatedRound = {
+    ...existingRound,
+    placedPlayers: placedPlayers.value.map((p) => p.id),
+    sortingFinished: sortingFinished.value,
+    sortingStarted: sortingStarted.value,
+  };
+
+  const { error } = await supabase
+    .from("game_session")
+    .update({
+      current_round: updatedRound,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", gameId.value);
+
+  if (error) {
+    console.error("Fehler beim Aktualisieren der Session:", error);
+    return;
+  }
+
   console.log(
     "[FLAST TURN 106] lokale änderungen an placedPlayers in die DB gespeichert:",
     placedPlayers.value.map((p) => p.name)
@@ -733,10 +897,6 @@ const onFinishPlacement = async () => {
   console.log(
     "[FLAST TURN 109] update von sortingFinished & sortingStarted -> START"
   );
-  await updateDoc(roomRef, {
-    "currentRound.sortingFinished": sortingFinished.value,
-    "currentRound.sortingStarted": sortingStarted.value,
-  });
   FinishedViewCompundingFunc();
   console.log(
     "[FLAST TURN 110] update von sortingFinished & sortingStarted -> END"
@@ -772,20 +932,22 @@ function movePlayer(direction: number) {
 async function FinishedViewCompundingFunc() {
   console.log("[FinishedView] Funktion gestartet");
 
-  const roomRef = doc(db, "gameSessions", gameId.value);
-  const freshDataSnap = await getDoc(roomRef);
+  const { data: freshData, error } = await supabase
+    .from("game_session")
+    .select("*")
+    .eq("id", gameId.value)
+    .single();
 
-  if (!freshDataSnap.exists()) {
-    console.error("[FinishedView] Dokument nicht gefunden:", gameId.value);
+  if (error || !freshData) {
+    console.error("[FinishedView] Dokument nicht gefunden:", gameId.value, error);
     return;
   }
 
-  const freshData = freshDataSnap.data();
   console.log("[FinishedView] Daten geladen:", freshData);
 
   const playersData = freshData.players || [];
-  const answers = freshData.currentRound?.answers || {};
-  const placedIds = freshData.currentRound?.placedPlayers || [];
+  const answers = freshData.current_round?.answers || {};
+  const placedIds = freshData.current_round?.placedPlayers || [];
 
   console.log("[FinishedView] Spieler-Daten:", playersData);
   console.log("[FinishedView] Antworten:", answers);
@@ -813,13 +975,36 @@ async function FinishedViewCompundingFunc() {
 }
 
 const goToPrepareNextRound = async () => {
-  const roomRef = doc(db, "gameSessions", gameId.value);
-  const docSnap = await getDoc(roomRef);
-  if (docSnap.exists()) {
-    await updateDoc(roomRef, {
-      "currentRound.PrepNextRound": true,
-      "currentRound.phase": "prepaire",
-    });
+  // Aktuelle Session laden um current_round zu mergen
+  const { data: currentSession, error: loadError } = await supabase
+    .from("game_session")
+    .select("current_round")
+    .eq("id", gameId.value)
+    .single();
+
+  if (loadError) {
+    console.error("Fehler beim Laden der Session:", loadError);
+    return;
+  }
+
+  const existingRound = currentSession?.current_round || {};
+  const updatedRound = {
+    ...existingRound,
+    PrepNextRound: true,
+    phase: "prepaire",
+  };
+
+  const { error } = await supabase
+    .from("game_session")
+    .update({
+      current_round: updatedRound,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", gameId.value);
+
+  if (error) {
+    console.error("Fehler beim Aktualisieren der Session:", error);
+    return;
   }
 
   console.log("[FinishedView] unsubscribe -> Start");

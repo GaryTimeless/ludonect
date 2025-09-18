@@ -218,7 +218,7 @@ import {
   IonList,
 } from "@ionic/vue";
 import { ref, computed } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import questions from "@/questions.json";
 import { supabase } from "@/supabaseClient";
 import FunButton from "@/components/FunButton.vue";
@@ -242,6 +242,7 @@ function getStorage(key: string): string | null {
 }
 
 const router = useRouter();
+const route = useRoute();
 
 function getRandomQuestion() {
   const index = Math.floor(Math.random() * questions.length);
@@ -495,15 +496,24 @@ function startAutomaticListener(code: string) {
           console.log("🔄 [postgres_changes] UI aktualisiert!");
           
           // Wenn Spielzustand auf "running" wechselt, alle Clients zur Frage navigieren
+          // ABER nur wenn wir noch in der Lobby sind (nicht in EstimationView oder QuestionView)
+          console.log("🔄 [postgres_changes] Prüfe Navigation - state:", data.state);
+          console.log("🔄 [postgres_changes] Prüfe Navigation - current_round:", data.current_round);
+          console.log("🔄 [postgres_changes] Prüfe Navigation - route.path:", route.path);
+          
           if (
             data.state === "running" &&
             data.current_round &&
-            typeof data.current_round.question_id === "number"
+            typeof data.current_round.question_id === "number" &&
+            (route.path.includes('/lobby/') || route.path === '/lobby')
           ) {
             const questionId = data.current_round.question_id;
             const target = `/question/${code}/${questionId}`;
             console.log("🔄 [postgres_changes] Spiel gestartet – Navigiere zu:", target);
+            console.log("🔄 [postgres_changes] Aktuelle Route:", route.path);
             router.push(target);
+          } else {
+            console.log("🔄 [postgres_changes] Navigation übersprungen - Bedingungen nicht erfüllt");
           }
         }
       }
