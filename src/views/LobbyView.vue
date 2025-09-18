@@ -493,6 +493,18 @@ function startAutomaticListener(code: string) {
             data.state === "waiting";
             
           console.log("🔄 [postgres_changes] UI aktualisiert!");
+          
+          // Wenn Spielzustand auf "running" wechselt, alle Clients zur Frage navigieren
+          if (
+            data.state === "running" &&
+            data.current_round &&
+            typeof data.current_round.question_id === "number"
+          ) {
+            const questionId = data.current_round.question_id;
+            const target = `/question/${code}/${questionId}`;
+            console.log("🔄 [postgres_changes] Spiel gestartet – Navigiere zu:", target);
+            router.push(target);
+          }
         }
       }
     )

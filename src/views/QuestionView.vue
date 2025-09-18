@@ -40,22 +40,12 @@ import {
 } from "@ionic/vue";
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { inject } from "vue";
-
-import {
-  getFirestore,
-  doc,
-  updateDoc,
-  Timestamp,
-  getDoc,
-} from "firebase/firestore";
+import questions from "@/questions.json";
+import { supabase } from "@/supabaseClient";
 
 console.log("Welcome to QuestionView");
-const questions = inject("questions", []) as any[];
 const route = useRoute();
 const router = useRouter();
-
-const db = getFirestore();
 
 // Spielername lokal auslesen (kann später nützlich sein für Feedback oder Debugging)
 const userName = localStorage.getItem("playerName");
@@ -88,7 +78,7 @@ onMounted(async () => {
     "| Typ:",
     typeof questionId
   );
-  const question = questions.find((q) => q.id === questionId);
+  const question = (questions as any[]).find((q) => q.id === questionId);
   console.log("[QUESTIONVIEW] Gefundene Frage:", question);
 
   if (question) {
@@ -101,13 +91,18 @@ onMounted(async () => {
     );
     router.push(`/lobby/${gameId}`);
   }
-
-  const dbRef = doc(db, "gameSessions", gameId);
-  const docSnap = await getDoc(dbRef);
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    players.value = data.players;
-  }
+  // Spieler aus Supabase laden (derzeit nicht benötigt für diese View)
+  // const { data: session, error } = await supabase
+  //   .from("game_session")
+  //   .select("players, current_round")
+  //   .eq("id", gameId)
+  //   .single();
+  // if (error) {
+  //   console.warn("[QUESTIONVIEW] Fehler beim Laden der Session:", error);
+  // }
+  // if (session?.players) {
+  //   players.value = session.players as Player[];
+  // }
 });
 
 async function submitAnswer() {
@@ -119,47 +114,52 @@ async function submitAnswer() {
   );
 
   const playerId = localStorage.getItem("playerId");
-  // Update the answer in the gameSessions document
-  const sessionRef = doc(db, "gameSessions", gameId);
-
-  // Vor updateDoc: hole aktuelle Spieler aus der DB
-  const freshSnap = await getDoc(sessionRef);
-  const freshPlayers = freshSnap.data()?.players || [];
-
-  console.log(userName)
-  console.log(freshPlayers)
-
-
-  const updatedPlayers = freshPlayers.map((p: Player) => {
-    if (p.id === playerId) {
-  return { ...p, estimation: true };
-} else {
-  return p;
-}
-  });
-
-  try {
-    await updateDoc(sessionRef, {
-      [`currentRound.answers.${playerId}`]: {
-        answerValue: answer.value,
-        answeredAt: Timestamp.now(),
-      },
-      players: updatedPlayers,
-      "currentRound.phase": "estimation",
-
-    });
-    console.log("Antwort erfolgreich gespeichert.");
-    // Debug: Nach Update erneut Spieler aus der DB holen
-    const updatedSnap = await getDoc(sessionRef);
-    if (updatedSnap.exists()) {
-      const updatedData = updatedSnap.data();
-      console.log(" [QUESTIONVIEW] Spieler nach dem Speichern:", updatedData.players);
-    } else {
-      console.warn("Fehler: Session-Dokument nach Update nicht gefunden.");
-    }
-  } catch (error) {
-    console.error("Fehler beim Speichern der Antwort:", error);
+  // Aktuelle Session aus Supabase lesen
+  const { data: session, error: loadError } = await supabase
+    .from("game_session")
+    .select("players, current_round")
+    .eq("id", gameId)
+    .single();
+  if (loadError || !session) {
+    console.error("Fehler beim Laden der Session:", loadError);
+    return;
   }
+
+  const freshPlayers: Player[] = (session.players || []) as Player[];
+  const updatedPlayers = freshPlayers.map((p: Player) =>
+    p.id === playerId ? { ...p, estimation: true } : p
+  );
+
+  const existingRound = session.current_round || {};
+  const existingAnswers = existingRound.answers || {};
+  const newAnswers = {
+    ...existingAnswers,
+    [playerId as string]: {
+      answerValue: answer.value,
+      answeredAt: new Date().toISOString(),
+    },
+  };
+
+  const updatedRound = {
+    ...existingRound,
+    answers: newAnswers,
+    phase: "estimation",
+  };
+
+  const { error: updateError } = await supabase
+    .from("game_session")
+    .update({
+      players: updatedPlayers,
+      current_round: updatedRound,
+      updated_at: new Date().toISOString(),
+      phase_updated_at: new Date().toISOString(),
+    })
+    .eq("id", gameId);
+  if (updateError) {
+    console.error("Fehler beim Speichern der Antwort:", updateError);
+    return;
+  }
+  console.log("Antwort erfolgreich gespeichert.");
 
   router.push(`/estimation/${gameId}/${questionId}`);
   console.log("[QUESTIONVIEW] Weiterleitung zur EstimationView");
