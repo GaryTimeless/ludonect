@@ -217,8 +217,8 @@ import {
   IonIcon,
   IonList,
 } from "@ionic/vue";
-import { ref, computed } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { ref, computed, onBeforeUnmount } from "vue";
+import { useRouter, useRoute, onBeforeRouteLeave } from "vue-router";
 import questions from "@/questions.json";
 import { supabase } from "@/supabaseClient";
 import FunButton from "@/components/FunButton.vue";
@@ -281,6 +281,14 @@ const currentPlayerId = ref(getStorage("playerId") || "");
 
 // Automatischer Realtime-Listener
 let realtimeChannel: any = null;
+
+onBeforeUnmount(() => {
+  stopAutomaticListener();
+});
+
+onBeforeRouteLeave(() => {
+  stopAutomaticListener();
+});
 
 // Local display name of this client
 const localPlayerName = ref(getStorage("playerName") || "");
