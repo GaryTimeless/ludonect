@@ -125,8 +125,13 @@ async function submitAnswer() {
     return;
   }
 
+  if (!playerId) {
+    console.error("Kein playerId im LocalStorage gefunden.");
+    return;
+  }
+
   const freshPlayers: Player[] = (session.players || []) as Player[];
-  const updatedPlayers = freshPlayers.map((p: Player) =>
+  const playersWithFlags = freshPlayers.map((p: Player) =>
     p.id === playerId ? { ...p, estimation: true } : p
   );
 
@@ -146,10 +151,32 @@ async function submitAnswer() {
     phase: "estimation",
   };
 
+  const playersWithIndex = playersWithFlags.map((player, index) => ({
+    player,
+    index,
+  }));
+
+  const orderedPlayers = playersWithIndex
+    .sort((a, b) => {
+      const answerA = newAnswers[a.player.id];
+      const answerB = newAnswers[b.player.id];
+      if (answerA && answerB) {
+        const timeA = Date.parse(answerA.answeredAt);
+        const timeB = Date.parse(answerB.answeredAt);
+        if (timeA !== timeB) return timeA - timeB;
+      } else if (answerA) {
+        return -1;
+      } else if (answerB) {
+        return 1;
+      }
+      return a.index - b.index;
+    })
+    .map(({ player }) => player);
+
   const { error: updateError } = await supabase
     .from("game_session")
     .update({
-      players: updatedPlayers,
+      players: orderedPlayers,
       current_round: updatedRound,
       updated_at: new Date().toISOString(),
       phase_updated_at: new Date().toISOString(),
