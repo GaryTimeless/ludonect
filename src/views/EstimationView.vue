@@ -758,6 +758,8 @@ const onFinishPlacement = async () => {
 
   if (!sortingFinished.value) {
     // 1. spieler hat ggf änderungen in der reihenfolge on placedPlayers vorgenommen
+    const basePlacedIds = [...placedPlayerIds.value];
+
     const { data: placedPlayersBeforeUpdate } = await supabase
       .from("game_session")
       .select("current_round")
@@ -768,13 +770,13 @@ const onFinishPlacement = async () => {
       .update({
         current_round: {
           ...((placedPlayersBeforeUpdate?.current_round as any) || {}),
-          placedPlayers: placedPlayerIds.value,
+          placedPlayers: basePlacedIds,
         },
       })
       .eq("id", roomRef);
     console.log(
       "[FINISED TURN 01] lokale änderungen an placedPlayers in die DB gespeichert:",
-      placedPlayerIds.value.map((id) => playerById(id)?.name ?? id)
+      basePlacedIds.map((id) => playerById(id)?.name ?? id)
     );
 
     // 2. Nächster Spieler ist an der Reihe.
@@ -856,28 +858,25 @@ const onFinishPlacement = async () => {
     console.log("[FINISED TURN 05.2] player.value:", players.value);
     const fallbackPlayer = players.value[0] || null;
     const nextActiveId =
-      trimmedOrder.length > 0 ? trimmedOrder[0] : fallbackPlayer?.id;
-    if (nextActiveId) {
-      const candidate = playerById(nextActiveId);
-      if (candidate) {
-        console.log(
-          "[FINISED TURN 05.3] next active player ermittelt",
-          candidate
-        );
-        activePlayer.value = candidate;
-      } else {
-        console.log(
-          "[FINISED TURN 05.3] Kein Player-Objekt für nextActiveId gefunden",
-          nextActiveId
-        );
-        activePlayer.value = fallbackPlayer;
-      }
+      trimmedOrder.length > 0
+        ? trimmedOrder[0]
+        : fallbackPlayer?.id ?? null;
+    const nextActivePlayer = nextActiveId ? playerById(nextActiveId) : fallbackPlayer;
+
+    if (nextActivePlayer) {
+      console.log(
+        "[FINISED TURN 05.3] next active player ermittelt",
+        nextActivePlayer
+      );
+      activePlayer.value = nextActivePlayer;
     } else {
       console.log(
         "FINISED TURN 05.4] Order ist leer, players.value[0] wird aktualisiert"
       );
       activePlayer.value = fallbackPlayer;
     }
+
+    const activePlayerIdForUpdate = nextActivePlayer?.id || null;
 
     console.log(
       "[FINISED TURN 06] activePlayer wurde lokal aktualisiert",
@@ -899,7 +898,7 @@ const onFinishPlacement = async () => {
         .update({
           current_round: {
             ...((activePlayerSnapshot?.current_round as any) || {}),
-            activePlayerId: activePlayer.value?.id || null,
+            activePlayerId: activePlayerIdForUpdate,
           },
         })
         .eq("id", roomRef);
@@ -913,12 +912,14 @@ const onFinishPlacement = async () => {
     // 4. Der aktive Spieler legt sein Plättchen in die Tischmitte
     if (trimmedOrder.length > 1) {
       const nextPlacedPlayerId = trimmedOrder[0];
-      if (nextPlacedPlayerId) {
-        placedPlayerIds.value.push(nextPlacedPlayerId);
+      let placedPayload = [...basePlacedIds];
+      if (nextPlacedPlayerId && !placedPayload.includes(nextPlacedPlayerId)) {
+        placedPayload.push(nextPlacedPlayerId);
       }
+      placedPlayerIds.value = placedPayload;
       console.log(
         "[FINISED TURN 09] placedPlayer wurde lokal aktualisiert",
-        placedPlayerIds.value
+        placedPayload
       );
 
       console.log("[FINISED TURN 11] update von placedPlayer -> START");
@@ -936,7 +937,7 @@ const onFinishPlacement = async () => {
           .update({
             current_round: {
               ...((placedPlayersAfterPush?.current_round as any) || {}),
-              placedPlayers: placedPlayerIds.value,
+              placedPlayers: placedPayload,
             },
           })
           .eq("id", roomRef);
