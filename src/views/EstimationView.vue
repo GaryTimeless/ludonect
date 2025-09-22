@@ -454,6 +454,9 @@ onMounted(async () => {
       // STEP 8: Statusflags setzen
       sortingStarted.value = sessionData.current_round?.sortingStarted || false;
       sortingFinished.value = sessionData.current_round?.sortingFinished || false;
+      if (sortingFinished.value) {
+        await FinishedViewCompundingFunc();
+      }
     } else {
       console.error("Room-Dokument nicht gefunden.");
     }
