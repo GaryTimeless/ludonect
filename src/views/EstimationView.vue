@@ -239,6 +239,7 @@
             <ion-button
               style="margin-top: 16px"
               @click="onFinishPlacement"
+              :disabled="isFinishingTurn"
               class="finish-button"
             >
               Fertig
@@ -325,6 +326,7 @@ const placedPlayerIds = ref<string[]>([]);
 const activePlayer = ref<Player | null>(null);
 const sortingFinished = ref(false);
 const secondTurnStartPlayer = ref(false);
+const isFinishingTurn = ref(false);
 const finishedViewAnswerValue = ref<FinishedViewCompunding[]>([]);
 const currentRound = ref<any | null>(null);
 const questions = inject("questions", []) as any[];
@@ -690,244 +692,154 @@ const startGame = async () => {
 // FINISH PLACEMENT
 // -------------
 const onFinishPlacement = async () => {
-  //**
-  // Drehbuch
-  // 1. Lokale änderungen an placedPlayers in die DB gespeichert
-  // 2. Nächster Spieler ist an der Reihe.-> order aus der DB holen und .slice(1) + upload.
-  // 3. Aktiver Spieler ist dann order[0] -> Activer spieler local ändern + upload
-  // 4. Der aktive spieler leht sein Plättchen in die Tischmitte -> placedPlayer.push(Order[0]) + upload
-  // 4.1 AUSNAHME: der erste Spieler ist 2 mal dran, aber keine zwei plättchen.
-  // 5. wenn alle Spieler gespielt haben, wird das ergebnis gezeigt.
-  //  */
-  console.log(
-    "[FINISED TURN 00]  Fertig geklickt von:",
-    activePlayer.value?.name
-  );
-  const roomRef = gameId.value;
-  console.log(
-    "[FINISED TURN 000] sortingFinished value:",
-    sortingFinished.value
-  );
-  console.log(
-    "[FINISED TURN 000] secondTurnStartPlayer value:",
-    secondTurnStartPlayer.value
-  );
-
-  if (
-    activePlayer.value?.id == players.value[0].id &&
-    secondTurnStartPlayer.value
-  ) {
-    sortingFinished.value = true;
-    console.log(
-      "[LAST TRUN 000] sortingFinished wurde aktualisiert auf true",
-      sortingFinished.value
-    );
-    // Save placedPlayers IDs in a temp variable before update
-    const tempPlacedIds = [...placedPlayerIds.value];
-    // Schritt 1: sortingFinished speichern
-    const { data: sortingFinishedSnapshot } = await supabase
-      .from("game_session")
-      .select("current_round")
-      .eq("id", roomRef)
-      .single();
-    await supabase
-      .from("game_session")
-      .update({
-        current_round: {
-          ...((sortingFinishedSnapshot?.current_round as any) || {}),
-          sortingFinished: sortingFinished.value,
-        },
-      })
-      .eq("id", roomRef);
-    // Schritt 2: placedPlayers aus temp erneut speichern
-    const { data: placedPlayersSnapshot } = await supabase
-      .from("game_session")
-      .select("current_round")
-      .eq("id", roomRef)
-      .single();
-    await supabase
-      .from("game_session")
-      .update({
-        current_round: {
-          ...((placedPlayersSnapshot?.current_round as any) || {}),
-          placedPlayers: tempPlacedIds,
-        },
-      })
-      .eq("id", roomRef);
+  if (isFinishingTurn.value) {
+    console.warn("[FINISH TURN] Mehrfachklick ignoriert");
+    return;
   }
 
-  if (!sortingFinished.value) {
-    // 1. spieler hat ggf änderungen in der reihenfolge on placedPlayers vorgenommen
-    const basePlacedIds = [...placedPlayerIds.value];
+  isFinishingTurn.value = true;
 
-    const { data: placedPlayersBeforeUpdate } = await supabase
-      .from("game_session")
-      .select("current_round")
-      .eq("id", roomRef)
-      .single();
-    await supabase
-      .from("game_session")
-      .update({
-        current_round: {
-          ...((placedPlayersBeforeUpdate?.current_round as any) || {}),
-          placedPlayers: basePlacedIds,
-        },
-      })
-      .eq("id", roomRef);
+  try {
+    //**
+    // Drehbuch
+    // 1. Lokale änderungen an placedPlayers in die DB gespeichert
+    // 2. Nächster Spieler ist an der Reihe.-> order aus der DB holen und .slice(1) + upload.
+    // 3. Aktiver Spieler ist dann order[0] -> Activer spieler local ändern + upload
+    // 4. Der aktive spieler leht sein Plättchen in die Tischmitte -> placedPlayer.push(Order[0]) + upload
+    // 4.1 AUSNAHME: der erste Spieler ist 2 mal dran, aber keine zwei plättchen.
+    // 5. wenn alle Spieler gespielt haben, wird das ergebnis gezeigt.
+    //  */
     console.log(
-      "[FINISED TURN 01] lokale änderungen an placedPlayers in die DB gespeichert:",
-      basePlacedIds.map((id) => playerById(id)?.name ?? id)
+      "[FINISED TURN 00]  Fertig geklickt von:",
+      activePlayer.value?.name
+    );
+    const roomRef = gameId.value;
+    console.log(
+      "[FINISED TURN 000] sortingFinished value:",
+      sortingFinished.value
+    );
+    console.log(
+      "[FINISED TURN 000] secondTurnStartPlayer value:",
+      secondTurnStartPlayer.value
     );
 
-    // 2. Nächster Spieler ist an der Reihe.
-    const { data: freshData, error: freshError } = await supabase
-      .from("game_session")
-      .select("current_round")
-      .eq("id", roomRef)
-      .single();
-    let fetchedOrderIds: string[] = [];
-    if (freshError) {
-      console.error(
-        "[FINISED TURN 02] Fehler beim Laden der Order, fallback auf Cache:",
-        freshError
+    if (
+      activePlayer.value?.id == players.value[0].id &&
+      secondTurnStartPlayer.value
+    ) {
+      sortingFinished.value = true;
+      console.log(
+        "[LAST TRUN 000] sortingFinished wurde aktualisiert auf true",
+        sortingFinished.value
       );
-      fetchedOrderIds = [...estimationOrderIds.value];
-    } else {
-      const rawOrder = freshData?.current_round?.estimationOrder || [];
-      fetchedOrderIds = rawOrder
-        .map((entry: any) =>
-          typeof entry === "string" ? entry : (entry as Player)?.id
-        )
-        .filter((id: string | undefined): id is string => !!id);
-      if (
-        fetchedOrderIds.length === 0 &&
-        estimationOrderIds.value.length > 0
-      ) {
-        console.warn(
-          "[FINISED TURN 02] Order aus DB leer, benutze lokale Kopie",
-          estimationOrderIds.value
+      // Save placedPlayers IDs in a temp variable before update
+      const tempPlacedIds = [...placedPlayerIds.value];
+      // Schritt 1: sortingFinished speichern
+      const { data: sortingFinishedSnapshot } = await supabase
+        .from("game_session")
+        .select("current_round")
+        .eq("id", roomRef)
+        .single();
+      await supabase
+        .from("game_session")
+        .update({
+          current_round: {
+            ...((sortingFinishedSnapshot?.current_round as any) || {}),
+            sortingFinished: sortingFinished.value,
+          },
+        })
+        .eq("id", roomRef);
+      // Schritt 2: placedPlayers aus temp erneut speichern
+      const { data: placedPlayersSnapshot } = await supabase
+        .from("game_session")
+        .select("current_round")
+        .eq("id", roomRef)
+        .single();
+      await supabase
+        .from("game_session")
+        .update({
+          current_round: {
+            ...((placedPlayersSnapshot?.current_round as any) || {}),
+            placedPlayers: tempPlacedIds,
+          },
+        })
+        .eq("id", roomRef);
+    }
+
+    if (!sortingFinished.value) {
+      // 1. spieler hat ggf änderungen in der reihenfolge on placedPlayers vorgenommen
+      const basePlacedIds = [...placedPlayerIds.value];
+
+      const { data: placedPlayersBeforeUpdate } = await supabase
+        .from("game_session")
+        .select("current_round")
+        .eq("id", roomRef)
+        .single();
+      await supabase
+        .from("game_session")
+        .update({
+          current_round: {
+            ...((placedPlayersBeforeUpdate?.current_round as any) || {}),
+            placedPlayers: basePlacedIds,
+          },
+        })
+        .eq("id", roomRef);
+      console.log(
+        "[FINISED TURN 01] lokale änderungen an placedPlayers in die DB gespeichert:",
+        basePlacedIds.map((id) => playerById(id)?.name ?? id)
+      );
+
+      // 2. Nächster Spieler ist an der Reihe.
+      const { data: freshData, error: freshError } = await supabase
+        .from("game_session")
+        .select("current_round")
+        .eq("id", roomRef)
+        .single();
+      let fetchedOrderIds: string[] = [];
+      if (freshError) {
+        console.error(
+          "[FINISED TURN 02] Fehler beim Laden der Order, fallback auf Cache:",
+          freshError
         );
         fetchedOrderIds = [...estimationOrderIds.value];
+      } else {
+        const rawOrder = freshData?.current_round?.estimationOrder || [];
+        fetchedOrderIds = rawOrder
+          .map((entry: any) =>
+            typeof entry === "string" ? entry : (entry as Player)?.id
+          )
+          .filter((id: string | undefined): id is string => !!id);
+        if (
+          fetchedOrderIds.length === 0 &&
+          estimationOrderIds.value.length > 0
+        ) {
+          console.warn(
+            "[FINISED TURN 02] Order aus DB leer, benutze lokale Kopie",
+            estimationOrderIds.value
+          );
+          fetchedOrderIds = [...estimationOrderIds.value];
+        }
       }
-    }
 
-    estimationOrderIds.value = fetchedOrderIds;
+      estimationOrderIds.value = fetchedOrderIds;
 
-    console.log("[FINISED TURN 02] Order-IDs aus der DB geholt", fetchedOrderIds);
+      console.log("[FINISED TURN 02] Order-IDs aus der DB geholt", fetchedOrderIds);
 
-    const trimmedOrder = fetchedOrderIds.slice(1);
-    estimationOrderIds.value = trimmedOrder;
+      const trimmedOrder = fetchedOrderIds.slice(1);
+      estimationOrderIds.value = trimmedOrder;
 
-    console.log("[FINISED TURN 03] Order-IDs lokal aktualisiert", trimmedOrder);
-    console.log("[FINISED TURN 04] update von order IDs -> START");
-    if (freshError) {
-      console.warn(
-        "[FINISED TURN 04] Überspringe DB-Update wegen vorherigem Load-Fehler"
-      );
-    }
-    // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-    // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
-
-    if (!freshError) {
-      const { data: orderSnapshot } = await supabase
-        .from("game_session")
-        .select("current_round")
-        .eq("id", roomRef)
-        .single();
-      await supabase
-        .from("game_session")
-        .update({
-          current_round: {
-            ...((orderSnapshot?.current_round as any) || {}),
-            estimationOrder: trimmedOrder,
-          },
-        })
-        .eq("id", roomRef);
-      console.log("[FINISED TURN 05] update von order IDs -> END");
-    } else {
-      console.warn(
-        "[FINISED TURN 05] Kein DB-Update für estimationOrder aufgrund Fehler"
-      );
-    }
-
-    // 3. Aktiver Spieler wird aktualisiert
-    console.log(
-      "[FINISED TURN 05.1] estimationOrderIds.value:",
-      estimationOrderIds.value
-    );
-    console.log("[FINISED TURN 05.2] player.value:", players.value);
-    const fallbackPlayer = players.value[0] || null;
-    const nextActiveId =
-      trimmedOrder.length > 0
-        ? trimmedOrder[0]
-        : fallbackPlayer?.id ?? null;
-    const nextActivePlayer = nextActiveId ? playerById(nextActiveId) : fallbackPlayer;
-
-    if (nextActivePlayer) {
-      console.log(
-        "[FINISED TURN 05.3] next active player ermittelt",
-        nextActivePlayer
-      );
-      activePlayer.value = nextActivePlayer;
-    } else {
-      console.log(
-        "FINISED TURN 05.4] Order ist leer, players.value[0] wird aktualisiert"
-      );
-      activePlayer.value = fallbackPlayer;
-    }
-
-    const activePlayerIdForUpdate = nextActivePlayer?.id || null;
-
-    console.log(
-      "[FINISED TURN 06] activePlayer wurde lokal aktualisiert",
-      activePlayer.value
-    );
-
-    console.log("[FINISED TURN 07] update von activePlayerId -> START");
-    // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-    // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
-
-    if (!freshError) {
-      const { data: activePlayerSnapshot } = await supabase
-        .from("game_session")
-        .select("current_round")
-        .eq("id", roomRef)
-        .single();
-      await supabase
-        .from("game_session")
-        .update({
-          current_round: {
-            ...((activePlayerSnapshot?.current_round as any) || {}),
-            activePlayerId: activePlayerIdForUpdate,
-          },
-        })
-        .eq("id", roomRef);
-      console.log("[FINISED TURN 08] update von activePlayer -> END");
-    } else {
-      console.warn(
-        "[FINISED TURN 08] Kein DB-Update für activePlayerId aufgrund Fehler"
-      );
-    }
-
-    // 4. Der aktive Spieler legt sein Plättchen in die Tischmitte
-    if (trimmedOrder.length > 1) {
-      const nextPlacedPlayerId = trimmedOrder[0];
-      let placedPayload = [...basePlacedIds];
-      if (nextPlacedPlayerId && !placedPayload.includes(nextPlacedPlayerId)) {
-        placedPayload.push(nextPlacedPlayerId);
+      console.log("[FINISED TURN 03] Order-IDs lokal aktualisiert", trimmedOrder);
+      console.log("[FINISED TURN 04] update von order IDs -> START");
+      if (freshError) {
+        console.warn(
+          "[FINISED TURN 04] Überspringe DB-Update wegen vorherigem Load-Fehler"
+        );
       }
-      placedPlayerIds.value = placedPayload;
-      console.log(
-        "[FINISED TURN 09] placedPlayer wurde lokal aktualisiert",
-        placedPayload
-      );
-
-      console.log("[FINISED TURN 11] update von placedPlayer -> START");
       // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
       // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
 
       if (!freshError) {
-        const { data: placedPlayersAfterPush } = await supabase
+        const { data: orderSnapshot } = await supabase
           .from("game_session")
           .select("current_round")
           .eq("id", roomRef)
@@ -936,96 +848,197 @@ const onFinishPlacement = async () => {
           .from("game_session")
           .update({
             current_round: {
-              ...((placedPlayersAfterPush?.current_round as any) || {}),
-              placedPlayers: placedPayload,
+              ...((orderSnapshot?.current_round as any) || {}),
+              estimationOrder: trimmedOrder,
             },
           })
           .eq("id", roomRef);
-        console.log("[FINISED TURN 12] update von placedPlayer -> END");
+        console.log("[FINISED TURN 05] update von order IDs -> END");
       } else {
         console.warn(
-          "[FINISED TURN 12] Kein DB-Update für placedPlayers aufgrund Fehler"
+          "[FINISED TURN 05] Kein DB-Update für estimationOrder aufgrund Fehler"
         );
       }
-    } else {
-      // wenn order => [p0], weil order>1 = false
-      console.log("[FLAST TURN 101] Startspieler darf letzten Zug machen.");
-      console.log("[FLAST TURN 102] update von secondTurnStartPlayer -> START");
 
-      secondTurnStartPlayer.value = true;
-      if (!freshError) {
-        const { data: secondTurnSnapshot } = await supabase
-          .from("game_session")
-          .select("current_round")
-          .eq("id", roomRef)
-          .single();
-        await supabase
-          .from("game_session")
-          .update({
-            current_round: {
-              ...((secondTurnSnapshot?.current_round as any) || {}),
-              secondTurnStartPlayer: secondTurnStartPlayer.value,
-            },
-          })
-          .eq("id", roomRef);
-        console.log("[FLAST TURN 103] update von sortingFinished -> END");
-      } else {
-        console.warn(
-          "[FLAST TURN 103] Kein DB-Update für secondTurnStartPlayer aufgrund Fehler"
+      // 3. Aktiver Spieler wird aktualisiert
+      console.log(
+        "[FINISED TURN 05.1] estimationOrderIds.value:",
+        estimationOrderIds.value
+      );
+      console.log("[FINISED TURN 05.2] player.value:", players.value);
+      const fallbackPlayer = players.value[0] || null;
+      const nextActiveId =
+        trimmedOrder.length > 0
+          ? trimmedOrder[0]
+          : fallbackPlayer?.id ?? null;
+      const nextActivePlayer = nextActiveId ? playerById(nextActiveId) : fallbackPlayer;
+
+      if (nextActivePlayer) {
+        console.log(
+          "[FINISED TURN 05.3] next active player ermittelt",
+          nextActivePlayer
         );
+        activePlayer.value = nextActivePlayer;
+      } else {
+        console.log(
+          "FINISED TURN 05.4] Order ist leer, players.value[0] wird aktualisiert"
+        );
+        activePlayer.value = fallbackPlayer;
       }
+
+      const activePlayerIdForUpdate = nextActivePlayer?.id || null;
+
+      console.log(
+        "[FINISED TURN 06] activePlayer wurde lokal aktualisiert",
+        activePlayer.value
+      );
+
+      console.log("[FINISED TURN 07] update von activePlayerId -> START");
       // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-      // console.log("[FLAST TURN 104] Prüfe VOR update DB? :", input);
+      // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
+
+      if (!freshError) {
+        const { data: activePlayerSnapshot } = await supabase
+          .from("game_session")
+          .select("current_round")
+          .eq("id", roomRef)
+          .single();
+        await supabase
+          .from("game_session")
+          .update({
+            current_round: {
+              ...((activePlayerSnapshot?.current_round as any) || {}),
+              activePlayerId: activePlayerIdForUpdate,
+            },
+          })
+          .eq("id", roomRef);
+        console.log("[FINISED TURN 08] update von activePlayer -> END");
+      } else {
+        console.warn(
+          "[FINISED TURN 08] Kein DB-Update für activePlayerId aufgrund Fehler"
+        );
+      }
+
+      // 4. Der aktive Spieler legt sein Plättchen in die Tischmitte
+      if (trimmedOrder.length > 1) {
+        const nextPlacedPlayerId = trimmedOrder[0];
+        let placedPayload = [...basePlacedIds];
+        if (nextPlacedPlayerId && !placedPayload.includes(nextPlacedPlayerId)) {
+          placedPayload.push(nextPlacedPlayerId);
+        }
+        placedPlayerIds.value = placedPayload;
+        console.log(
+          "[FINISED TURN 09] placedPlayer wurde lokal aktualisiert",
+          placedPayload
+        );
+
+        console.log("[FINISED TURN 11] update von placedPlayer -> START");
+        // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+        // console.log("[FINISED TURN] Prüfe VOR update DB? :", input);
+
+        if (!freshError) {
+          const { data: placedPlayersAfterPush } = await supabase
+            .from("game_session")
+            .select("current_round")
+            .eq("id", roomRef)
+            .single();
+          await supabase
+            .from("game_session")
+            .update({
+              current_round: {
+                ...((placedPlayersAfterPush?.current_round as any) || {}),
+                placedPlayers: placedPayload,
+              },
+            })
+            .eq("id", roomRef);
+          console.log("[FINISED TURN 12] update von placedPlayer -> END");
+        } else {
+          console.warn(
+            "[FINISED TURN 12] Kein DB-Update für placedPlayers aufgrund Fehler"
+          );
+        }
+      } else {
+        // wenn order => [p0], weil order>1 = false
+        console.log("[FLAST TURN 101] Startspieler darf letzten Zug machen.");
+        console.log("[FLAST TURN 102] update von secondTurnStartPlayer -> START");
+
+        secondTurnStartPlayer.value = true;
+        if (!freshError) {
+          const { data: secondTurnSnapshot } = await supabase
+            .from("game_session")
+            .select("current_round")
+            .eq("id", roomRef)
+            .single();
+          await supabase
+            .from("game_session")
+            .update({
+              current_round: {
+                ...((secondTurnSnapshot?.current_round as any) || {}),
+                secondTurnStartPlayer: secondTurnStartPlayer.value,
+              },
+            })
+            .eq("id", roomRef);
+          console.log("[FLAST TURN 103] update von sortingFinished -> END");
+        } else {
+          console.warn(
+            "[FLAST TURN 103] Kein DB-Update für secondTurnStartPlayer aufgrund Fehler"
+          );
+        }
+        // const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
+        // console.log("[FLAST TURN 104] Prüfe VOR update DB? :", input);
+      }
+      console.log("[FINISED TURN 13] RETURNING");
+      return;
     }
-    console.log("[FINISED TURN 13] RETURNING");
-    return;
+
+    console.log("[FLAST TURN 105] Update lokal changes placedPlayer -> START");
+
+    const { data: placedPlayersFinalSnapshot } = await supabase
+      .from("game_session")
+      .select("current_round")
+      .eq("id", roomRef)
+      .single();
+    await supabase
+      .from("game_session")
+      .update({
+        current_round: {
+          ...((placedPlayersFinalSnapshot?.current_round as any) || {}),
+          placedPlayers: placedPlayerIds.value,
+        },
+      })
+      .eq("id", roomRef);
+    console.log(
+      "[FLAST TURN 106] lokale änderungen an placedPlayers in die DB gespeichert:",
+      placedPlayerIds.value.map((id) => playerById(id)?.name ?? id)
+    );
+
+    console.log("[FLAST TURN 107] Update lokal changes placedPlayer -> END");
+    console.log("[FLAST TURN 108] Alle Spieler wurden platziert. 🎉");
+    console.log(
+      "[FLAST TURN 109] update von sortingFinished & sortingStarted -> START"
+    );
+    const { data: sortingFlagsSnapshot } = await supabase
+      .from("game_session")
+      .select("current_round")
+      .eq("id", roomRef)
+      .single();
+    await supabase
+      .from("game_session")
+      .update({
+        current_round: {
+          ...((sortingFlagsSnapshot?.current_round as any) || {}),
+          sortingFinished: sortingFinished.value,
+          sortingStarted: sortingStarted.value,
+        },
+      })
+      .eq("id", roomRef);
+    FinishedViewCompundingFunc();
+    console.log(
+      "[FLAST TURN 110] update von sortingFinished & sortingStarted -> END"
+    );
+  } finally {
+    isFinishingTurn.value = false;
   }
-
-  console.log("[FLAST TURN 105] Update lokal changes placedPlayer -> START");
-
-  const { data: placedPlayersFinalSnapshot } = await supabase
-    .from("game_session")
-    .select("current_round")
-    .eq("id", roomRef)
-    .single();
-  await supabase
-    .from("game_session")
-    .update({
-      current_round: {
-        ...((placedPlayersFinalSnapshot?.current_round as any) || {}),
-        placedPlayers: placedPlayerIds.value,
-      },
-    })
-    .eq("id", roomRef);
-  console.log(
-    "[FLAST TURN 106] lokale änderungen an placedPlayers in die DB gespeichert:",
-    placedPlayerIds.value.map((id) => playerById(id)?.name ?? id)
-  );
-
-  console.log("[FLAST TURN 107] Update lokal changes placedPlayer -> END");
-  console.log("[FLAST TURN 108] Alle Spieler wurden platziert. 🎉");
-  console.log(
-    "[FLAST TURN 109] update von sortingFinished & sortingStarted -> START"
-  );
-  const { data: sortingFlagsSnapshot } = await supabase
-    .from("game_session")
-    .select("current_round")
-    .eq("id", roomRef)
-    .single();
-  await supabase
-    .from("game_session")
-    .update({
-      current_round: {
-        ...((sortingFlagsSnapshot?.current_round as any) || {}),
-        sortingFinished: sortingFinished.value,
-        sortingStarted: sortingStarted.value,
-      },
-    })
-    .eq("id", roomRef);
-  FinishedViewCompundingFunc();
-  console.log(
-    "[FLAST TURN 110] update von sortingFinished & sortingStarted -> END"
-  );
 };
 
 function unnessesaryFunction() {
