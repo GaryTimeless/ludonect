@@ -142,6 +142,7 @@ export function setupSocketHandlers(
             currentTurnIndex: 0,
             activePlayerId: null,
             placedPlayers: [],
+            initialOrder: [],
             answers: {},
             playerOrderings: {},
           },
@@ -370,6 +371,7 @@ export function setupSocketHandlers(
           game.currentRound.estimationOrder = [];
           game.currentRound.currentTurnIndex = 0;
           game.currentRound.placedPlayers = [];
+          game.currentRound.initialOrder = [];
           game.currentRound.activePlayerId = null;
           game.currentRound.playerOrderings = {};
         }
@@ -420,6 +422,7 @@ export function setupSocketHandlers(
             currentTurnIndex: 0,
             activePlayerId: null,
             placedPlayers: [],
+            initialOrder: [],
             answers: {},
             playerOrderings: {},
           },
@@ -515,17 +518,22 @@ export function setupSocketHandlers(
         // Set estimation order (each player gets exactly one turn)
         const order = [...game.players.map(p => p.id)];
 
+        // Store the initial order (as arranged by host) - this will be used to reset for each player's turn
+        const hostOrder = [...game.players.map(p => p.id)];
+
         game.currentRound.sortingStarted = true;
         game.currentRound.estimationOrder = order;
         game.currentRound.currentTurnIndex = 0;
         game.currentRound.activePlayerId = order[0];
+        game.currentRound.initialOrder = hostOrder;
         // Initialize with all players visible in the order set by host
-        game.currentRound.placedPlayers = [...game.players.map(p => p.id)];
+        game.currentRound.placedPlayers = [...hostOrder];
 
         callback({ success: true });
         io.to(roomCode).emit('gameUpdate', game);
         console.log(`[Room ${roomCode}] Estimation game started`);
         console.log(`[Room ${roomCode}] estimationOrder:`, order);
+        console.log(`[Room ${roomCode}] initialOrder (host's arrangement):`, hostOrder);
         console.log(`[Room ${roomCode}] currentTurnIndex: 0, activePlayerId:`, order[0]);
       } catch (error) {
         console.error('[StartEstimationGame] Error:', error);
@@ -565,10 +573,7 @@ export function setupSocketHandlers(
           }
         }
 
-        // Update placed players with validated order
-        game.currentRound.placedPlayers = validatedPlacedPlayers;
-
-        // Store this player's ordering
+        // Store this player's ordering (don't update placedPlayers yet, we'll reset it below)
         if (!game.currentRound.playerOrderings) {
           game.currentRound.playerOrderings = {};
         }
@@ -584,14 +589,17 @@ export function setupSocketHandlers(
         console.log(`[Room ${roomCode}] estimationOrder:`, currentOrder);
 
         if (nextIndex < currentOrder.length) {
-          // More players to go
+          // More players to go - reset placedPlayers to initial order for next player
           game.currentRound.currentTurnIndex = nextIndex;
           game.currentRound.activePlayerId = currentOrder[nextIndex];
+          game.currentRound.placedPlayers = [...(game.currentRound.initialOrder || [])];
           console.log(`[Room ${roomCode}] Next player: ${game.currentRound.activePlayerId} (index ${nextIndex})`);
+          console.log(`[Room ${roomCode}] Reset placedPlayers to initial order:`, game.currentRound.placedPlayers);
         } else {
-          // All done!
+          // All done! Keep the last player's ordering for display
           game.currentRound.sortingFinished = true;
           game.currentRound.activePlayerId = null;
+          game.currentRound.placedPlayers = validatedPlacedPlayers;
           console.log(`[Room ${roomCode}] All turns finished!`);
         }
 

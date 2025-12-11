@@ -26,6 +26,7 @@ export interface CurrentRound {
   currentTurnIndex: number;       // Current index in estimationOrder
   activePlayerId: string | null;  // Current player's turn
   placedPlayers: string[];        // IDs of players who have placed themselves
+  initialOrder: string[];         // Original order set by host (used to reset for each turn)
   answers: Record<string, number>; // playerId -> answer value
   playerOrderings: Record<string, string[]>; // playerId -> their ordering of all players
 }
