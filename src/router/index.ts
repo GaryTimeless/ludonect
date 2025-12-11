@@ -22,6 +22,12 @@ const routes: Array<RouteRecordRaw> = [
     component: LobbyView
   },
   {
+    path: '/join/:roomCode',
+    name: 'JoinRoom',
+    component: LobbyView,
+    props: true,
+  },
+  {
     path: '/question/:gameId/:questionId',
     name: 'question',
     component: QuestionView
