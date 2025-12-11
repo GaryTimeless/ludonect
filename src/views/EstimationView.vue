@@ -186,53 +186,71 @@
       </v-card-title>
 
       <v-card-text>
-        <p class="text-center text-medium-emphasis mb-4">
+        <p class="text-center text-medium-emphasis mb-2">
           So hat jeder die Spieler sortiert:
         </p>
 
-        <!-- Horizontal scroll container for table -->
-        <div class="table-scroll-container">
-          <table class="ordering-comparison-table">
-            <thead>
-              <tr>
-                <th class="rank-column">Rang</th>
-                <th v-for="player in allPlayers" :key="player.id" class="player-column">
-                  <div class="player-header">
-                    <v-avatar :color="getPlayerColor(player.id)" size="32" class="mb-2">
-                      <span class="text-white font-weight-bold text-caption">
-                        {{ player.name.charAt(0).toUpperCase() }}
-                      </span>
-                    </v-avatar>
-                    <div class="player-name">{{ player.name }}</div>
-                    <v-chip size="x-small" color="primary" class="mt-1">
-                      {{ getPlayerAnswer(player.id) }}
-                    </v-chip>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="rank in maxPlayers" :key="rank">
-                <td class="rank-cell">{{ rank }}</td>
-                <td v-for="player in allPlayers" :key="player.id" class="ordering-cell">
-                  <div class="ordered-player">
-                    <v-avatar
-                      :color="getPlayerColor(getPlayerOrderingAtRank(player.id, rank - 1))"
-                      size="28"
-                      class="mr-2"
-                    >
-                      <span class="text-white font-weight-bold text-caption">
-                        {{ getPlayerNameShort(getPlayerOrderingAtRank(player.id, rank - 1)) }}
-                      </span>
-                    </v-avatar>
-                    <span class="ordered-player-name">
-                      {{ getPlayerName(getPlayerOrderingAtRank(player.id, rank - 1)) }}
+        <!-- Scroll hint for mobile -->
+        <div class="scroll-hint text-center mb-4">
+          <v-icon color="primary" size="small">mdi-arrow-left-right</v-icon>
+          <span class="text-caption text-medium-emphasis ml-1">Wische nach links/rechts</span>
+        </div>
+
+        <!-- Horizontal scroll container for cards -->
+        <div class="cards-scroll-container">
+          <div class="player-cards-wrapper">
+            <div
+              v-for="player in allPlayers"
+              :key="player.id"
+              class="player-ordering-card scale-in"
+            >
+              <!-- Player header with answer -->
+              <div class="card-header" :style="{ background: getPlayerColor(player.id) }">
+                <v-avatar color="white" size="40" class="mb-2">
+                  <span class="font-weight-bold" :style="{ color: getPlayerColor(player.id) }">
+                    {{ player.name.charAt(0).toUpperCase() }}
+                  </span>
+                </v-avatar>
+                <div class="card-player-name">{{ player.name }}</div>
+                <div class="card-answer-chip">
+                  Antwort: <strong>{{ getPlayerAnswer(player.id) }}</strong>
+                </div>
+              </div>
+
+              <!-- Ordering list -->
+              <div class="card-ordering-list">
+                <div
+                  v-for="(_, rank) in maxPlayers"
+                  :key="rank"
+                  class="ordering-row"
+                >
+                  <div class="rank-badge">{{ rank + 1 }}</div>
+                  <v-avatar
+                    :color="getPlayerColor(getPlayerOrderingAtRank(player.id, rank))"
+                    size="32"
+                    class="mx-2"
+                  >
+                    <span class="text-white font-weight-bold text-caption">
+                      {{ getPlayerNameShort(getPlayerOrderingAtRank(player.id, rank)) }}
                     </span>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </v-avatar>
+                  <span class="ordering-player-name">
+                    {{ getPlayerName(getPlayerOrderingAtRank(player.id, rank)) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scroll indicator dots -->
+        <div class="scroll-indicators" v-if="allPlayers.length > 1">
+          <div
+            v-for="player in allPlayers"
+            :key="player.id"
+            class="indicator-dot"
+            :style="{ background: getPlayerColor(player.id) }"
+          ></div>
         </div>
 
         <v-btn
@@ -326,7 +344,11 @@ const activePlayerName = computed(() => {
   return getPlayerName(activePlayerId.value);
 });
 
-const playerOrderings = computed(() => currentRound.value?.playerOrderings || {});
+const playerOrderings = computed(() => {
+  const orderings = currentRound.value?.playerOrderings || {};
+  console.log('[EstimationView] playerOrderings:', orderings);
+  return orderings;
+});
 
 const allPlayers = computed(() => gameState.value?.players || []);
 
@@ -334,6 +356,7 @@ const maxPlayers = computed(() => allPlayers.value.length);
 
 function getPlayerAnswer(playerId: string): string {
   const answer = answers.value[playerId];
+  console.log(`[EstimationView] getPlayerAnswer(${playerId}):`, answer, 'all answers:', answers.value);
   return answer !== undefined ? String(answer) : 'Keine Antwort';
 }
 
@@ -513,92 +536,132 @@ async function prepareNextRound() {
   z-index: 10;
 }
 
-.table-scroll-container {
+.scroll-hint {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.cards-scroll-container {
   overflow-x: auto;
+  overflow-y: visible;
   margin: 0 -16px;
-  padding: 0 16px;
+  padding: 0 16px 16px 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
 }
 
-.ordering-comparison-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 8px;
-  min-width: 600px;
+.cards-scroll-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Edge */
 }
 
-.ordering-comparison-table thead th {
-  background: linear-gradient(135deg, #59981A 0%, #7CB342 100%);
+.player-cards-wrapper {
+  display: flex;
+  gap: 16px;
+  padding: 8px 0;
+  min-width: min-content;
+}
+
+.player-ordering-card {
+  flex: 0 0 auto;
+  width: 280px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  scroll-snap-align: center;
+  transition: transform 0.2s;
+}
+
+.player-ordering-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  padding: 20px;
   color: white;
-  padding: 12px 8px;
   text-align: center;
-  border-radius: 8px;
-  font-weight: 600;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.rank-column {
-  width: 60px;
-  min-width: 60px;
-}
-
-.player-column {
-  min-width: 140px;
-}
-
-.player-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 4px;
 }
 
-.player-name {
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-align: center;
-  word-break: break-word;
-  max-width: 120px;
-}
-
-.rank-cell {
-  background: linear-gradient(135deg, #f9ffe6 0%, #ffffff 100%);
-  text-align: center;
-  font-weight: 700;
+.card-player-name {
   font-size: 1.1rem;
-  color: #385028;
-  padding: 12px;
-  border-radius: 8px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.ordering-cell {
-  background: #ffffff;
-  border: 2px solid #e0e0e0;
-  padding: 8px;
-  border-radius: 8px;
+.card-answer-chip {
+  background: rgba(255, 255, 255, 0.95);
+  color: #2d4a0e;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-ordering-list {
+  padding: 16px;
+}
+
+.ordering-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: linear-gradient(135deg, #f9ffe6 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 2px solid #e8f5e9;
   transition: all 0.2s;
 }
 
-.ordering-cell:hover {
-  background: #f5f5f5;
+.ordering-row:hover {
   border-color: #59981A;
+  transform: translateX(4px);
 }
 
-.ordered-player {
+.rank-badge {
+  background: linear-gradient(135deg, #59981A 0%, #7CB342 100%);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(89, 152, 26, 0.3);
 }
 
-.ordered-player-name {
-  font-size: 0.875rem;
-  font-weight: 500;
+.ordering-player-name {
+  font-size: 0.95rem;
+  font-weight: 600;
   color: #2d4a0e;
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 90px;
+}
+
+.scroll-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  opacity: 0.5;
+  transition: all 0.3s;
 }
 
 @media (max-width: 600px) {
@@ -611,23 +674,31 @@ async function prepareNextRound() {
     padding: 12px;
   }
 
-  .table-scroll-container {
-    margin: 0 -24px;
-    padding: 0 24px;
+  .player-ordering-card {
+    width: 260px;
   }
 
-  .player-column {
-    min-width: 120px;
+  .card-player-name {
+    font-size: 1rem;
   }
 
-  .ordered-player-name {
-    max-width: 70px;
-    font-size: 0.75rem;
+  .card-answer-chip {
+    font-size: 0.85rem;
+    padding: 6px 12px;
   }
 
-  .player-name {
-    font-size: 0.75rem;
-    max-width: 100px;
+  .ordering-row {
+    padding: 8px 10px;
+  }
+
+  .rank-badge {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  .ordering-player-name {
+    font-size: 0.85rem;
   }
 }
 </style>
