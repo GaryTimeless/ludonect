@@ -23,9 +23,11 @@ export interface CurrentRound {
   sortingFinished?: boolean;      // All players have placed themselves
   secondTurnStartPlayer?: boolean; // First player gets second turn
   estimationOrder: string[];      // Array of player socket IDs
+  currentTurnIndex: number;       // Current index in estimationOrder
   activePlayerId: string | null;  // Current player's turn
   placedPlayers: string[];        // IDs of players who have placed themselves
   answers: Record<string, number>; // playerId -> answer value
+  playerOrderings: Record<string, string[]>; // playerId -> their ordering of all players
 }
 
 export interface CreateRoomResponse {

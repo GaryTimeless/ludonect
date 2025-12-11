@@ -63,6 +63,20 @@
             <span class="ml-2">Warte auf andere Spieler...</span>
           </div>
         </transition>
+
+        <!-- Host can proceed when all have answered -->
+        <v-btn
+          v-if="isHost && allPlayersAnswered"
+          color="primary"
+          size="x-large"
+          block
+          @click="proceedToEstimation"
+          :loading="proceeding"
+          class="btn-press mt-6"
+        >
+          <v-icon start>mdi-arrow-right</v-icon>
+          Zur Schätzung
+        </v-btn>
       </v-card-text>
     </v-card>
   </v-container>
@@ -88,15 +102,18 @@ const max = ref(100);
 const answer = ref(50);
 const hasAnswered = ref(false);
 const submitting = ref(false);
+const proceeding = ref(false);
 
 // Get game state from socket service
 const gameState = computed(() => socketService.gameState.value);
 const currentPlayerId = computed(() => socketService.getSocketId());
+const isHost = computed(() => gameState.value?.hostId === currentPlayerId.value);
 const totalPlayers = computed(() => gameState.value?.players.length || 0);
 const answeredCount = computed(() => {
   if (!gameState.value?.currentRound) return 0;
   return Object.keys(gameState.value.currentRound.answers).length;
 });
+const allPlayersAnswered = computed(() => answeredCount.value === totalPlayers.value && totalPlayers.value > 0);
 
 onMounted(async () => {
   console.log('[QuestionView] Mounted with question ID:', questionId);
@@ -155,6 +172,22 @@ async function submitAnswer() {
     alert(error.message || 'Fehler beim Speichern der Antwort');
   } finally {
     submitting.value = false;
+  }
+}
+
+async function proceedToEstimation() {
+  proceeding.value = true;
+  try {
+    // Tell server to navigate all clients to estimation view
+    await socketService.emit('proceedToEstimation', {
+      roomCode: gameId,
+    });
+    console.log('[QuestionView] Proceeding to estimation view');
+  } catch (error: any) {
+    console.error('[QuestionView] Fehler beim Weiterleiten:', error);
+    alert(error.message || 'Fehler beim Weiterleiten');
+  } finally {
+    proceeding.value = false;
   }
 }
 </script>

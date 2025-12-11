@@ -139,9 +139,11 @@ export function setupSocketHandlers(
             questionId,
             sortingStarted: false,
             estimationOrder: [],
+            currentTurnIndex: 0,
             activePlayerId: null,
             placedPlayers: [],
             answers: {},
+            playerOrderings: {},
           },
         });
 
@@ -180,9 +182,39 @@ export function setupSocketHandlers(
         callback({ success: true });
         io.to(roomCode).emit('gameUpdate', game);
         console.log(`[Room ${roomCode}] Player ${socket.id} submitted answer: ${answer}`);
+        console.log(`[Room ${roomCode}] All answers:`, game.currentRound.answers);
+        console.log(`[Room ${roomCode}] All player IDs:`, game.players.map(p => p.id));
       } catch (error) {
         console.error('[SubmitAnswer] Error:', error);
         callback({ success: false, error: 'Failed to submit answer' });
+      }
+    });
+
+    // =========================================================================
+    // PROCEED TO ESTIMATION (Host moves everyone from question to estimation)
+    // =========================================================================
+    socket.on('proceedToEstimation', (data: GenericRoomData, callback: (response: GenericResponse) => void) => {
+      try {
+        const { roomCode } = data;
+        const game = gameManager.getGame(roomCode);
+
+        if (!game || !game.currentRound) {
+          callback({ success: false, error: 'Invalid game state' });
+          return;
+        }
+
+        if (game.hostId !== socket.id) {
+          callback({ success: false, error: 'Only the host can proceed to estimation' });
+          return;
+        }
+
+        // Navigate all players to estimation view
+        callback({ success: true });
+        io.to(roomCode).emit('navigateTo', `/estimation/${roomCode}/${game.currentRound.questionId}`);
+        console.log(`[Room ${roomCode}] Proceeding to estimation view`);
+      } catch (error) {
+        console.error('[ProceedToEstimation] Error:', error);
+        callback({ success: false, error: 'Failed to proceed to estimation' });
       }
     });
 
@@ -336,8 +368,10 @@ export function setupSocketHandlers(
           game.currentRound.sortingFinished = false;
           game.currentRound.secondTurnStartPlayer = false;
           game.currentRound.estimationOrder = [];
+          game.currentRound.currentTurnIndex = 0;
           game.currentRound.placedPlayers = [];
           game.currentRound.activePlayerId = null;
+          game.currentRound.playerOrderings = {};
         }
 
         callback({ success: true });
@@ -383,9 +417,11 @@ export function setupSocketHandlers(
             sortingStarted: false,
             sortingFinished: false,
             estimationOrder: [],
+            currentTurnIndex: 0,
             activePlayerId: null,
             placedPlayers: [],
             answers: {},
+            playerOrderings: {},
           },
         });
 
@@ -476,18 +512,21 @@ export function setupSocketHandlers(
           return;
         }
 
-        // Set estimation order (all players + first player again at end)
+        // Set estimation order (each player gets exactly one turn)
         const order = [...game.players.map(p => p.id)];
-        order.push(game.players[0].id); // First player gets second turn
 
         game.currentRound.sortingStarted = true;
         game.currentRound.estimationOrder = order;
+        game.currentRound.currentTurnIndex = 0;
         game.currentRound.activePlayerId = order[0];
-        game.currentRound.placedPlayers = [order[0]]; // First player auto-placed
+        // Initialize with all players visible in the order set by host
+        game.currentRound.placedPlayers = [...game.players.map(p => p.id)];
 
         callback({ success: true });
         io.to(roomCode).emit('gameUpdate', game);
-        console.log(`[Room ${roomCode}] Estimation game started, order:`, order);
+        console.log(`[Room ${roomCode}] Estimation game started`);
+        console.log(`[Room ${roomCode}] estimationOrder:`, order);
+        console.log(`[Room ${roomCode}] currentTurnIndex: 0, activePlayerId:`, order[0]);
       } catch (error) {
         console.error('[StartEstimationGame] Error:', error);
         callback({ success: false, error: 'Failed to start estimation game' });
@@ -507,33 +546,57 @@ export function setupSocketHandlers(
           return;
         }
 
-        // Update placed players with current order
-        game.currentRound.placedPlayers = placedPlayers;
+        // Validate: only accept valid player IDs, no duplicates
+        const validPlayerIds = new Set(game.players.map(p => p.id));
+        const seenIds = new Set<string>();
+        const validatedPlacedPlayers: string[] = [];
 
-        // Move to next player
+        for (const playerId of placedPlayers) {
+          if (validPlayerIds.has(playerId) && !seenIds.has(playerId)) {
+            validatedPlacedPlayers.push(playerId);
+            seenIds.add(playerId);
+          }
+        }
+
+        // Ensure all players are included (add any missing at the end)
+        for (const playerId of validPlayerIds) {
+          if (!seenIds.has(playerId)) {
+            validatedPlacedPlayers.push(playerId);
+          }
+        }
+
+        // Update placed players with validated order
+        game.currentRound.placedPlayers = validatedPlacedPlayers;
+
+        // Store this player's ordering
+        if (!game.currentRound.playerOrderings) {
+          game.currentRound.playerOrderings = {};
+        }
+        game.currentRound.playerOrderings[socket.id] = validatedPlacedPlayers;
+        console.log(`[Room ${roomCode}] Stored ordering for player ${socket.id}:`, validatedPlacedPlayers);
+
+        // Move to next player using tracked index (not indexOf which fails with duplicates)
         const currentOrder = game.currentRound.estimationOrder || [];
-        const nextIndex = placedPlayers.length;
+        const currentIndex = game.currentRound.currentTurnIndex || 0;
+        const nextIndex = currentIndex + 1;
+
+        console.log(`[Room ${roomCode}] finishPlayerTurn: currentIndex=${currentIndex}, nextIndex=${nextIndex}, orderLength=${currentOrder.length}`);
+        console.log(`[Room ${roomCode}] estimationOrder:`, currentOrder);
 
         if (nextIndex < currentOrder.length) {
           // More players to go
+          game.currentRound.currentTurnIndex = nextIndex;
           game.currentRound.activePlayerId = currentOrder[nextIndex];
-
-          // Add next player to placed list
-          game.currentRound.placedPlayers.push(currentOrder[nextIndex]);
-
-          // Check if this is the last player (first player's second turn)
-          if (nextIndex === currentOrder.length - 1) {
-            game.currentRound.secondTurnStartPlayer = true;
-          }
+          console.log(`[Room ${roomCode}] Next player: ${game.currentRound.activePlayerId} (index ${nextIndex})`);
         } else {
           // All done!
           game.currentRound.sortingFinished = true;
           game.currentRound.activePlayerId = null;
+          console.log(`[Room ${roomCode}] All turns finished!`);
         }
 
         callback({ success: true });
         io.to(roomCode).emit('gameUpdate', game);
-        console.log(`[Room ${roomCode}] Player turn finished, active:`, game.currentRound.activePlayerId);
       } catch (error) {
         console.error('[FinishPlayerTurn] Error:', error);
         callback({ success: false, error: 'Failed to finish player turn' });

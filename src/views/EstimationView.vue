@@ -116,49 +116,51 @@
         </v-alert>
 
         <p class="text-center mb-4 text-medium-emphasis">
-          Nutze die Pfeile um deinen Namen neu zu positionieren
+          {{ isMyTurn ? 'Ziehe deinen Namen an die richtige Position' : 'Warte auf die anderen Spieler' }}
         </p>
 
-        <!-- Current placement order -->
-        <v-list class="placement-list mb-4">
-          <v-list-item
-            v-for="(playerId, idx) in placedPlayers"
-            :key="playerId"
-            class="placement-item mb-2"
-            :class="{ 'active-player': playerId === localPlayerId && isMyTurn }"
-          >
-            <template #prepend>
-              <v-avatar :color="getPlayerColor(playerId)" size="36">
-                <span class="text-white font-weight-bold text-caption">
-                  {{ getPlayerName(playerId).charAt(0).toUpperCase() }}
-                </span>
-              </v-avatar>
-            </template>
-            <v-list-item-title>
-              {{ idx + 1 }}. {{ getPlayerName(playerId) }}
-            </v-list-item-title>
-          </v-list-item>
-        </v-list>
-
-        <!-- Move controls (only for active player) -->
-        <div v-if="isMyTurn" class="move-controls mb-4">
-          <v-btn
-            icon="mdi-arrow-up"
-            size="large"
-            color="primary"
-            @click="movePlayer(-1)"
-            :disabled="!canMoveUp"
-            class="btn-press"
-          />
-          <v-btn
-            icon="mdi-arrow-down"
-            size="large"
-            color="primary"
-            @click="movePlayer(1)"
-            :disabled="!canMoveDown"
-            class="btn-press"
-          />
-        </div>
+        <!-- Current placement order with drag and drop -->
+        <VueDraggable
+          v-model="placedPlayersLocal"
+          :disabled="!isMyTurn"
+          item-key="id"
+          class="player-drag-list"
+          @end="onDragEnd"
+        >
+          <template #item="{ element, index }">
+            <v-card
+              class="placement-drag-item mb-2"
+              :class="{
+                'active-player': element === localPlayerId && isMyTurn,
+                'my-turn': isMyTurn
+              }"
+              elevation="2"
+            >
+              <v-card-text class="d-flex align-center py-2">
+                <v-icon v-if="isMyTurn" class="drag-handle mr-3" size="small">
+                  mdi-drag
+                </v-icon>
+                <v-avatar :color="getPlayerColor(element)" size="36" class="mr-3">
+                  <span class="text-white font-weight-bold text-caption">
+                    {{ getPlayerName(element).charAt(0).toUpperCase() }}
+                  </span>
+                </v-avatar>
+                <div class="flex-grow-1">
+                  <div class="font-weight-medium">
+                    {{ index + 1 }}. {{ getPlayerName(element) }}
+                  </div>
+                </div>
+                <v-chip
+                  v-if="element === localPlayerId && isMyTurn"
+                  size="small"
+                  color="success"
+                >
+                  Du
+                </v-chip>
+              </v-card-text>
+            </v-card>
+          </template>
+        </VueDraggable>
 
         <!-- Finish button (sticky at bottom for mobile) -->
         <div v-if="isMyTurn" class="finish-button-container safe-bottom">
@@ -177,37 +179,61 @@
       </v-card-text>
     </v-card>
 
-    <!-- Results: Show final order with answers -->
+    <!-- Results: Show each player's ordering side-by-side -->
     <v-card v-else class="results-card" elevation="3">
       <v-card-title class="text-center">
         <h2>🎉 Finale Reihenfolge</h2>
       </v-card-title>
 
       <v-card-text>
-        <v-list class="results-list">
-          <v-list-item
-            v-for="(result, index) in finalResults"
-            :key="result.playerId"
-            class="result-item mb-2 scale-in"
-            :style="{ animationDelay: `${index * 0.1}s` }"
-          >
-            <template #prepend>
-              <v-avatar :color="getPlayerColor(result.playerId)" size="40">
-                <span class="text-white font-weight-bold">
-                  {{ result.playerName.charAt(0).toUpperCase() }}
-                </span>
-              </v-avatar>
-            </template>
-            <v-list-item-title>
-              {{ index + 1 }}. {{ result.playerName }}
-            </v-list-item-title>
-            <template #append>
-              <v-chip color="primary" size="large">
-                {{ result.answer }}
-              </v-chip>
-            </template>
-          </v-list-item>
-        </v-list>
+        <p class="text-center text-medium-emphasis mb-4">
+          So hat jeder die Spieler sortiert:
+        </p>
+
+        <!-- Horizontal scroll container for table -->
+        <div class="table-scroll-container">
+          <table class="ordering-comparison-table">
+            <thead>
+              <tr>
+                <th class="rank-column">Rang</th>
+                <th v-for="player in allPlayers" :key="player.id" class="player-column">
+                  <div class="player-header">
+                    <v-avatar :color="getPlayerColor(player.id)" size="32" class="mb-2">
+                      <span class="text-white font-weight-bold text-caption">
+                        {{ player.name.charAt(0).toUpperCase() }}
+                      </span>
+                    </v-avatar>
+                    <div class="player-name">{{ player.name }}</div>
+                    <v-chip size="x-small" color="primary" class="mt-1">
+                      {{ getPlayerAnswer(player.id) }}
+                    </v-chip>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="rank in maxPlayers" :key="rank">
+                <td class="rank-cell">{{ rank }}</td>
+                <td v-for="player in allPlayers" :key="player.id" class="ordering-cell">
+                  <div class="ordered-player">
+                    <v-avatar
+                      :color="getPlayerColor(getPlayerOrderingAtRank(player.id, rank - 1))"
+                      size="28"
+                      class="mr-2"
+                    >
+                      <span class="text-white font-weight-bold text-caption">
+                        {{ getPlayerNameShort(getPlayerOrderingAtRank(player.id, rank - 1)) }}
+                      </span>
+                    </v-avatar>
+                    <span class="ordered-player-name">
+                      {{ getPlayerName(getPlayerOrderingAtRank(player.id, rank - 1)) }}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <v-btn
           v-if="isHost"
@@ -215,7 +241,7 @@
           size="x-large"
           block
           @click="prepareNextRound"
-          class="btn-press mt-4"
+          class="btn-press mt-6"
         >
           <v-icon start>mdi-arrow-right</v-icon>
           Nächste Runde vorbereiten
@@ -258,11 +284,37 @@ const totalPlayers = computed(() => gameState.value?.players.length || 0);
 const answeredCount = computed(() => Object.keys(answers.value).length);
 
 const isMyTurn = computed(() => activePlayerId.value === localPlayerId.value);
-const myPositionIndex = computed(() =>
-  placedPlayers.value.findIndex((id: string) => id === localPlayerId.value)
+
+// Local copy of placed players for drag and drop
+const placedPlayersLocal = ref<string[]>([]);
+
+// Track if we've modified local during our turn (to preserve drag changes)
+const hasLocalChanges = ref(false);
+
+// Watch for changes in placedPlayers from server and sync to local
+watch(
+  () => placedPlayers.value,
+  (newPlayers) => {
+    // Sync if: local is empty, OR it's not our turn, OR we haven't made local changes yet
+    if (placedPlayersLocal.value.length === 0 || !isMyTurn.value || !hasLocalChanges.value) {
+      placedPlayersLocal.value = [...newPlayers];
+    }
+  },
+  { immediate: true, deep: true }
 );
-const canMoveUp = computed(() => myPositionIndex.value > 0);
-const canMoveDown = computed(() => myPositionIndex.value < placedPlayers.value.length - 1);
+
+// When our turn starts, reset the local changes flag and sync latest state
+watch(
+  () => activePlayerId.value,
+  (newActiveId, oldActiveId) => {
+    if (newActiveId === localPlayerId.value) {
+      // Our turn just started - sync latest state from server
+      hasLocalChanges.value = false;
+      placedPlayersLocal.value = [...placedPlayers.value];
+      console.log('[Estimation] Turn started, synced placedPlayers:', placedPlayersLocal.value);
+    }
+  }
+);
 
 const currentQuestion = computed(() => {
   if (!currentRound.value?.questionId) return null;
@@ -274,13 +326,30 @@ const activePlayerName = computed(() => {
   return getPlayerName(activePlayerId.value);
 });
 
-const finalResults = computed(() => {
-  return placedPlayers.value.map((playerId: string) => ({
-    playerId,
-    playerName: getPlayerName(playerId),
-    answer: answers.value[playerId] || 'Keine Antwort',
-  }));
-});
+const playerOrderings = computed(() => currentRound.value?.playerOrderings || {});
+
+const allPlayers = computed(() => gameState.value?.players || []);
+
+const maxPlayers = computed(() => allPlayers.value.length);
+
+function getPlayerAnswer(playerId: string): string {
+  const answer = answers.value[playerId];
+  return answer !== undefined ? String(answer) : 'Keine Antwort';
+}
+
+function getPlayerOrderingAtRank(playerId: string, rankIndex: number): string {
+  const ordering = playerOrderings.value[playerId];
+  if (!ordering || rankIndex >= ordering.length) {
+    return '';
+  }
+  return ordering[rankIndex];
+}
+
+function getPlayerNameShort(playerId: string): string {
+  if (!playerId) return '?';
+  const player = gameState.value?.players.find((p: any) => p.id === playerId);
+  return player?.name?.charAt(0).toUpperCase() || '?';
+}
 
 // Generate consistent colors
 const playerColors = ['#9C27B0', '#FF9800', '#2196F3', '#4CAF50', '#F44336', '#00BCD4'];
@@ -336,23 +405,10 @@ async function startEstimation() {
   }
 }
 
-function movePlayer(direction: number) {
-  const newPlaced = [...placedPlayers.value];
-  const index = myPositionIndex.value;
-  const newIndex = index + direction;
-
-  if (newIndex < 0 || newIndex >= newPlaced.length) return;
-
-  const [moved] = newPlaced.splice(index, 1);
-  newPlaced.splice(newIndex, 0, moved);
-
-  // Update immediately via socket
-  socketService.emit('updatePlacedPlayers', {
-    roomCode: gameId.value,
-    placedPlayers: newPlaced,
-  }).catch((error: any) => {
-    console.error('[Estimation] Move error:', error);
-  });
+function onDragEnd() {
+  // Mark that we've made local changes (prevents server sync overwriting our drag)
+  hasLocalChanges.value = true;
+  console.log('[Estimation] Player dragged to new position');
 }
 
 async function finishPlacement() {
@@ -360,7 +416,7 @@ async function finishPlacement() {
   try {
     await socketService.emit('finishPlayerTurn', {
       roomCode: gameId.value,
-      placedPlayers: placedPlayers.value,
+      placedPlayers: placedPlayersLocal.value,
     });
     console.log('[Estimation] Turn finished');
   } catch (error: any) {
@@ -428,22 +484,23 @@ async function prepareNextRound() {
   background: transparent;
 }
 
-.placement-item {
+.placement-drag-item {
   background: #f5f5f5;
-  border-radius: 12px;
-  transition: all 0.3s;
+  transition: all 0.2s;
 }
 
-.placement-item.active-player {
+.placement-drag-item.my-turn {
+  cursor: grab;
+}
+
+.placement-drag-item.my-turn:active {
+  cursor: grabbing;
+}
+
+.placement-drag-item.active-player {
   background: linear-gradient(135deg, #d0f0c0 0%, #e8f5e9 100%);
   box-shadow: 0 4px 12px rgba(89, 152, 26, 0.3);
   transform: scale(1.02);
-}
-
-.move-controls {
-  display: flex;
-  justify-content: center;
-  gap: 60px;
 }
 
 .finish-button-container {
@@ -456,14 +513,92 @@ async function prepareNextRound() {
   z-index: 10;
 }
 
-.results-list {
-  max-width: 500px;
-  margin: 0 auto;
+.table-scroll-container {
+  overflow-x: auto;
+  margin: 0 -16px;
+  padding: 0 16px;
 }
 
-.result-item {
+.ordering-comparison-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 8px;
+  min-width: 600px;
+}
+
+.ordering-comparison-table thead th {
+  background: linear-gradient(135deg, #59981A 0%, #7CB342 100%);
+  color: white;
+  padding: 12px 8px;
+  text-align: center;
+  border-radius: 8px;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.rank-column {
+  width: 60px;
+  min-width: 60px;
+}
+
+.player-column {
+  min-width: 140px;
+}
+
+.player-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+}
+
+.player-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  word-break: break-word;
+  max-width: 120px;
+}
+
+.rank-cell {
   background: linear-gradient(135deg, #f9ffe6 0%, #ffffff 100%);
-  border-radius: 12px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #385028;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.ordering-cell {
+  background: #ffffff;
+  border: 2px solid #e0e0e0;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.ordering-cell:hover {
+  background: #f5f5f5;
+  border-color: #59981A;
+}
+
+.ordered-player {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.ordered-player-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #2d4a0e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
 }
 
 @media (max-width: 600px) {
@@ -472,12 +607,27 @@ async function prepareNextRound() {
     font-size: 1.1rem;
   }
 
-  .move-controls {
-    gap: 40px;
-  }
-
   .finish-button-container {
     padding: 12px;
+  }
+
+  .table-scroll-container {
+    margin: 0 -24px;
+    padding: 0 24px;
+  }
+
+  .player-column {
+    min-width: 120px;
+  }
+
+  .ordered-player-name {
+    max-width: 70px;
+    font-size: 0.75rem;
+  }
+
+  .player-name {
+    font-size: 0.75rem;
+    max-width: 100px;
   }
 }
 </style>
