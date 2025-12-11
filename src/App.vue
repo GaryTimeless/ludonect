@@ -1,11 +1,16 @@
 <template>
-  <ion-app>
-    <ion-router-outlet />
-  </ion-app>
+  <v-app>
+    <v-main>
+      <router-view v-slot="{ Component }">
+        <transition name="page" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </v-main>
+  </v-app>
 </template>
 
 <script setup lang="ts">
-import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { provide, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import questions from "@/questions.json";
@@ -33,3 +38,8 @@ onUnmounted(() => {
   socketService.disconnect();
 });
 </script>
+
+<style>
+@import './styles/animations.css';
+@import './styles/global.css';
+</style>

@@ -20,6 +20,8 @@ export interface GameSession {
 export interface CurrentRound {
   questionId: number;
   sortingStarted: boolean;
+  sortingFinished?: boolean;      // All players have placed themselves
+  secondTurnStartPlayer?: boolean; // First player gets second turn
   estimationOrder: string[];      // Array of player socket IDs
   activePlayerId: string | null;  // Current player's turn
   placedPlayers: string[];        // IDs of players who have placed themselves
@@ -72,4 +74,14 @@ export interface GenericRoomData {
 export interface GenericResponse {
   success: boolean;
   error?: string;
+}
+
+export interface StartNextQuestionData {
+  roomCode: string;
+  questionId: number;
+}
+
+export interface UpdatePlacedPlayersData {
+  roomCode: string;
+  placedPlayers: string[]; // Updated array of placed player IDs
 }

@@ -1,221 +1,264 @@
-<!-- TODO Dark Mode funktioniert nicht sauber -->
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar color="primary">
-        <ion-title>Ludonect Lobby</ion-title>
-      </ion-toolbar>
-    </ion-header>
+  <v-container class="mobile-container fade-in">
+    <div class="lobby-header">
+      <img
+        src="@/assets/ludonect_combo.png"
+        alt="Ludonect Logo"
+        class="ludonect-logo scale-in"
+      />
+    </div>
 
-    <ion-content class="ion-padding">
-      <div class="lobby-header">
-        <img
-          src="@/assets/ludonect_combo.png"
-          alt="Ludonect Logo"
-          class="ludonect-logo"
-        />
-      </div>
-
-      <!-- Play Buttons -->
-      <div v-if="!roomCode">
-        <template v-if="mode === 'start'">
-          <div class="lobby-buttons">
-            <ion-button expand="block" @click="mode = 'create'">
-              Neuen Raum erstellen
-            </ion-button>
-            <ion-button expand="block" @click="mode = 'join'">
-              Trete Raum bei
-            </ion-button>
-          </div>
-
-          <!-- How to Play -->
-          <ion-button
-            expand="block"
-            fill="outline"
-            size="small"
-            color="medium"
-            @click="showHowToPlay = !showHowToPlay"
-            style="margin-bottom: 10px"
+    <!-- Play Buttons -->
+    <div v-if="!roomCode">
+      <template v-if="mode === 'start'">
+        <div class="lobby-buttons">
+          <v-btn
+            color="primary"
+            size="x-large"
+            block
+            class="btn-press"
+            @click="mode = 'create'"
           >
-            {{ showHowToPlay ? "Weniger anzeigen" : "How to Play" }}
-          </ion-button>
-          <transition name="fade">
-            <div v-if="showHowToPlay">
-              <div class="how-to-play">
-                <strong>So funktioniert Ludonect:</strong>
+            Neuen Raum erstellen
+          </v-btn>
+          <v-btn
+            color="secondary"
+            size="x-large"
+            block
+            class="btn-press"
+            @click="mode = 'join'"
+          >
+            Trete Raum bei
+          </v-btn>
+        </div>
 
-                <ol>
-                  <li>Raum erstellen oder beitreten</li>
+        <!-- How to Play -->
+        <v-btn
+          variant="outlined"
+          color="primary"
+          block
+          class="mt-4"
+          @click="showHowToPlay = !showHowToPlay"
+        >
+          {{ showHowToPlay ? "Weniger anzeigen" : "How to Play" }}
+        </v-btn>
+        <transition name="fade">
+          <v-card v-if="showHowToPlay" class="mt-4" elevation="2">
+            <v-card-text class="how-to-play">
+              <strong>So funktioniert Ludonect:</strong>
+
+              <ol>
+                <li>Raum erstellen oder beitreten</li>
+                <li>
+                  Jede*r beantwortet eine Frage geheim<br />
+                  <small>(Einigt euch grob, wie die Frage zu verstehen ist.)</small>
+                </li>
+                <li>Schätzt ein, wie die Antworten der Gruppe zueinander passen</li>
+                <li>Antworten werden aufgedeckt und gemeinsam besprochen</li>
+                <li>Nächste Runde!</li>
+              </ol>
+
+              <div class="example-questions">
+                <div><strong>Beispiel-Fragen:</strong></div>
+                <ul>
                   <li>
-                    Jede*r beantwortet eine Frage geheim<br />
-                    <small>(Einigt euch grob, wie die Frage zu verstehen ist.)</small>
+                    Wie oft schaust du Dokus?<br />
+                    <span class="example-scale">0 = gar nicht | 100 = lieber als alles andere</span>
                   </li>
-                  <li>Schätzt ein, wie die Antworten der Gruppe zueinander passen</li>
-                  <li>Antworten werden aufgedeckt und gemeinsam besprochen</li>
-                  <li>Nächste Runde!</li>
-                </ol>
-
-                <div class="example-questions">
-                  <div><strong>Beispiel-Fragen:</strong></div>
-                  <ul>
-                    <li>
-                      Wie oft schaust du Dokus?<br />
-                      <span class="example-scale">0 = gar nicht | 100 = lieber als alles andere</span>
-                    </li>
-                    <li>
-                      Wie spontan bist du?<br />
-                      <span class="example-scale">0 = gar nicht | 100 = Wer hat Bock auf ein Eis?</span>
-                    </li>
-                    <li>
-                      Wie gerne würdest du für einen Tag unsichtbar sein?<br />
-                      <span class="example-scale">0 = gar nicht | 100 = muhahahaha</span>
-                    </li>
-                  </ul>
-                </div>
+                  <li>
+                    Wie spontan bist du?<br />
+                    <span class="example-scale">0 = gar nicht | 100 = Wer hat Bock auf ein Eis?</span>
+                  </li>
+                  <li>
+                    Wie gerne würdest du für einen Tag unsichtbar sein?<br />
+                    <span class="example-scale">0 = gar nicht | 100 = muhahahaha</span>
+                  </li>
+                </ul>
               </div>
-            </div>
-          </transition>
-        </template>
+            </v-card-text>
+          </v-card>
+        </transition>
+      </template>
 
-        <!-- Raum erstellen -->
-        <template v-else-if="mode === 'create'">
-          <div class="lobby-room-wrapper">
-            <ion-item>
-              <ion-label position="floating">Dein Name</ion-label>
-              <ion-input v-model="playerName" :maxlength="20" />
-            </ion-item>
-            <ion-button
-              expand="block"
+      <!-- Raum erstellen -->
+      <template v-else-if="mode === 'create'">
+        <v-card class="lobby-room-card" elevation="3">
+          <v-card-text>
+            <v-text-field
+              v-model="playerName"
+              label="Dein Name"
+              variant="outlined"
+              :maxlength="20"
+              counter
+              class="mb-4"
+            />
+            <v-btn
+              color="primary"
+              size="x-large"
+              block
               :disabled="!playerName"
               @click="createRoom"
+              class="btn-press mb-2"
             >
               Raum erstellen
-            </ion-button>
-            <ion-button
-              expand="block"
+            </v-btn>
+            <v-btn
+              variant="outlined"
+              color="primary"
+              block
               @click="mode = 'start'"
-              color="medium"
-              class="inner-button"
+              class="btn-press"
             >
               Zurück
-            </ion-button>
-          </div>
-        </template>
+            </v-btn>
+          </v-card-text>
+        </v-card>
+      </template>
 
-        <!-- Join Room -->
-        <template v-else-if="mode === 'join'">
-          <div class="lobby-room-wrapper">
-            <ion-item>
-              <ion-label position="floating">Raumcode eingeben</ion-label>
-              <ion-input
-                v-model="joinCode"
-                :maxlength="6"
-                @ionInput="onJoinCodeInput"
-              />
-            </ion-item>
-            <ion-item>
-              <ion-label position="floating">Dein Name</ion-label>
-              <ion-input v-model="playerName" :maxlength="20" />
-            </ion-item>
-            <ion-button
-              expand="block"
+      <!-- Join Room -->
+      <template v-else-if="mode === 'join'">
+        <v-card class="lobby-room-card" elevation="3">
+          <v-card-text>
+            <v-text-field
+              v-model="joinCode"
+              label="Raumcode eingeben"
+              variant="outlined"
+              :maxlength="6"
+              @input="onJoinCodeInput"
+              class="mb-4"
+            />
+            <v-text-field
+              v-model="playerName"
+              label="Dein Name"
+              variant="outlined"
+              :maxlength="20"
+              counter
+              class="mb-4"
+            />
+            <v-btn
+              color="secondary"
+              size="x-large"
+              block
               :disabled="!joinCode || !playerName"
               @click="joinRoom"
+              class="btn-press mb-2"
             >
               Beitreten
-            </ion-button>
-            <ion-button
-              expand="block"
+            </v-btn>
+            <v-btn
+              variant="outlined"
+              color="primary"
+              block
               @click="mode = 'start'"
-              color="medium"
-              class="inner-button"
+              class="btn-press"
             >
               Zurück
-            </ion-button>
-          </div>
-        </template>
-      </div>
+            </v-btn>
+          </v-card-text>
+        </v-card>
+      </template>
+    </div>
 
-      <!-- After Login / echte Lobby -->
-      <div v-else>
-        <div class="lobby-room-wrapper">
-          <h2 class="room-code">
+    <!-- After Login / echte Lobby -->
+    <div v-else>
+      <v-card class="lobby-room-card" elevation="3">
+        <v-card-text>
+          <h2 class="room-code text-center text-primary">
             Raumcode: <strong>{{ roomCode }}</strong>
           </h2>
 
           <!-- Shareable Link Section -->
-          <div v-if="shareLink" class="share-section">
-            <p style="margin: 8px 0; font-size: 14px; color: var(--ion-color-medium)">
-              Teile diesen Link:
-            </p>
-            <div class="share-link-container">
-              <input
-                readonly
-                :value="shareLink"
-                class="share-link-input"
-                @click="selectLinkText"
-              />
-              <ion-button @click="copyShareLink" size="small" fill="outline">
-                <ion-icon :icon="copyOutline" slot="icon-only" />
-              </ion-button>
-              <ion-button
-                v-if="canUseNativeShare"
-                @click="nativeShare"
-                size="small"
-                fill="outline"
-                color="secondary"
-              >
-                <ion-icon :icon="shareSocialOutline" slot="icon-only" />
-              </ion-button>
-            </div>
-          </div>
+          <v-card v-if="shareLink" class="share-section" color="surface-variant" elevation="0">
+            <v-card-text>
+              <p class="text-caption text-medium-emphasis mb-2">
+                Teile diesen Link:
+              </p>
+              <div class="share-link-container">
+                <input
+                  readonly
+                  :value="shareLink"
+                  class="share-link-input"
+                  @click="selectLinkText"
+                />
+                <v-btn
+                  @click="copyShareLink"
+                  icon="mdi-content-copy"
+                  size="small"
+                  variant="outlined"
+                  color="primary"
+                />
+                <v-btn
+                  v-if="canUseNativeShare"
+                  @click="nativeShare"
+                  icon="mdi-share-variant"
+                  size="small"
+                  variant="outlined"
+                  color="secondary"
+                />
+              </div>
+            </v-card-text>
+          </v-card>
 
           <p class="player-label">Spieler:</p>
-          <ion-list>
-            <ion-item v-for="player in playersInRoom" :key="player.id">
-              <ion-label>
+          <v-list class="player-list" bg-color="transparent">
+            <v-list-item
+              v-for="player in playersInRoom"
+              :key="player.id"
+              class="player-item"
+            >
+              <template #prepend>
+                <v-avatar :color="getPlayerColor(player.id)" size="40">
+                  <span class="text-white font-weight-bold">
+                    {{ player.name.charAt(0).toUpperCase() }}
+                  </span>
+                </v-avatar>
+              </template>
+              <v-list-item-title>
                 {{ player.name }}
-                <span v-if="player.id === currentPlayerId"> (Du)</span>
-              </ion-label>
-              <ion-icon slot="end" name="home" v-if="player.isHost" />
-            </ion-item>
-          </ion-list>
+                <v-chip v-if="player.id === currentPlayerId" size="x-small" class="ml-2" color="accent">
+                  Du
+                </v-chip>
+              </v-list-item-title>
+              <template #append v-if="player.isHost">
+                <v-icon icon="mdi-crown" color="accent" />
+              </template>
+            </v-list-item>
+          </v-list>
 
-          <ion-button v-if="canStartGame" expand="block" @click="startGame">
+          <v-btn
+            v-if="canStartGame"
+            color="success"
+            size="x-large"
+            block
+            @click="startGame"
+            class="btn-press mt-4"
+          >
             Spiel starten
-          </ion-button>
-          <p v-else-if="isHost" style="text-align: center; color: var(--ion-color-medium); font-size: 14px;">
+          </v-btn>
+          <p v-else-if="isHost" class="text-center text-medium-emphasis text-caption mt-4">
             Mindestens 2 Spieler benötigt
           </p>
 
-          <FunButton />
-        </div>
-      </div>
-    </ion-content>
-  </ion-page>
+          <div class="mt-4">
+            <FunButton />
+          </div>
+        </v-card-text>
+      </v-card>
+    </div>
+
+    <!-- Snackbar for notifications -->
+    <v-snackbar v-model="snackbar" :timeout="2000" color="success">
+      {{ snackbarText }}
+    </v-snackbar>
+  </v-container>
 </template>
 
 <script setup lang="ts">
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonButton,
-  IonItem,
-  IonLabel,
-  IonInput,
-  IonIcon,
-  IonList,
-} from "@ionic/vue";
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { copyOutline, shareSocialOutline } from "ionicons/icons";
 import questions from "@/questions.json";
 import FunButton from "@/components/FunButton.vue";
 import { socketService } from "@/services/socketService";
-import type { Player } from "../../server/types";
 
 const showHowToPlay = ref(false);
 const router = useRouter();
@@ -226,6 +269,8 @@ const shareLink = ref("");
 const joinCode = ref("");
 const playerName = ref("");
 const mode = ref<"start" | "create" | "join">("start");
+const snackbar = ref(false);
+const snackbarText = ref("");
 
 // Get game state from socket service
 const gameState = computed(() => socketService.gameState.value);
@@ -234,6 +279,13 @@ const currentPlayerId = computed(() => socketService.getSocketId() || "");
 const isHost = computed(() => gameState.value?.hostId === currentPlayerId.value);
 const canStartGame = computed(() => isHost.value && playersInRoom.value.length >= 2);
 const canUseNativeShare = computed(() => 'share' in navigator);
+
+// Generate consistent colors for players
+const playerColors = ['#9C27B0', '#FF9800', '#2196F3', '#4CAF50', '#F44336', '#00BCD4'];
+function getPlayerColor(playerId: string): string {
+  const hash = playerId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return playerColors[hash % playerColors.length];
+}
 
 // Check if joining via link (URL parameter)
 onMounted(() => {
@@ -251,8 +303,9 @@ watch(gameState, (newState) => {
   }
 });
 
-function onJoinCodeInput(event: any) {
-  joinCode.value = event.target.value.toUpperCase();
+function onJoinCodeInput(event: Event) {
+  const input = event.target as HTMLInputElement;
+  joinCode.value = input.value.toUpperCase();
 }
 
 async function createRoom() {
@@ -319,7 +372,8 @@ function selectLinkText(event: Event) {
 async function copyShareLink() {
   try {
     await navigator.clipboard.writeText(shareLink.value);
-    alert('Link kopiert!');
+    snackbarText.value = 'Link kopiert!';
+    snackbar.value = true;
   } catch (error) {
     console.error('Copy failed:', error);
     // Fallback: select the text
@@ -327,7 +381,8 @@ async function copyShareLink() {
     if (input) {
       input.select();
       document.execCommand('copy');
-      alert('Link kopiert!');
+      snackbarText.value = 'Link kopiert!';
+      snackbar.value = true;
     }
   }
 }
@@ -357,7 +412,7 @@ async function nativeShare() {
 <style scoped>
 .lobby-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .ludonect-logo {
@@ -368,30 +423,40 @@ async function nativeShare() {
 .lobby-buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   margin-bottom: 24px;
 }
 
-.lobby-room-wrapper {
+.lobby-room-card {
   max-width: 500px;
   margin: 0 auto;
 }
 
 .room-code {
-  text-align: center;
-  margin: 16px 0;
+  margin: 16px 0 24px;
+  font-size: 1.5rem;
+  color: #59981A;
 }
 
 .player-label {
-  font-weight: 600;
-  margin: 16px 0 8px;
+  font-weight: 700;
+  margin: 24px 0 8px;
+  font-size: 1.1rem;
+  color: #385028;
+}
+
+.player-list {
+  margin-bottom: 16px;
+}
+
+.player-item {
+  background: #F5F5F5;
+  border-radius: 12px;
+  margin-bottom: 8px;
 }
 
 .share-section {
-  background: var(--ion-color-light);
-  padding: 12px;
-  border-radius: 8px;
-  margin: 16px 0;
+  margin: 16px 0 24px;
 }
 
 .share-link-container {
@@ -402,18 +467,16 @@ async function nativeShare() {
 
 .share-link-input {
   flex: 1;
-  padding: 8px;
-  border: 1px solid var(--ion-color-medium);
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 10px 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  font-size: 14px;
   background: white;
+  font-family: 'Nunito', sans-serif;
 }
 
 .how-to-play {
-  background: var(--ion-color-light);
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
+  font-size: 15px;
 }
 
 .how-to-play ol,
@@ -428,15 +491,14 @@ async function nativeShare() {
 
 .example-questions {
   margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
 }
 
 .example-scale {
   font-size: 12px;
-  color: var(--ion-color-medium);
-}
-
-.inner-button {
-  margin-top: 8px;
+  color: #666;
+  font-style: italic;
 }
 
 .fade-enter-active,
@@ -447,5 +509,15 @@ async function nativeShare() {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+@media (max-width: 600px) {
+  .room-code {
+    font-size: 1.2rem;
+  }
+
+  .ludonect-logo {
+    max-width: 160px;
+  }
 }
 </style>

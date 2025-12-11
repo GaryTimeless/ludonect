@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from '@ionic/vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import { RouteRecordRaw } from 'vue-router';
 // import LandingPageView from '../views/LandingPageView.vue';
 import LobbyView from '../views/LobbyView.vue';

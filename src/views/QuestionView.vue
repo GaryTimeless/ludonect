@@ -1,56 +1,74 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar color="primary">
-        <ion-title>Frage</ion-title>
-      </ion-toolbar>
-    </ion-header>
-
-    <ion-content class="ion-padding">
-      <div class="question-wrapper">
+  <v-container class="mobile-container fade-in">
+    <v-card class="question-card" elevation="3">
+      <v-card-title class="question-title text-center">
         <h2>{{ questionText }}</h2>
-        <ion-item>
-          <ion-label position="stacked">
-            Deine Antwort ({{ min }}–{{ max }})
-          </ion-label>
-          <ion-range :min="min" :max="max" v-model="answer" />
-        </ion-item>
-        <p>
-          Deine Auswahl: <strong>{{ answer }}</strong>
-        </p>
+      </v-card-title>
 
-        <p class="info-text" style="margin-top: 24px;">
+      <v-card-text>
+        <div class="slider-container">
+          <p class="slider-label text-center mb-2">
+            Deine Antwort ({{ min }}–{{ max }})
+          </p>
+
+          <v-slider
+            v-model="answer"
+            :min="min"
+            :max="max"
+            :step="1"
+            thumb-label="always"
+            color="primary"
+            track-color="grey-lighten-2"
+            class="question-slider"
+          >
+            <template #thumb-label="{ modelValue }">
+              <span class="slider-thumb-value">{{ modelValue }}</span>
+            </template>
+          </v-slider>
+
+          <div class="slider-value-display">
+            <v-chip color="primary" size="large" class="value-chip">
+              {{ answer }}
+            </v-chip>
+          </div>
+        </div>
+
+        <v-progress-linear
+          :model-value="(answeredCount / totalPlayers) * 100"
+          color="success"
+          height="8"
+          rounded
+          class="mt-6 mb-2"
+        />
+        <p class="text-center text-caption text-medium-emphasis">
           {{ answeredCount }} / {{ totalPlayers }} haben bereits geantwortet
         </p>
 
-        <ion-button
-          expand="block"
+        <v-btn
+          color="success"
+          size="x-large"
+          block
           @click="submitAnswer"
           :disabled="hasAnswered"
+          :loading="submitting"
+          class="btn-press mt-6"
         >
+          <v-icon start v-if="hasAnswered">mdi-check-circle</v-icon>
           {{ hasAnswered ? 'Antwort abgesendet' : 'Antwort absenden' }}
-        </ion-button>
+        </v-btn>
 
-        <p v-if="hasAnswered" class="waiting-text">
-          Warte auf andere Spieler...
-        </p>
-      </div>
-    </ion-content>
-  </ion-page>
+        <transition name="fade">
+          <div v-if="hasAnswered" class="waiting-message mt-4 pulse">
+            <v-icon color="success" size="small">mdi-clock-outline</v-icon>
+            <span class="ml-2">Warte auf andere Spieler...</span>
+          </div>
+        </transition>
+      </v-card-text>
+    </v-card>
+  </v-container>
 </template>
 
 <script setup lang="ts">
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonItem,
-  IonLabel,
-  IonRange,
-  IonButton,
-} from "@ionic/vue";
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { inject } from "vue";
@@ -69,6 +87,7 @@ const min = ref(0);
 const max = ref(100);
 const answer = ref(50);
 const hasAnswered = ref(false);
+const submitting = ref(false);
 
 // Get game state from socket service
 const gameState = computed(() => socketService.gameState.value);
@@ -121,6 +140,8 @@ watch(
 async function submitAnswer() {
   if (hasAnswered.value) return;
 
+  submitting.value = true;
+
   try {
     await socketService.emit('submitAnswer', {
       roomCode: gameId,
@@ -129,84 +150,84 @@ async function submitAnswer() {
 
     console.log('[QuestionView] Antwort abgesendet:', answer.value);
     hasAnswered.value = true;
-
-    // Navigate to estimation view automatically
-    // (or wait for server to send navigation event)
-    // For now, let's wait for the host to proceed
   } catch (error: any) {
     console.error('[QuestionView] Fehler beim Speichern der Antwort:', error);
     alert(error.message || 'Fehler beim Speichern der Antwort');
+  } finally {
+    submitting.value = false;
   }
 }
 </script>
 
 <style scoped>
-ion-toolbar {
-  --background: #59981a;
-  --color: #edffcc;
-  --min-height: 54px;
-  --padding-start: 0;
-  --padding-end: 0;
-  box-shadow: none;
-  border-bottom: none;
-  font-family: "Tenor Sans", Arial, sans-serif;
+.question-card {
+  max-width: 500px;
+  margin: 24px auto;
+  background: linear-gradient(135deg, #f9ffe6 0%, #ffffff 100%);
 }
 
-ion-title {
-  font-family: "Tenor Sans", Arial, sans-serif;
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #edffcc;
-  text-align: center;
-  letter-spacing: 0.01em;
-  padding: 0;
-  margin: 0;
-  width: 100%;
-  display: block;
-}
-
-.question-wrapper {
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 0 16px 32px 16px;
-  background: #f9ffe6;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.question-wrapper h2 {
-  text-align: center;
+.question-title h2 {
   font-size: 1.5rem;
-  margin: 24px 0;
   color: #2d4a0e;
+  font-weight: 700;
+  padding: 16px;
+  line-height: 1.4;
 }
 
-.info-text {
-  text-align: center;
-  color: var(--ion-color-medium);
+.slider-container {
+  padding: 24px 16px;
+}
+
+.slider-label {
+  font-size: 1.1rem;
+  color: #385028;
+  font-weight: 600;
+}
+
+.question-slider {
+  margin: 32px 0;
+}
+
+.slider-thumb-value {
+  font-weight: 700;
   font-size: 14px;
 }
 
-.waiting-text {
+.slider-value-display {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.value-chip {
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 24px;
+}
+
+.waiting-message {
   text-align: center;
-  color: var(--ion-color-success);
+  color: #4CAF50;
   font-weight: 600;
-  margin-top: 16px;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-ion-button {
-  --background: #59981a;
-  --color: #edffcc;
-  --border-radius: 9px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  min-height: 48px;
-  margin-top: 16px;
+/* Gradient slider track */
+:deep(.v-slider-track__fill) {
+  background: linear-gradient(to right, #F44336 0%, #FFC107 50%, #4CAF50 100%);
 }
 
-ion-button[disabled] {
-  --background: var(--ion-color-medium);
-  --color: white;
+@media (max-width: 600px) {
+  .question-title h2 {
+    font-size: 1.25rem;
+  }
+
+  .value-chip {
+    font-size: 1.25rem;
+    padding: 20px;
+  }
 }
 </style>

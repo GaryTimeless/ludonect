@@ -15,23 +15,16 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@capacitor/app": "7.0.1",
-    "@capacitor/core": "7.2.0",
-    "@capacitor/haptics": "7.0.1",
-    "@capacitor/keyboard": "7.0.1",
-    "@capacitor/status-bar": "7.0.1",
-    "@ionic/vue": "^8.0.0",
-    "@ionic/vue-router": "^8.0.0",
-    "firebase": "^11.6.0",
-    "ionicons": "^7.0.0",
+    "@mdi/font": "^7.4.47",
+    "sass": "^1.96.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "vue": "^3.3.0",
     "vue-router": "^4.2.0",
-    "vuedraggable": "^4.1.0"
+    "vuedraggable": "^4.1.0",
+    "vuetify": "^3.11.3"
   },
   "devDependencies": {
-    "@capacitor/cli": "7.2.0",
     "@types/node": "^24.9.1",
     "@vitejs/plugin-legacy": "^5.0.0",
     "@vitejs/plugin-vue": "^4.0.0",
