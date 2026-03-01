@@ -6,7 +6,8 @@ import path from 'path'
 import { defineConfig } from 'vite'
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/ludonect/' : '/',
   plugins: [
     vue(),
     legacy()
@@ -23,4 +24,4 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom'
   }
-})
+}))
