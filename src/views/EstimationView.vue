@@ -254,7 +254,7 @@ const finishing = ref(false);
 
 // Get game state from socket service
 const gameState = computed(() => socketService.gameState.value);
-const localPlayerId = computed(() => socketService.getSocketId());
+const localPlayerId = computed(() => localStorage.getItem('playerId') ?? socketService.getSocketId() ?? undefined);
 const isHost = computed(() => gameState.value?.hostId === localPlayerId.value);
 const currentRound = computed(() => gameState.value?.currentRound);
 

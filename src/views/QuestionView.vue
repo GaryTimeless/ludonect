@@ -106,7 +106,7 @@ const proceeding = ref(false);
 
 // Get game state from socket service
 const gameState = computed(() => socketService.gameState.value);
-const currentPlayerId = computed(() => socketService.getSocketId());
+const currentPlayerId = computed(() => localStorage.getItem('playerId') ?? socketService.getSocketId() ?? undefined);
 const isHost = computed(() => gameState.value?.hostId === currentPlayerId.value);
 const totalPlayers = computed(() => gameState.value?.players.length || 0);
 const answeredCount = computed(() => {

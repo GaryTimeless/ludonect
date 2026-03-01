@@ -6,17 +6,18 @@ export class GameManager {
   /**
    * Create a new game session
    */
-  createGame(roomCode: string, hostSocketId: string, hostName: string): GameSession {
+  createGame(roomCode: string, playerId: string, socketId: string, hostName: string): GameSession {
     const session: GameSession = {
       roomCode,
       createdAt: Date.now(),
-      hostId: hostSocketId,
+      hostId: playerId,
       hostDisconnectedAt: null,
       state: 'waiting',
       players: [
         {
-          id: hostSocketId,
-          name: `${hostName} (Host)`,
+          id: playerId,
+          socketId,
+          name: hostName,
           isHost: true,
           joinedAt: Date.now(),
         },
@@ -54,6 +55,29 @@ export class GameManager {
     game.players.push(player);
     console.log(`[GameManager] Player ${player.name} joined ${roomCode}`);
     return game;
+  }
+
+  /**
+   * Upsert a player: if playerId already exists in the room (reconnect), update
+   * their socketId. Otherwise add them as a new player.
+   * Returns 'joined' | 'reconnected'.
+   */
+  upsertPlayer(roomCode: string, player: Player): { game: GameSession; action: 'joined' | 'reconnected' } | null {
+    const game = this.games.get(roomCode);
+    if (!game) return null;
+
+    const existing = game.players.find(p => p.id === player.id);
+    if (existing) {
+      // Reconnect: update socket connection and name (in case it changed)
+      existing.socketId = player.socketId;
+      existing.name = player.name;
+      console.log(`[GameManager] Player ${player.name} reconnected to ${roomCode} (new socketId: ${player.socketId})`);
+      return { game, action: 'reconnected' };
+    }
+
+    game.players.push(player);
+    console.log(`[GameManager] Player ${player.name} joined ${roomCode}`);
+    return { game, action: 'joined' };
   }
 
   /**
@@ -173,7 +197,19 @@ export class GameManager {
    */
   findRoomBySocketId(socketId: string): string | null {
     for (const [roomCode, game] of this.games.entries()) {
-      if (game.players.some(p => p.id === socketId)) {
+      if (game.players.some(p => p.socketId === socketId)) {
+        return roomCode;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Find which room a player's persistent UUID is in
+   */
+  findRoomByPlayerId(playerId: string): string | null {
+    for (const [roomCode, game] of this.games.entries()) {
+      if (game.players.some(p => p.id === playerId)) {
         return roomCode;
       }
     }

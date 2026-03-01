@@ -32,6 +32,18 @@
           </v-btn>
         </div>
 
+        <!-- Dev Reset -->
+        <v-btn
+          variant="outlined"
+          color="error"
+          size="small"
+          block
+          class="mt-2"
+          @click="resetLocalPlayer"
+        >
+          🧪 Dev Reset (Clear Storage)
+        </v-btn>
+
         <!-- How to Play -->
         <v-btn
           variant="outlined"
@@ -275,10 +287,20 @@ const snackbarText = ref("");
 // Get game state from socket service
 const gameState = computed(() => socketService.gameState.value);
 const playersInRoom = computed(() => gameState.value?.players || []);
-const currentPlayerId = computed(() => socketService.getSocketId() || "");
+const currentPlayerId = computed(() => localStorage.getItem('playerId') ?? socketService.getSocketId() ?? '');
 const isHost = computed(() => gameState.value?.hostId === currentPlayerId.value);
 const canStartGame = computed(() => isHost.value && playersInRoom.value.length >= 2);
 const canUseNativeShare = computed(() => 'share' in navigator);
+
+// Persistent player ID (UUID from localStorage)
+function getOrCreatePlayerId(): string {
+  let id = localStorage.getItem('playerId');
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem('playerId', id);
+  }
+  return id;
+}
 
 // Generate consistent colors for players
 const playerColors = ['#9C27B0', '#FF9800', '#2196F3', '#4CAF50', '#F44336', '#00BCD4'];
@@ -289,6 +311,11 @@ function getPlayerColor(playerId: string): string {
 
 // Check if joining via link (URL parameter)
 onMounted(() => {
+  getOrCreatePlayerId();
+  // Pre-fill name from last session
+  const savedName = localStorage.getItem('playerName');
+  if (savedName) playerName.value = savedName;
+
   const roomCodeFromRoute = route.params.roomCode as string;
   if (roomCodeFromRoute) {
     joinCode.value = roomCodeFromRoute.toUpperCase();
@@ -310,12 +337,18 @@ function onJoinCodeInput(event: Event) {
 
 async function createRoom() {
   if (!playerName.value.trim()) {
-    alert("Bitte gib einen Namen ein");
+    alert('Bitte gib einen Namen ein');
     return;
   }
 
+  const playerId = getOrCreatePlayerId();
+  localStorage.setItem('playerName', playerName.value.trim());
+
   try {
-    const response = await socketService.emit('createRoom', playerName.value.trim());
+    const response = await socketService.emit('createRoom', {
+      playerName: playerName.value.trim(),
+      playerId,
+    });
     roomCode.value = response.roomCode;
     shareLink.value = response.shareLink;
     console.log('[Lobby] Room created:', response);
@@ -327,20 +360,24 @@ async function createRoom() {
 
 async function joinRoom() {
   if (!playerName.value.trim()) {
-    alert("Bitte gib einen Namen ein");
+    alert('Bitte gib einen Namen ein');
     return;
   }
 
   if (!joinCode.value.trim()) {
-    alert("Bitte gib einen Raumcode ein");
+    alert('Bitte gib einen Raumcode ein');
     return;
   }
+
+  const playerId = getOrCreatePlayerId();
+  localStorage.setItem('playerName', playerName.value.trim());
 
   try {
     const code = joinCode.value.toUpperCase().trim();
     await socketService.emit('joinRoom', {
       roomCode: code,
       playerName: playerName.value.trim(),
+      playerId,
     });
     roomCode.value = code;
     console.log('[Lobby] Joined room:', code);
@@ -348,6 +385,12 @@ async function joinRoom() {
     console.error('[Lobby] Join room error:', error);
     alert(error.message || 'Raum existiert nicht!');
   }
+}
+
+function resetLocalPlayer() {
+  localStorage.removeItem('playerId');
+  localStorage.removeItem('playerName');
+  window.location.reload();
 }
 
 async function startGame() {

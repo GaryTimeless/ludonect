@@ -84,7 +84,7 @@ const suggestedQuestions = ref<any[]>([]);
 // Get game state from socket service
 const gameState = computed(() => socketService.gameState.value);
 const players = computed(() => gameState.value?.players || []);
-const localPlayerId = computed(() => socketService.getSocketId());
+const localPlayerId = computed(() => localStorage.getItem('playerId') ?? socketService.getSocketId() ?? undefined);
 const isHost = computed(() => gameState.value?.hostId === localPlayerId.value);
 const usedQuestionIds = computed(() => gameState.value?.usedQuestionIds || []);
 

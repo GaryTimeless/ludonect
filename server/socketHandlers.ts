@@ -4,6 +4,7 @@ import { ReconnectionManager } from './reconnectionManager.js';
 import { generateRoomCode, generateShareableLink, isValidRoomCode } from './utils.js';
 import {
   Player,
+  CreateRoomData,
   CreateRoomResponse,
   JoinRoomData,
   JoinRoomResponse,
@@ -27,31 +28,32 @@ export function setupSocketHandlers(
   io.on('connection', (socket: Socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
 
+    /** Returns true if the current socket belongs to the host of the given game. */
+    function isSocketHost(game: { hostId: string; players: { id: string; socketId: string }[] }): boolean {
+      const player = game.players.find(p => p.socketId === socket.id);
+      return player?.id === game.hostId;
+    }
+
     // =========================================================================
     // CREATE ROOM
     // =========================================================================
-    socket.on('createRoom', (playerName: string, callback: (response: CreateRoomResponse) => void) => {
+    socket.on('createRoom', (data: CreateRoomData, callback: (response: CreateRoomResponse) => void) => {
       try {
-        if (!playerName || playerName.trim().length === 0) {
-          callback({ success: false, error: 'Player name is required' });
+        const { playerName, playerId } = data;
+        if (!playerName || playerName.trim().length === 0 || !playerId) {
+          callback({ success: false, error: 'Player name and ID are required' });
           return;
         }
 
         const roomCode = generateRoomCode();
-        const game = gameManager.createGame(roomCode, socket.id, playerName.trim());
+        const game = gameManager.createGame(roomCode, playerId, socket.id, playerName.trim());
         socket.join(roomCode);
 
         const shareLink = generateShareableLink(roomCode, BASE_URL);
 
-        callback({
-          success: true,
-          roomCode,
-          shareLink,
-          game,
-        });
-
+        callback({ success: true, roomCode, shareLink, game });
         io.to(roomCode).emit('gameUpdate', game);
-        console.log(`[Room ${roomCode}] Created by ${playerName}`);
+        console.log(`[Room ${roomCode}] Created by ${playerName} (${playerId})`);
       } catch (error) {
         console.error('[CreateRoom] Error:', error);
         callback({ success: false, error: 'Failed to create room' });
@@ -63,10 +65,10 @@ export function setupSocketHandlers(
     // =========================================================================
     socket.on('joinRoom', (data: JoinRoomData, callback: (response: JoinRoomResponse) => void) => {
       try {
-        const { roomCode, playerName } = data;
+        const { roomCode, playerName, playerId } = data;
 
-        if (!roomCode || !playerName) {
-          callback({ success: false, error: 'Room code and player name are required' });
+        if (!roomCode || !playerName || !playerId) {
+          callback({ success: false, error: 'Room code, player name and ID are required' });
           return;
         }
 
@@ -83,27 +85,24 @@ export function setupSocketHandlers(
           return;
         }
 
-        // Check if player already exists (rejoin scenario)
-        const existingPlayer = game.players.find(p => p.id === socket.id);
-        if (existingPlayer) {
-          socket.join(cleanRoomCode);
-          callback({ success: true, game });
-          return;
-        }
-
         const player: Player = {
-          id: socket.id,
+          id: playerId,
+          socketId: socket.id,
           name: playerName.trim(),
           isHost: false,
           joinedAt: Date.now(),
         };
 
-        gameManager.addPlayer(cleanRoomCode, player);
-        socket.join(cleanRoomCode);
+        const result = gameManager.upsertPlayer(cleanRoomCode, player);
+        if (!result) {
+          callback({ success: false, error: 'Failed to join room' });
+          return;
+        }
 
-        callback({ success: true, game });
-        io.to(cleanRoomCode).emit('gameUpdate', game);
-        console.log(`[Room ${cleanRoomCode}] ${playerName} joined`);
+        socket.join(cleanRoomCode);
+        callback({ success: true, game: result.game });
+        io.to(cleanRoomCode).emit('gameUpdate', result.game);
+        console.log(`[Room ${cleanRoomCode}] ${playerName} ${result.action} (${playerId})`);
       } catch (error) {
         console.error('[JoinRoom] Error:', error);
         callback({ success: false, error: 'Failed to join room' });
@@ -123,7 +122,7 @@ export function setupSocketHandlers(
           return;
         }
 
-        if (game.hostId !== socket.id) {
+        if (!isSocketHost(game)) {
           callback({ success: false, error: 'Only the host can start the game' });
           return;
         }
@@ -176,20 +175,19 @@ export function setupSocketHandlers(
           return;
         }
 
-        // Store answer
-        game.currentRound.answers[socket.id] = answer;
-
-        // Mark player as having submitted
-        const player = game.players.find(p => p.id === socket.id);
-        if (player) {
-          player.estimation = true;
+        // Find player by socketId to get persistent UUID
+        const player = game.players.find(p => p.socketId === socket.id);
+        if (!player) {
+          callback({ success: false, error: 'Player not found' });
+          return;
         }
+
+        game.currentRound.answers[player.id] = answer;
+        player.estimation = true;
 
         callback({ success: true });
         io.to(roomCode).emit('gameUpdate', game);
-        console.log(`[Room ${roomCode}] Player ${socket.id} submitted answer: ${answer}`);
-        console.log(`[Room ${roomCode}] All answers:`, game.currentRound.answers);
-        console.log(`[Room ${roomCode}] All player IDs:`, game.players.map(p => p.id));
+        console.log(`[Room ${roomCode}] ${player.name} submitted answer: ${answer}`);
       } catch (error) {
         console.error('[SubmitAnswer] Error:', error);
         callback({ success: false, error: 'Failed to submit answer' });
@@ -209,7 +207,7 @@ export function setupSocketHandlers(
           return;
         }
 
-        if (game.hostId !== socket.id) {
+        if (!isSocketHost(game)) {
           callback({ success: false, error: 'Only the host can proceed to estimation' });
           return;
         }
@@ -237,7 +235,7 @@ export function setupSocketHandlers(
           return;
         }
 
-        if (game.hostId !== socket.id) {
+        if (!isSocketHost(game)) {
           callback({ success: false, error: 'Only the host can update order' });
           return;
         }
@@ -266,7 +264,7 @@ export function setupSocketHandlers(
           return;
         }
 
-        if (game.hostId !== socket.id) {
+        if (!isSocketHost(game)) {
           callback({ success: false, error: 'Only the host can start sorting' });
           return;
         }
@@ -329,7 +327,7 @@ export function setupSocketHandlers(
           return;
         }
 
-        if (game.hostId !== socket.id) {
+        if (!isSocketHost(game)) {
           callback({ success: false, error: 'Only the host can prepare next round' });
           return;
         }
@@ -359,7 +357,7 @@ export function setupSocketHandlers(
           return;
         }
 
-        if (game.hostId !== socket.id) {
+        if (!isSocketHost(game)) {
           callback({ success: false, error: 'Only the host can reset round' });
           return;
         }
@@ -403,7 +401,7 @@ export function setupSocketHandlers(
           return;
         }
 
-        if (game.hostId !== socket.id) {
+        if (!isSocketHost(game)) {
           callback({ success: false, error: 'Only the host can start next question' });
           return;
         }
@@ -481,7 +479,7 @@ export function setupSocketHandlers(
           return;
         }
 
-        if (game.hostId !== socket.id) {
+        if (!isSocketHost(game)) {
           callback({ success: false, error: 'Only the host can save player order' });
           return;
         }
@@ -515,7 +513,7 @@ export function setupSocketHandlers(
           return;
         }
 
-        if (game.hostId !== socket.id) {
+        if (!isSocketHost(game)) {
           callback({ success: false, error: 'Only the host can start estimation' });
           return;
         }
@@ -621,15 +619,18 @@ export function setupSocketHandlers(
       const game = gameManager.getGame(roomCode);
       if (!game) return;
 
-      const isHost = game.hostId === socket.id;
+      // Find player by socketId
+      const player = game.players.find(p => p.socketId === socket.id);
+      if (!player) return;
+
+      const isHost = game.hostId === player.id;
 
       if (isHost) {
-        // Host disconnected - start timeout
         console.log(`[Room ${roomCode}] Host disconnected, starting timeout`);
         reconnectionManager.startHostTimeout(roomCode);
       } else {
-        // Regular player disconnected - remove immediately
-        gameManager.removePlayer(roomCode, socket.id);
+        // Regular player disconnected — remove by persistent id
+        gameManager.removePlayer(roomCode, player.id);
         const updatedGame = gameManager.getGame(roomCode);
         if (updatedGame) {
           io.to(roomCode).emit('gameUpdate', updatedGame);

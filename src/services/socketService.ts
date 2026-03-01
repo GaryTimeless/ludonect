@@ -7,6 +7,7 @@ class SocketService {
   public gameState: Ref<GameSession | null> = ref(null);
   public connected: Ref<boolean> = ref(false);
   public error: Ref<string | null> = ref(null);
+  public hostMigratedEvent: Ref<{ newHostId: string; newHostName: string } | null> = ref(null);
 
   /**
    * Connect to the WebSocket server
@@ -76,6 +77,11 @@ class SocketService {
 
     this.socket.on('hostReconnected', (data: { message: string }) => {
       console.log('[SocketService] Host reconnected:', data);
+    });
+
+    this.socket.on('hostMigrated', (data: { newHostId: string; newHostName: string }) => {
+      console.log('[SocketService] Host migrated:', data);
+      this.hostMigratedEvent.value = data;
     });
 
     this.socket.on('gameEnded', (data: { reason: string; message: string }) => {

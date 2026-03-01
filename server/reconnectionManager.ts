@@ -9,7 +9,7 @@ export class ReconnectionManager {
   constructor(
     private io: Server,
     private gameManager: GameManager
-  ) {}
+  ) { }
 
   /**
    * Start the host disconnect timeout
@@ -58,22 +58,16 @@ export class ReconnectionManager {
     const game = this.gameManager.getGame(roomCode);
     if (!game) return;
 
-    // Update host socket ID
-    const hostPlayer = game.players.find(p => p.isHost);
+    // Update the host's socket connection (id stays the same persistent UUID)
+    const hostPlayer = game.players.find(p => p.id === game.hostId);
     if (hostPlayer) {
-      hostPlayer.id = newSocketId;
+      hostPlayer.socketId = newSocketId;
     }
 
-    // Update game's hostId
-    game.hostId = newSocketId;
-
-    // Notify all players
     this.io.to(roomCode).emit('hostReconnected', {
       message: 'Host reconnected! Game resuming...',
     });
-
     this.io.to(roomCode).emit('gameUpdate', game);
-
     console.log(`[Reconnection] Host reconnected to room ${roomCode}`);
   }
 
@@ -85,17 +79,50 @@ export class ReconnectionManager {
     const game = this.gameManager.getGame(roomCode);
     if (!game) return;
 
-    // Notify all players
-    this.io.to(roomCode).emit('gameEnded', {
-      reason: 'Host did not reconnect within 60 seconds',
-      message: 'The game has ended. Please return to the lobby.',
-    });
+    const oldHostId = game.hostId;
 
-    // Delete the game
-    this.gameManager.deleteGame(roomCode);
+    // Remove the old host from the player list
+    game.players = game.players.filter(p => p.id !== oldHostId);
+
+    if (game.players.length === 0) {
+      // No players left — clean up the room
+      this.gameManager.deleteGame(roomCode);
+      this.hostTimeouts.delete(roomCode);
+      console.log(`[Reconnection] Room ${roomCode} deleted — no players remaining`);
+      return;
+    }
+
+    // Clean up stale references in currentRound (avoids "Unknown" labels)
+    if (game.currentRound) {
+      // Remove departed host from placed list and turn order
+      game.currentRound.placedPlayers = game.currentRound.placedPlayers.filter(id => id !== oldHostId);
+      game.currentRound.estimationOrder = game.currentRound.estimationOrder.filter(id => id !== oldHostId);
+
+      // If the departed host was the active player, advance to the next one
+      if (game.currentRound.activePlayerId === oldHostId) {
+        const remainingOrder = game.currentRound.estimationOrder;
+        game.currentRound.activePlayerId = remainingOrder.length > 0 ? remainingOrder[0] : null;
+        game.currentRound.currentTurnIndex = 0;
+      }
+    }
+
+    // Promote the first remaining player to host
+    const newHost = game.players[0];
+    newHost.isHost = true;
+    game.hostId = newHost.id;
+    game.hostDisconnectedAt = null;
     this.hostTimeouts.delete(roomCode);
 
-    console.log(`[Reconnection] Game ${roomCode} ended due to host timeout`);
+    console.log(`[Reconnection] Host migrated in room ${roomCode} → new host: ${newHost.name} (${newHost.id})`);
+
+    // Notify all players about the migration
+    this.io.to(roomCode).emit('hostMigrated', {
+      newHostId: newHost.id,
+      newHostName: newHost.name,
+    });
+
+    // Push updated game state so all clients reflect the new host
+    this.io.to(roomCode).emit('gameUpdate', game);
   }
 
   /**
