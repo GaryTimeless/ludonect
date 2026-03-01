@@ -123,6 +123,7 @@
         <VueDraggable
           v-model="placedPlayersLocal"
           :disabled="!isMyTurn"
+          handle=".drag-handle"
           item-key="id"
           class="player-drag-list"
           @end="onDragEnd"
@@ -132,14 +133,21 @@
               class="placement-drag-item mb-2"
               :class="{
                 'active-player': element === localPlayerId && isMyTurn,
-                'my-turn': isMyTurn
+                'my-turn': element === localPlayerId && isMyTurn,
               }"
               elevation="2"
             >
               <v-card-text class="d-flex align-center py-2">
-                <v-icon v-if="isMyTurn" class="drag-handle mr-3" size="small">
+                <!-- Only show drag handle for own card -->
+                <v-icon
+                  v-if="element === localPlayerId && isMyTurn"
+                  class="drag-handle mr-3"
+                  size="small"
+                >
                   mdi-drag
                 </v-icon>
+                <!-- Spacer so layout stays consistent when no handle shown -->
+                <span v-else-if="isMyTurn" class="drag-handle-spacer mr-3" />
                 <v-avatar :color="getPlayerColor(element)" size="36" class="mr-3">
                   <span class="text-white font-weight-bold text-caption">
                     {{ getPlayerName(element).charAt(0).toUpperCase() }}
@@ -436,6 +444,9 @@ async function prepareNextRound() {
   color: #385028;
   font-weight: 700;
   padding: 8px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .player-drag-list {
@@ -461,6 +472,11 @@ async function prepareNextRound() {
   color: #59981A;
 }
 
+.drag-handle-spacer {
+  display: inline-block;
+  width: 20px; /* matches mdi-drag icon size */
+}
+
 .placement-list {
   max-width: 500px;
   margin: 0 auto;
@@ -473,11 +489,11 @@ async function prepareNextRound() {
 }
 
 .placement-drag-item.my-turn {
-  cursor: grab;
+  cursor: default; /* only the handle has grab cursor */
 }
 
 .placement-drag-item.my-turn:active {
-  cursor: grabbing;
+  cursor: default;
 }
 
 .placement-drag-item.active-player {
