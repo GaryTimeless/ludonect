@@ -261,40 +261,39 @@ const answeredCount = computed(() => Object.keys(answers.value).length);
 
 const isMyTurn = computed(() => activePlayerId.value === localPlayerId.value);
 
-// Local copy of placed players for drag and drop
+// Local copy for drag-and-drop during our turn
 const placedPlayersLocal = ref<string[]>([]);
 
-// Track if we've modified local during our turn (to preserve drag changes)
-const hasLocalChanges = ref(false);
-
-// Watch for changes in placedPlayers from server and sync to local
-watch(
-  () => placedPlayers.value,
-  (newPlayers) => {
-    // Sync if: local is empty, OR it's not our turn, OR we haven't made local changes yet
-    if (placedPlayersLocal.value.length === 0 || !isMyTurn.value || !hasLocalChanges.value) {
-      placedPlayersLocal.value = [...newPlayers];
-    }
-  },
-  { immediate: true, deep: true }
-);
-
-// When our turn starts, reset the local changes flag and sync latest state
+// Sync server placedPlayers → local whenever turn changes
 watch(
   () => activePlayerId.value,
-  (newActiveId, oldActiveId) => {
+  (newActiveId) => {
     if (newActiveId === localPlayerId.value) {
-      // Our turn just started - sync latest state from server
-      hasLocalChanges.value = false;
-      placedPlayersLocal.value = [...placedPlayers.value];
-      console.log('[Estimation] Turn started, synced placedPlayers:', placedPlayersLocal.value);
+      // Our turn just started.
+      // Seed local list with current server list + append our own ID so we can drag it.
+      const myId = localPlayerId.value ?? '';
+      const serverList = placedPlayers.value.filter(id => id !== myId);
+      placedPlayersLocal.value = myId ? [...serverList, myId] : [...serverList];
+      console.log('[Estimation] Turn started, seeded placedPlayersLocal:', placedPlayersLocal.value);
     }
-  }
+  },
+  { immediate: true }
+);
+
+// Also sync when not our turn (spectators see live list from server)
+watch(
+  () => placedPlayers.value,
+  (newList) => {
+    if (!isMyTurn.value) {
+      placedPlayersLocal.value = [...newList];
+    }
+  },
+  { deep: true }
 );
 
 const currentQuestion = computed(() => {
   if (!currentRound.value?.questionId) return null;
-  return questions.find((q: any) => q.id === currentRound.value.questionId);
+  return questions.find((q: any) => q.id === currentRound.value?.questionId);
 });
 
 const activePlayerName = computed(() => {
@@ -387,19 +386,22 @@ async function startEstimation() {
 }
 
 function onDragEnd() {
-  // Mark that we've made local changes (prevents server sync overwriting our drag)
-  hasLocalChanges.value = true;
-  console.log('[Estimation] Player dragged to new position');
+  console.log('[Estimation] Player dragged to new position:', placedPlayersLocal.value);
 }
 
 async function finishPlacement() {
   finishing.value = true;
   try {
+    const order = currentRound.value?.estimationOrder || [];
+    const isP1 = localPlayerId.value === order[0];
+    const isSecondTurn = isP1 && placedPlayersLocal.value.length === order.length;
+
     await socketService.emit('finishPlayerTurn', {
       roomCode: gameId.value,
       placedPlayers: placedPlayersLocal.value,
+      ...(isSecondTurn ? { isSecondTurn: true } : {}),
     });
-    console.log('[Estimation] Turn finished');
+    console.log('[Estimation] Turn finished', isSecondTurn ? '(P1 second turn)' : '');
   } catch (error: any) {
     console.error('[Estimation] Finish error:', error);
     alert(error.message || 'Fehler beim Beenden');

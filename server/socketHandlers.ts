@@ -520,26 +520,24 @@ export function setupSocketHandlers(
           return;
         }
 
-        // Set estimation order (each player gets exactly one turn)
+        // estimation order = all players in the host-arranged sequence
         const order = [...game.players.map(p => p.id)];
-
-        // Store the initial order (as arranged by host) - this will be used to reset for each player's turn
-        const hostOrder = [...game.players.map(p => p.id)];
 
         game.currentRound.sortingStarted = true;
         game.currentRound.estimationOrder = order;
-        game.currentRound.currentTurnIndex = 0;
-        game.currentRound.activePlayerId = order[0];
-        game.currentRound.initialOrder = hostOrder;
-        // Initialize with all players visible in the order set by host
-        game.currentRound.placedPlayers = [...hostOrder];
+        game.currentRound.initialOrder = [...order];
+        // Only P1 starts in the placed list as the anchor
+        game.currentRound.placedPlayers = [order[0]];
+        // P2 is the first active player (index 1); P1's turn is at index 0 and is skipped
+        game.currentRound.currentTurnIndex = 1;
+        game.currentRound.activePlayerId = order.length > 1 ? order[1] : null;
 
         callback({ success: true });
         io.to(roomCode).emit('gameUpdate', game);
-        console.log(`[Room ${roomCode}] Estimation game started`);
+        console.log(`[Room ${roomCode}] Estimation game started (progressive mode)`);
         console.log(`[Room ${roomCode}] estimationOrder:`, order);
-        console.log(`[Room ${roomCode}] initialOrder (host's arrangement):`, hostOrder);
-        console.log(`[Room ${roomCode}] currentTurnIndex: 0, activePlayerId:`, order[0]);
+        console.log(`[Room ${roomCode}] placedPlayers (anchor):`, game.currentRound.placedPlayers);
+        console.log(`[Room ${roomCode}] First active player: ${game.currentRound.activePlayerId} (index 1)`);
       } catch (error) {
         console.error('[StartEstimationGame] Error:', error);
         callback({ success: false, error: 'Failed to start estimation game' });
@@ -551,7 +549,7 @@ export function setupSocketHandlers(
     // =========================================================================
     socket.on('finishPlayerTurn', (data: UpdatePlacedPlayersData, callback: (response: GenericResponse) => void) => {
       try {
-        const { roomCode, placedPlayers } = data;
+        const { roomCode, placedPlayers, isSecondTurn } = data;
         const game = gameManager.getGame(roomCode);
 
         if (!game || !game.currentRound) {
@@ -559,53 +557,48 @@ export function setupSocketHandlers(
           return;
         }
 
-        // Validate: only accept valid player IDs, no duplicates
+        const currentOrder = game.currentRound.estimationOrder || [];
+
+        // Validate: only accept known player IDs, deduplicate
         const validPlayerIds = new Set(game.players.map(p => p.id));
         const seenIds = new Set<string>();
-        const validatedPlacedPlayers: string[] = [];
-
-        for (const playerId of placedPlayers) {
-          if (validPlayerIds.has(playerId) && !seenIds.has(playerId)) {
-            validatedPlacedPlayers.push(playerId);
-            seenIds.add(playerId);
+        const validated: string[] = [];
+        for (const id of placedPlayers) {
+          if (validPlayerIds.has(id) && !seenIds.has(id)) {
+            validated.push(id);
+            seenIds.add(id);
           }
         }
 
-        // Ensure all players are included (add any missing at the end)
-        for (const playerId of validPlayerIds) {
-          if (!seenIds.has(playerId)) {
-            validatedPlacedPlayers.push(playerId);
-          }
-        }
-
-        // Store this player's ordering (don't update placedPlayers yet, we'll reset it below)
-        if (!game.currentRound.playerOrderings) {
-          game.currentRound.playerOrderings = {};
-        }
-        game.currentRound.playerOrderings[socket.id] = validatedPlacedPlayers;
-        console.log(`[Room ${roomCode}] Stored ordering for player ${socket.id}:`, validatedPlacedPlayers);
-
-        // Move to next player using tracked index (not indexOf which fails with duplicates)
-        const currentOrder = game.currentRound.estimationOrder || [];
-        const currentIndex = game.currentRound.currentTurnIndex || 0;
-        const nextIndex = currentIndex + 1;
-
-        console.log(`[Room ${roomCode}] finishPlayerTurn: currentIndex=${currentIndex}, nextIndex=${nextIndex}, orderLength=${currentOrder.length}`);
-        console.log(`[Room ${roomCode}] estimationOrder:`, currentOrder);
-
-        if (nextIndex < currentOrder.length) {
-          // More players to go - reset placedPlayers to initial order for next player
-          game.currentRound.currentTurnIndex = nextIndex;
-          game.currentRound.activePlayerId = currentOrder[nextIndex];
-          game.currentRound.placedPlayers = [...(game.currentRound.initialOrder || [])];
-          console.log(`[Room ${roomCode}] Next player: ${game.currentRound.activePlayerId} (index ${nextIndex})`);
-          console.log(`[Room ${roomCode}] Reset placedPlayers to initial order:`, game.currentRound.placedPlayers);
-        } else {
-          // All done! Keep the last player's ordering for display
+        if (isSecondTurn) {
+          // P1 has finished their final second turn → round complete
+          game.currentRound.placedPlayers = validated;
           game.currentRound.sortingFinished = true;
+          game.currentRound.secondTurnStartPlayer = false;
           game.currentRound.activePlayerId = null;
-          game.currentRound.placedPlayers = validatedPlacedPlayers;
-          console.log(`[Room ${roomCode}] All turns finished!`);
+          console.log(`[Room ${roomCode}] P1 second turn complete → sorting finished!`);
+        } else {
+          // Normal turn: adopt the player's submitted order as the new running list
+          game.currentRound.placedPlayers = validated;
+
+          const currentIndex = game.currentRound.currentTurnIndex ?? 1;
+          const nextIndex = currentIndex + 1;
+
+          console.log(`[Room ${roomCode}] finishPlayerTurn: index=${currentIndex}→${nextIndex}, orderLen=${currentOrder.length}`);
+
+          if (nextIndex < currentOrder.length) {
+            // More regular players to go
+            game.currentRound.currentTurnIndex = nextIndex;
+            game.currentRound.activePlayerId = currentOrder[nextIndex];
+            game.currentRound.secondTurnStartPlayer = false;
+            console.log(`[Room ${roomCode}] Next player: ${game.currentRound.activePlayerId} (index ${nextIndex})`);
+          } else {
+            // All players (P2..Pn) done → P1 gets second turn
+            game.currentRound.currentTurnIndex = nextIndex;
+            game.currentRound.activePlayerId = currentOrder[0];
+            game.currentRound.secondTurnStartPlayer = true;
+            console.log(`[Room ${roomCode}] All done → P1 second turn: ${currentOrder[0]}`);
+          }
         }
 
         callback({ success: true });

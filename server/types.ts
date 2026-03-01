@@ -87,4 +87,5 @@ export interface StartNextQuestionData {
 export interface UpdatePlacedPlayersData {
   roomCode: string;
   placedPlayers: string[]; // Updated array of placed player IDs
+  isSecondTurn?: boolean;  // True when P1 is finishing their second (final) turn
 }
