@@ -3,55 +3,48 @@
     <!-- Host View -->
     <v-card v-if="isHost" class="prepare-card" elevation="3">
       <v-card-title class="text-center">
-        <h2>Vorbereitung nächste Runde</h2>
+        <h2>Nächste Runde wählen</h2>
       </v-card-title>
 
       <v-card-text>
-        <v-list class="player-list mb-4">
-          <v-list-subheader>Spieler in der Runde</v-list-subheader>
+        <p class="text-center mb-4 text-medium-emphasis">
+          Wähle eine der folgenden Fragen für die nächste Runde:
+        </p>
+
+        <v-list class="question-selection-list mb-6">
           <v-list-item
-            v-for="player in players"
-            :key="player.id"
-            class="player-item mb-2"
+            v-for="question in suggestedQuestions"
+            :key="question.id"
+            class="question-option mb-3"
+            @click="startNextRound(question.id)"
+            :disabled="starting"
           >
             <template #prepend>
-              <v-avatar :color="getPlayerColor(player.id)" size="40">
-                <span class="text-white font-weight-bold">
-                  {{ player.name.charAt(0).toUpperCase() }}
-                </span>
-              </v-avatar>
+              <v-icon color="primary">mdi-chat-question</v-icon>
             </template>
-            <v-list-item-title>
-              {{ player.name }}
+            <v-list-item-title class="text-wrap py-2">
+              {{ question.text }}
             </v-list-item-title>
             <template #append>
-              <v-icon v-if="player.isHost" color="accent">mdi-crown</v-icon>
+              <v-btn
+                icon="mdi-chevron-right"
+                variant="text"
+                color="primary"
+              ></v-btn>
             </template>
           </v-list-item>
         </v-list>
 
         <v-btn
-          color="warning"
-          size="large"
+          color="secondary"
+          variant="tonal"
           block
-          @click="resetCurrentRound"
-          :loading="resetting"
-          class="btn-press mb-3"
-        >
-          <v-icon start>mdi-broom</v-icon>
-          Runde zurücksetzen
-        </v-btn>
-
-        <v-btn
-          color="success"
-          size="x-large"
-          block
-          @click="startNextRound"
-          :loading="starting"
+          @click="refreshSuggestions"
+          :disabled="starting"
           class="btn-press"
         >
-          <v-icon start>mdi-play</v-icon>
-          Neue Frage laden & zur nächsten Runde
+          <v-icon start>mdi-refresh</v-icon>
+          Andere Vorschläge
         </v-btn>
       </v-card-text>
     </v-card>
@@ -62,7 +55,7 @@
         <v-icon size="80" color="primary" class="pulse mb-4">mdi-clock-outline</v-icon>
         <h3 class="mb-4">Warte auf den Host...</h3>
         <p class="text-medium-emphasis mb-4">
-          Der Host bereitet die nächste Runde vor.
+          Der Host wählt gerade die nächste Frage aus.
         </p>
         <img
           src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmwxcjQ3NzR3Nm5wdWd1bjJqZTJteWMxenFubnM2a2ZpMGw5enJzOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WFyqujMJoxIn9qSTf5/giphy.gif"
@@ -85,8 +78,8 @@ const questions = inject("questions") as any[];
 const router = useRouter();
 const route = useRoute();
 const gameId = ref<string>(route.params.gameId as string);
-const resetting = ref(false);
 const starting = ref(false);
+const suggestedQuestions = ref<any[]>([]);
 
 // Get game state from socket service
 const gameState = computed(() => socketService.gameState.value);
@@ -104,46 +97,34 @@ function getPlayerColor(playerId: string): string {
 
 onMounted(() => {
   console.log('[PrepareNextRound] Mounted, gameId:', gameId.value);
+  refreshSuggestions();
 });
 
-async function resetCurrentRound() {
-  resetting.value = true;
-
-  try {
-    await socketService.emit('resetRound', {
-      roomCode: gameId.value,
-    });
-    console.log('[PrepareNextRound] Round reset');
-  } catch (error: any) {
-    console.error('[PrepareNextRound] Reset error:', error);
-    alert(error.message || 'Fehler beim Zurücksetzen');
-  } finally {
-    resetting.value = false;
-  }
-}
-
-async function startNextRound() {
+function refreshSuggestions() {
   const unused = questions.filter((q: any) => !usedQuestionIds.value.includes(q.id));
-
+  
   if (unused.length === 0) {
-    alert('Keine Fragen mehr verfügbar.');
+    suggestedQuestions.value = [];
     return;
   }
 
-  const newQuestion = unused[Math.floor(Math.random() * unused.length)];
+  // Pick up to 3 random questions
+  const shuffled = [...unused].sort(() => 0.5 - Math.random());
+  suggestedQuestions.value = shuffled.slice(0, 3);
+}
+
+async function startNextRound(questionId: number) {
   starting.value = true;
 
   try {
     await socketService.emit('startNextQuestion', {
       roomCode: gameId.value,
-      questionId: newQuestion.id,
+      questionId: questionId,
     });
-    console.log('[PrepareNextRound] Started next question:', newQuestion.id);
-    // Server will emit navigateTo event
+    console.log('[PrepareNextRound] Started round with question:', questionId);
   } catch (error: any) {
     console.error('[PrepareNextRound] Start error:', error);
     alert(error.message || 'Fehler beim Starten der nächsten Runde');
-  } finally {
     starting.value = false;
   }
 }
@@ -162,15 +143,27 @@ async function startNextRound() {
   padding: 16px;
 }
 
-.player-list {
-  background: #f5f5f5;
-  border-radius: 12px;
-  padding: 8px;
+.question-selection-list {
+  background: transparent;
 }
 
-.player-item {
+.question-option {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 2px solid #e8f5e9;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.question-option:hover {
+  border-color: #59981A;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(89, 152, 26, 0.15);
+}
+
+.text-wrap {
+  white-space: normal;
+  line-height: 1.4;
 }
 
 .waiting-card {
