@@ -179,78 +179,36 @@
       </v-card-text>
     </v-card>
 
-    <!-- Results: Show each player's ordering side-by-side -->
+    <!-- Results: Final order with revealed answers -->
     <v-card v-else class="results-card" elevation="3">
-      <v-card-title class="text-center">
+      <v-card-title class="text-center results-title">
         <h2>🎉 Finale Reihenfolge</h2>
+        <p v-if="currentQuestion" class="results-question">
+          {{ currentQuestion.text }}
+        </p>
       </v-card-title>
 
       <v-card-text>
-        <p class="text-center text-medium-emphasis mb-2">
-          So hat jeder die Spieler sortiert:
-        </p>
-
-        <!-- Scroll hint for mobile -->
-        <div class="scroll-hint text-center mb-4">
-          <v-icon color="primary" size="small">mdi-arrow-left-right</v-icon>
-          <span class="text-caption text-medium-emphasis ml-1">Wische nach links/rechts</span>
-        </div>
-
-        <!-- Horizontal scroll container for cards -->
-        <div class="cards-scroll-container">
-          <div class="player-cards-wrapper">
-            <div
-              v-for="player in allPlayers"
-              :key="player.id"
-              class="player-ordering-card scale-in"
-            >
-              <!-- Player header with answer -->
-              <div class="card-header" :style="{ background: getPlayerColor(player.id) }">
-                <v-avatar color="white" size="40" class="mb-2">
-                  <span class="font-weight-bold" :style="{ color: getPlayerColor(player.id) }">
-                    {{ player.name.charAt(0).toUpperCase() }}
-                  </span>
-                </v-avatar>
-                <div class="card-player-name">{{ player.name }}</div>
-                <div class="card-answer-chip">
-                  Antwort: <strong>{{ getPlayerAnswer(player.id) }}</strong>
-                </div>
-              </div>
-
-              <!-- Ordering list -->
-              <div class="card-ordering-list">
-                <div
-                  v-for="(_, rank) in maxPlayers"
-                  :key="rank"
-                  class="ordering-row"
-                >
-                  <div class="rank-badge">{{ rank + 1 }}</div>
-                  <v-avatar
-                    :color="getPlayerColor(getPlayerOrderingAtRank(player.id, rank))"
-                    size="32"
-                    class="mx-2"
-                  >
-                    <span class="text-white font-weight-bold text-caption">
-                      {{ getPlayerNameShort(getPlayerOrderingAtRank(player.id, rank)) }}
-                    </span>
-                  </v-avatar>
-                  <span class="ordering-player-name">
-                    {{ getPlayerName(getPlayerOrderingAtRank(player.id, rank)) }}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Scroll indicator dots -->
-        <div class="scroll-indicators" v-if="allPlayers.length > 1">
+        <!-- Final placement list -->
+        <div class="results-list">
           <div
-            v-for="player in allPlayers"
-            :key="player.id"
-            class="indicator-dot"
-            :style="{ background: getPlayerColor(player.id) }"
-          ></div>
+            v-for="(playerId, index) in placedPlayers"
+            :key="playerId"
+            class="results-list-item scale-in"
+          >
+            <div class="rank-badge">{{ index + 1 }}</div>
+            <v-avatar :color="getPlayerColor(playerId)" size="40" class="mx-3">
+              <span class="text-white font-weight-bold">
+                {{ getPlayerName(playerId).charAt(0).toUpperCase() }}
+              </span>
+            </v-avatar>
+            <div class="results-player-info">
+              <div class="results-player-name">{{ getPlayerName(playerId) }}</div>
+            </div>
+            <v-chip color="primary" variant="tonal" class="results-answer-chip">
+              {{ getPlayerAnswer(playerId) }}
+            </v-chip>
+          </div>
         </div>
 
         <v-btn
@@ -536,132 +494,60 @@ async function prepareNextRound() {
   z-index: 10;
 }
 
-.scroll-hint {
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.cards-scroll-container {
-  overflow-x: auto;
-  overflow-y: visible;
-  margin: 0 -16px;
-  padding: 0 16px 16px 16px;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none; /* Firefox */
-}
-
-.cards-scroll-container::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Edge */
-}
-
-.player-cards-wrapper {
-  display: flex;
-  gap: 16px;
-  padding: 8px 0;
-  min-width: min-content;
-}
-
-.player-ordering-card {
-  flex: 0 0 auto;
-  width: 280px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  scroll-snap-align: center;
-  transition: transform 0.2s;
-}
-
-.player-ordering-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-.card-header {
-  padding: 20px;
-  color: white;
-  text-align: center;
+.results-title {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 8px;
+  white-space: normal !important;
 }
 
-.card-player-name {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+.results-question {
+  font-size: 1rem;
+  color: #666;
+  font-weight: 500;
+  margin-top: 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-.card-answer-chip {
-  background: rgba(255, 255, 255, 0.95);
-  color: #2d4a0e;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.results-list {
+  max-width: 500px;
+  margin: 0 auto;
 }
 
-.card-ordering-list {
-  padding: 16px;
-}
-
-.ordering-row {
+.results-list-item {
   display: flex;
   align-items: center;
-  padding: 10px 12px;
-  margin-bottom: 8px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
   background: linear-gradient(135deg, #f9ffe6 0%, #ffffff 100%);
-  border-radius: 12px;
+  border-radius: 14px;
   border: 2px solid #e8f5e9;
   transition: all 0.2s;
 }
 
-.ordering-row:hover {
+.results-list-item:hover {
   border-color: #59981A;
   transform: translateX(4px);
 }
 
-.rank-badge {
-  background: linear-gradient(135deg, #59981A 0%, #7CB342 100%);
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.9rem;
-  flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(89, 152, 26, 0.3);
+.results-player-info {
+  flex: 1;
+  min-width: 0;
 }
 
-.ordering-player-name {
-  font-size: 0.95rem;
+.results-player-name {
+  font-size: 1rem;
   font-weight: 600;
   color: #2d4a0e;
-  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.scroll-indicators {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 16px;
-  margin-bottom: 8px;
-}
-
-.indicator-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  opacity: 0.5;
-  transition: all 0.3s;
+.results-answer-chip {
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 @media (max-width: 600px) {
@@ -672,33 +558,6 @@ async function prepareNextRound() {
 
   .finish-button-container {
     padding: 12px;
-  }
-
-  .player-ordering-card {
-    width: 260px;
-  }
-
-  .card-player-name {
-    font-size: 1rem;
-  }
-
-  .card-answer-chip {
-    font-size: 0.85rem;
-    padding: 6px 12px;
-  }
-
-  .ordering-row {
-    padding: 8px 10px;
-  }
-
-  .rank-badge {
-    width: 28px;
-    height: 28px;
-    font-size: 0.8rem;
-  }
-
-  .ordering-player-name {
-    font-size: 0.85rem;
   }
 }
 </style>
