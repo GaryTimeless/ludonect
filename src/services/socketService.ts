@@ -17,8 +17,15 @@ class SocketService {
       return this.socket;
     }
 
-    const serverUrl = url || import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+    let serverUrl = url || import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+    // When accessed via network IP (e.g. phone in same WiFi), replace localhost or 127.0.0.1 with real IP
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      serverUrl = serverUrl
+        .replace('localhost', window.location.hostname)
+        .replace('127.0.0.1', window.location.hostname);
+    }
 
+    console.log('[SocketService] Versuche Verbindung mit:', serverUrl);
     console.log(`[SocketService] Connecting to ${serverUrl}...`);
 
     this.socket = io(serverUrl, {

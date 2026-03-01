@@ -13,7 +13,7 @@ const httpServer = createServer();
 // Create Socket.io server with CORS
 const io = new Server(httpServer, {
   cors: {
-    origin: CLIENT_URL,
+    origin: '*', // Allow all origins for easier local network testing
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -28,7 +28,7 @@ const reconnectionManager = new ReconnectionManager(io, gameManager);
 setupSocketHandlers(io, gameManager, reconnectionManager);
 
 // Start server
-httpServer.listen(PORT, () => {
+httpServer.listen(Number(PORT), '0.0.0.0', () => {
   console.log('');
   console.log('╔════════════════════════════════════════════════╗');
   console.log('║   🎮 Ludonect WebSocket Server Running 🎮    ║');
