@@ -1,13 +1,31 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Tenor+Sans&display=swap');
 
 * {
-  font-family: 'Nunito', 'Tenor Sans', Arial, sans-serif;
+  font-family: 'Tenor Sans', Arial, sans-serif !important;
 }
 
-body {
-  background: #EDFFCC;
-  overflow-x: hidden;
+body,
+.v-application {
+  font-family: 'Tenor Sans', Arial, sans-serif !important;
+  color: #385028 !important;
+  color-scheme: light !important; /* Force light mode */
 }
+
+/* Override Vuetify default Roboto in all typography classes */
+.v-card-title,
+.v-card-subtitle,
+.v-card-text,
+.v-list-item-title,
+.v-list-item-subtitle,
+.v-btn,
+.v-chip,
+.v-alert,
+.v-snackbar__content,
+.text-h1, .text-h2, .text-h3, .text-h4, .text-h5, .text-h6,
+.text-body-1, .text-body-2, .text-caption, .text-subtitle-1, .text-subtitle-2 {
+  font-family: 'Tenor Sans', Arial, sans-serif !important;
+}
+
 
 /* Mobile-first responsive utilities */
 .mobile-container {

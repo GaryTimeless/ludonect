@@ -4,7 +4,6 @@ import * as directives from 'vuetify/directives'
 import '@mdi/font/css/materialdesignicons.css'
 import 'vuetify/styles'
 
-// Vibrant & Playful Theme - Inspired by Duolingo/Kahoot
 export default createVuetify({
   components,
   directives,
@@ -14,45 +13,45 @@ export default createVuetify({
       ludonect: {
         dark: false,
         colors: {
-          // Primary - Vibrant Green (keeping brand color)
           primary: '#59981A',
           'primary-darken-1': '#4A7F15',
           'primary-lighten-1': '#6FAA2E',
 
-          // Secondary - Playful Purple
           secondary: '#9C27B0',
           'secondary-darken-1': '#7B1FA2',
           'secondary-lighten-1': '#BA68C8',
 
-          // Accent - Bold Orange
           accent: '#FF9800',
           'accent-darken-1': '#F57C00',
           'accent-lighten-1': '#FFB74D',
 
-          // Supporting colors
-          success: '#4CAF50',
-          warning: '#FFC107',
-          error: '#F44336',
-          info: '#2196F3',
+          // Semantic colors — matching old Ionic palette
+          success: '#2dd36f',
+          warning: '#ffc409',
+          error: '#eb445a',
+          info: '#91a095',
 
           // Backgrounds
           background: '#EDFFCC',
           surface: '#FFFFFF',
           'surface-variant': '#F5F5F5',
 
-          // Text
-          'on-primary': '#EDFFCC',
+          // Text on colored surfaces
+          'on-primary': '#EDFFCC', // light text on green buttons
           'on-secondary': '#FFFFFF',
           'on-background': '#385028',
           'on-surface': '#385028',
+          'on-success': '#FFFFFF',
+          'on-error': '#FFFFFF',
+          'on-info': '#FFFFFF',
+          'on-warning': '#385028',
         },
       },
     },
   },
   defaults: {
-    // Global component defaults for consistent styling
     VBtn: {
-      style: 'text-transform: none;',
+      style: 'text-transform: none; font-family: "Tenor Sans", Arial, sans-serif;',
       elevation: 0,
       rounded: 'xl',
     },
@@ -67,6 +66,12 @@ export default createVuetify({
     VSlider: {
       color: 'primary',
       thumbLabel: true,
+    },
+    VChip: {
+      style: 'font-family: "Tenor Sans", Arial, sans-serif;',
+    },
+    VSnackbar: {
+      color: 'surface',
     },
   },
 })

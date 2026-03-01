@@ -35,8 +35,10 @@
 
         <v-progress-linear
           :model-value="(answeredCount / totalPlayers) * 100"
-          color="success"
-          height="8"
+          color="primary"
+          bg-color="primary-lighten-1"
+          bg-opacity="0.15"
+          height="10"
           rounded
           class="mt-6 mb-2"
         />
@@ -254,7 +256,7 @@ async function proceedToEstimation() {
 
 /* Gradient slider track */
 :deep(.v-slider-track__fill) {
-  background: linear-gradient(to right, #F44336 0%, #FFC107 50%, #4CAF50 100%);
+  background: #59981A;
 }
 
 @media (max-width: 600px) {

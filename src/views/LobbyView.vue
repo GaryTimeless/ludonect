@@ -1,5 +1,6 @@
 <template>
-  <v-container class="mobile-container fade-in">
+  <v-container class="lobby-container fade-in">
+    <div class="lobby-content">
     <div class="lobby-header">
       <img
         src="@/assets/ludonect_combo.png"
@@ -14,7 +15,7 @@
         <div class="lobby-buttons">
           <v-btn
             color="primary"
-            size="x-large"
+            size="large"
             block
             class="btn-press"
             @click="mode = 'create'"
@@ -22,8 +23,9 @@
             Neuen Raum erstellen
           </v-btn>
           <v-btn
-            color="secondary"
-            size="x-large"
+            color="primary"
+            variant="outlined"
+            size="large"
             block
             class="btn-press"
             @click="mode = 'join'"
@@ -262,6 +264,7 @@
     <v-snackbar v-model="snackbar" :timeout="2000" color="success">
       {{ snackbarText }}
     </v-snackbar>
+    </div> <!-- end lobby-content -->
   </v-container>
 </template>
 
@@ -456,6 +459,20 @@ async function nativeShare() {
 .lobby-header {
   text-align: center;
   margin-bottom: 32px;
+}
+
+.lobby-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.lobby-content {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
 }
 
 .ludonect-logo {
