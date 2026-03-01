@@ -1,281 +1,272 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar color="primary">
-        <ion-title>Frage</ion-title>
-      </ion-toolbar>
-    </ion-header>
-
-    <ion-content class="ion-padding">
-      <div class="question-wrapper">
+  <v-container class="mobile-container fade-in">
+    <v-card class="question-card" elevation="3">
+      <v-card-title class="question-title text-center">
         <h2>{{ questionText }}</h2>
-        <ion-item>
-          <ion-label position="stacked"
-            >Deine Antwort ({{ min }}–{{ max }})</ion-label
+      </v-card-title>
+
+      <v-card-text>
+        <div class="slider-container">
+          <p class="slider-label text-center mb-2">
+            Deine Antwort ({{ min }}–{{ max }})
+          </p>
+
+          <v-slider
+            v-model="answer"
+            :min="min"
+            :max="max"
+            :step="1"
+            thumb-label="always"
+            color="primary"
+            track-color="grey-lighten-2"
+            class="question-slider"
           >
-          <ion-range :min="min" :max="max" v-model="answer" />
-        </ion-item>
-        <p>
-          Deine Auswahl: <strong>{{ answer }}</strong>
+            <template #thumb-label="{ modelValue }">
+              <span class="slider-thumb-value">{{ modelValue }}</span>
+            </template>
+          </v-slider>
+
+          <div class="slider-value-display">
+            <v-chip color="primary" size="large" class="value-chip">
+              {{ answer }}
+            </v-chip>
+          </div>
+        </div>
+
+        <v-progress-linear
+          :model-value="(answeredCount / totalPlayers) * 100"
+          color="primary"
+          bg-color="primary-lighten-1"
+          bg-opacity="0.15"
+          height="10"
+          rounded
+          class="mt-6 mb-2"
+        />
+        <p class="text-center text-caption text-medium-emphasis">
+          {{ answeredCount }} / {{ totalPlayers }} haben bereits geantwortet
         </p>
-        <ion-button expand="block" @click="submitAnswer"
-          >Antwort absenden</ion-button
+
+        <v-btn
+          color="success"
+          size="x-large"
+          block
+          @click="submitAnswer"
+          :disabled="hasAnswered"
+          :loading="submitting"
+          class="btn-press mt-6"
         >
-      </div>
-    </ion-content>
-  </ion-page>
+          <v-icon start v-if="hasAnswered">mdi-check-circle</v-icon>
+          {{ hasAnswered ? 'Antwort abgesendet' : 'Antwort absenden' }}
+        </v-btn>
+
+        <transition name="fade">
+          <div v-if="hasAnswered" class="waiting-message mt-4 pulse">
+            <v-icon color="success" size="small">mdi-clock-outline</v-icon>
+            <span class="ml-2">Warte auf andere Spieler...</span>
+          </div>
+        </transition>
+
+        <!-- Host can proceed when all have answered -->
+        <v-btn
+          v-if="isHost && allPlayersAnswered"
+          color="primary"
+          size="x-large"
+          block
+          @click="proceedToEstimation"
+          :loading="proceeding"
+          class="btn-press mt-6"
+        >
+          <v-icon start>mdi-arrow-right</v-icon>
+          Zur Schätzung
+        </v-btn>
+      </v-card-text>
+    </v-card>
+  </v-container>
 </template>
 
 <script setup lang="ts">
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonItem,
-  IonLabel,
-  IonRange,
-  IonButton,
-} from "@ionic/vue";
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { inject } from "vue";
+import { socketService } from "@/services/socketService";
 
-import {
-  getFirestore,
-  doc,
-  updateDoc,
-  Timestamp,
-  getDoc,
-} from "firebase/firestore";
-
-console.log("Welcome to QuestionView");
 const questions = inject("questions", []) as any[];
 const route = useRoute();
 const router = useRouter();
 
-const db = getFirestore();
-
-// Spielername lokal auslesen (kann später nützlich sein für Feedback oder Debugging)
-const userName = localStorage.getItem("playerName");
 const gameId = route.params.gameId as string;
 const rawQuestionId = route.params.questionId;
 const questionId = Number(rawQuestionId);
-
-if (isNaN(questionId)) {
-  console.warn("Ungültige questionId – Weiterleitung zur Lobby.");
-  router.push(`/lobby/${gameId}`);
-}
 
 const questionText = ref("");
 const min = ref(0);
 const max = ref(100);
 const answer = ref(50);
-interface Player {
-  id: string;
-  name: string;
-  isHost: boolean;
-  estimation?: boolean;
-}
+const hasAnswered = ref(false);
+const submitting = ref(false);
+const proceeding = ref(false);
 
-const players = ref<Player[]>([]);
+// Get game state from socket service
+const gameState = computed(() => socketService.gameState.value);
+const currentPlayerId = computed(() => localStorage.getItem('playerId') ?? socketService.getSocketId() ?? undefined);
+const isHost = computed(() => gameState.value?.hostId === currentPlayerId.value);
+const totalPlayers = computed(() => gameState.value?.players.length || 0);
+const answeredCount = computed(() => {
+  if (!gameState.value?.currentRound) return 0;
+  return Object.keys(gameState.value.currentRound.answers).length;
+});
+const allPlayersAnswered = computed(() => answeredCount.value === totalPlayers.value && totalPlayers.value > 0);
 
 onMounted(async () => {
-  console.log(
-    "[QUESTIONVIEW] Suche Frage mit ID:",
-    questionId,
-    "| Typ:",
-    typeof questionId
-  );
+  console.log('[QuestionView] Mounted with question ID:', questionId);
+
+  if (isNaN(questionId)) {
+    console.warn('Ungültige questionId – Weiterleitung zur Lobby.');
+    router.push('/lobby');
+    return;
+  }
+
   const question = questions.find((q) => q.id === questionId);
-  console.log("[QUESTIONVIEW] Gefundene Frage:", question);
+  console.log('[QuestionView] Gefundene Frage:', question);
 
   if (question) {
     questionText.value = question.text;
     min.value = question.min;
     max.value = question.max;
+    answer.value = Math.floor((question.min + question.max) / 2);
   } else {
-    console.warn(
-      "Fehlende oder ungültige gameId/questionId – Weiterleitung zur Lobby."
-    );
-    router.push(`/lobby/${gameId}`);
+    console.warn('Frage nicht gefunden – Weiterleitung zur Lobby.');
+    router.push('/lobby');
   }
 
-  const dbRef = doc(db, "gameSessions", gameId);
-  const docSnap = await getDoc(dbRef);
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    players.value = data.players;
+  // Check if this player has already answered
+  const pid = currentPlayerId.value;
+  if (pid && gameState.value?.currentRound?.answers[pid]) {
+    hasAnswered.value = true;
   }
 });
 
+// Watch for game state changes
+watch(
+  () => gameState.value?.currentRound?.answers,
+  (newAnswers) => {
+    if (newAnswers && currentPlayerId.value && newAnswers[currentPlayerId.value]) {
+      hasAnswered.value = true;
+    }
+  },
+  { deep: true }
+);
+
 async function submitAnswer() {
-  console.log(" [QUESTIONVIEW] Antwort abgesendet:", answer.value);
-  console.log(" [QUESTIONVIEW] Spielername (lokal):", userName);
-  localStorage.setItem(
-    `answer-${gameId}-${questionId}`,
-    answer.value.toString()
-  );
+  if (hasAnswered.value) return;
 
-  const playerId = localStorage.getItem("playerId");
-  // Update the answer in the gameSessions document
-  const sessionRef = doc(db, "gameSessions", gameId);
-
-  // Vor updateDoc: hole aktuelle Spieler aus der DB
-  const freshSnap = await getDoc(sessionRef);
-  const freshPlayers = freshSnap.data()?.players || [];
-
-  console.log(userName)
-  console.log(freshPlayers)
-
-
-  const updatedPlayers = freshPlayers.map((p: Player) => {
-    if (p.id === playerId) {
-  return { ...p, estimation: true };
-} else {
-  return p;
-}
-  });
+  submitting.value = true;
 
   try {
-    await updateDoc(sessionRef, {
-      [`currentRound.answers.${playerId}`]: {
-        answerValue: answer.value,
-        answeredAt: Timestamp.now(),
-      },
-      players: updatedPlayers,
-      "currentRound.phase": "estimation",
-
+    await socketService.emit('submitAnswer', {
+      roomCode: gameId,
+      answer: answer.value,
     });
-    console.log("Antwort erfolgreich gespeichert.");
-    // Debug: Nach Update erneut Spieler aus der DB holen
-    const updatedSnap = await getDoc(sessionRef);
-    if (updatedSnap.exists()) {
-      const updatedData = updatedSnap.data();
-      console.log(" [QUESTIONVIEW] Spieler nach dem Speichern:", updatedData.players);
-    } else {
-      console.warn("Fehler: Session-Dokument nach Update nicht gefunden.");
-    }
-  } catch (error) {
-    console.error("Fehler beim Speichern der Antwort:", error);
-  }
 
-  router.push(`/estimation/${gameId}/${questionId}`);
-  console.log("[QUESTIONVIEW] Weiterleitung zur EstimationView");
-  
+    console.log('[QuestionView] Antwort abgesendet:', answer.value);
+    hasAnswered.value = true;
+  } catch (error: any) {
+    console.error('[QuestionView] Fehler beim Speichern der Antwort:', error);
+    alert(error.message || 'Fehler beim Speichern der Antwort');
+  } finally {
+    submitting.value = false;
+  }
+}
+
+async function proceedToEstimation() {
+  proceeding.value = true;
+  try {
+    // Tell server to navigate all clients to estimation view
+    await socketService.emit('proceedToEstimation', {
+      roomCode: gameId,
+    });
+    console.log('[QuestionView] Proceeding to estimation view');
+  } catch (error: any) {
+    console.error('[QuestionView] Fehler beim Weiterleiten:', error);
+    alert(error.message || 'Fehler beim Weiterleiten');
+  } finally {
+    proceeding.value = false;
+  }
 }
 </script>
 
 <style scoped>
-ion-toolbar {
-  --background: #59981a;
-  --color: #edffcc;
-  --min-height: 54px;
-  --padding-start: 0;
-  --padding-end: 0;
-  box-shadow: none;
-  border-bottom: none;
-  font-family: "Tenor Sans", Arial, sans-serif;
-  /* display, align-items, justify-content entfernen! */
+.question-card {
+  max-width: 500px;
+  margin: 24px auto;
+  background: linear-gradient(135deg, #f9ffe6 0%, #ffffff 100%);
 }
 
-ion-title {
-  font-family: "Tenor Sans", Arial, sans-serif;
-  font-size: 1.3rem;
+.question-title h2 {
+  font-size: 1.5rem;
+  color: #2d4a0e;
   font-weight: 700;
-  color: #edffcc;
-  text-align: center;
-  letter-spacing: 0.01em;
-  padding: 0;
-  margin: 0;
-  width: 100%;
-  display: block;
-}
-.question-wrapper {
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 0 16px 32px 16px;
-  background: #f9ffe6;
-  border-radius: 18px;
-  box-shadow: 0 2px 10px 0 #d3e9b6a0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  padding: 16px;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-h2 {
-  color: #59981a;
-  font-size: 1.35rem;
-  text-align: center;
-  font-family: 'Tenor Sans', Arial, sans-serif;
-  margin: 16px 0 24px 0;
+.slider-container {
+  padding: 24px 16px;
 }
 
-ion-item {
-  background: transparent;
-  margin: 16px 0 10px 0;
-  border-radius: 12px;
-  --color: #385028;
-}
-
-ion-label {
-  color: #385028;
-  font-family: 'Tenor Sans', Arial, sans-serif;
+.slider-label {
   font-size: 1.1rem;
-}
-
-p {
   color: #385028;
-  text-align: center;
-  font-size: 1.04rem;
-  margin: 12px 0 20px 0;
-}
-
-ion-button {
-  --background: #59981a;
-  --color: #edffcc;
-  --border-radius: 18px;
-  font-family: 'Tenor Sans', Arial, sans-serif;
-  font-size: 1rem;
   font-weight: 600;
-  margin-top: 12px;
 }
 
-@media (max-width: 520px) {
-  .question-wrapper {
-    max-width: 95vw;
-    padding: 0 4vw 24px 4vw;
-  }
-  h2 {
-    font-size: 1.13rem;
-  }
+.question-slider {
+  margin: 32px 0;
 }
 
+.slider-thumb-value {
+  font-weight: 700;
+  font-size: 14px;
+}
 
-.question-wrapper {
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 0 16px 32px 16px;
-  background: #f9ffe6;
-  border-radius: 24px;
-  box-shadow: 0 2px 16px 0 #d3e9b6a0;
+.slider-value-display {
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  justify-content: center;
+  margin-top: 16px;
 }
 
-ion-item {
-  --background: #e4f9ce !important;
-  background: #e4f9ce !important; /* Fallback, aber Custom Property ist besser */
-  margin: 16px 0 10px 0;
-  border-radius: 18px;
-  --color: #385028;
+.value-chip {
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 24px;
 }
 
-ion-label {
-  color: #385028;
-  font-family: 'Tenor Sans', Arial, sans-serif;
-  font-size: 1.1rem;
+.waiting-message {
+  text-align: center;
+  color: #4CAF50;
+  font-weight: 600;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Gradient slider track */
+:deep(.v-slider-track__fill) {
+  background: #59981A;
+}
+
+@media (max-width: 600px) {
+  .question-title h2 {
+    font-size: 1.25rem;
+  }
+
+  .value-chip {
+    font-size: 1.25rem;
+    padding: 20px;
+  }
 }
 </style>

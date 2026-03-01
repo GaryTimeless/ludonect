@@ -1,290 +1,180 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title >Vorbereitung nächste Runde</ion-title>
-      </ion-toolbar>
-    </ion-header>
+  <v-container class="mobile-container fade-in">
+    <!-- Host View -->
+    <v-card v-if="isHost" class="prepare-card" elevation="3">
+      <v-card-title class="text-center">
+        <h2>Nächste Runde wählen</h2>
+      </v-card-title>
 
-    <ion-content>
-      <div class="prepare-center-wrapper">
-        <div class="p-4" v-if="isHost">
-          <h2 class="text-lg font-bold mb-2">
-            Aktueller Spielstand (currentRound)
-          </h2>
-          <pre>{{ currentRound }}</pre>
-          <div class="p-4">
-            <h2 class="text-lg font-bold mb-2">Spieler in der Runde</h2>
-            <ul class="list-disc list-inside space-y-2">
-              <li v-for="player in players" :key="player.id">
-                <div class="bg-white rounded-lg shadow-md p-4 mb-4">
-                  <h3 class="text-lg font-semibold text-gray-800 mb-1">
-                    {{ player.name }}
-                  </h3>
-                  <p class="text-sm text-gray-600 mb-1">
-                    <strong>ID:</strong> {{ player.id }}
-                  </p>
-                  <p class="text-sm text-gray-600 mb-1">
-                    <strong>Host:</strong>
-                    <span v-if="player.isHost">Ja 👑</span>
-                    <span v-else>Nein</span>
-                  </p>
-                  <p class="text-sm text-gray-600 mb-1">
-                    <strong>Schätzung:</strong>
-                    <span v-if="player.estimation">✅ Abgegeben</span>
-                    <span v-else>❌ Offen</span>
-                  </p>
-                  <p class="text-sm text-gray-600 mb-1">
-                    <strong>joinDate:</strong>
-                    <span> {{ player.joinedAt }}</span>
-                  </p>
-                </div>
-              </li>
-            </ul>
-          </div>
-                    <div class="prepare-buttons-wrapper">
-            <ion-button expand="block" @click="resetCurrentRound">
-              🧹 currentRound bereinigen
-            </ion-button>
-            <p>{{ CheckCleanDB ? "wurde bereinigt " :""}}</p>
-            <ion-button expand="block" color="medium" @click="startNextRound">
-              ➕ Neue Frage laden & ▶️ Weiter zur nächsten Spielrunde
-            </ion-button>
-          </div>
-        </div>
-        <div class="p-4" v-else>
-          <div class="prepare-center-wrapper">
-            <div class="player-list-wrapper" style="text-align: center">
-              <h3 class="player-list-title">🕒 Warte auf den Host...</h3>
-              <p class="player-list-title">
-                Der Host bereitet die nächste Runde vor.
-              </p>
-              <img
-                src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmwxcjQ3NzR3Nm5wdWd1bjJqZTJteWMxenFubnM2a2ZpMGw5enJzOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WFyqujMJoxIn9qSTf5/giphy.gif"
-                alt="Warten auf Host"
-                style="max-width: 80%; height: auto; border-radius: 8px"
-              />
+      <v-card-text>
+        <p class="text-center mb-4 text-medium-emphasis">
+          Wähle eine der folgenden Fragen für die nächste Runde:
+        </p>
 
-            </div>
-          </div>
-        </div>
-      </div>
-    </ion-content>
-  </ion-page>
+        <v-list class="question-selection-list mb-6">
+          <v-list-item
+            v-for="question in suggestedQuestions"
+            :key="question.id"
+            class="question-option mb-3"
+            @click="startNextRound(question.id)"
+            :disabled="starting"
+          >
+            <template #prepend>
+              <v-icon color="primary">mdi-chat-question</v-icon>
+            </template>
+            <v-list-item-title class="text-wrap py-2">
+              {{ question.text }}
+            </v-list-item-title>
+            <template #append>
+              <v-btn
+                icon="mdi-chevron-right"
+                variant="text"
+                color="primary"
+              ></v-btn>
+            </template>
+          </v-list-item>
+        </v-list>
+
+        <v-btn
+          color="secondary"
+          variant="tonal"
+          block
+          @click="refreshSuggestions"
+          :disabled="starting"
+          class="btn-press"
+        >
+          <v-icon start>mdi-refresh</v-icon>
+          Andere Vorschläge
+        </v-btn>
+      </v-card-text>
+    </v-card>
+
+    <!-- Non-Host View -->
+    <v-card v-else class="waiting-card" elevation="3">
+      <v-card-text class="text-center">
+        <v-icon size="80" color="primary" class="pulse mb-4">mdi-clock-outline</v-icon>
+        <h3 class="mb-4">Warte auf den Host...</h3>
+        <p class="text-medium-emphasis mb-4">
+          Der Host wählt gerade die nächste Frage aus.
+        </p>
+        <img
+          src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmwxcjQ3NzR3Nm5wdWd1bjJqZTJteWMxenFubnM2a2ZpMGw5enJzOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WFyqujMJoxIn9qSTf5/giphy.gif"
+          alt="Warten auf Host"
+          style="max-width: 80%; height: auto; border-radius: 16px"
+          class="mt-4"
+        />
+      </v-card-text>
+    </v-card>
+  </v-container>
 </template>
 
 <script setup lang="ts">
-import {
-  doc,
-  getFirestore,
-  getDoc,
-  updateDoc,
-  onSnapshot,
-} from "firebase/firestore";
-import { onMounted, ref, computed, onBeforeUnmount } from "vue";
-import { useRouter } from "vue-router";
-import { useRoute } from "vue-router";
-import {
-  IonPage,
-  IonHeader,
-  IonToolbar,
-  IonTitle,
-  IonContent,
-  IonButton,
-} from "@ionic/vue";
+import { ref, computed, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { inject } from "vue";
-const CheckCleanDB = ref(false);
+import { socketService } from "@/services/socketService";
 
 const questions = inject("questions") as any[];
-
-const db = getFirestore();
 const router = useRouter();
 const route = useRoute();
 const gameId = ref<string>(route.params.gameId as string);
-const currentRound = ref<any>({});
-let unsubscribeFn: (() => void) | null = null;
+const starting = ref(false);
+const suggestedQuestions = ref<any[]>([]);
 
-const players = ref<any[]>([]);
-const localPlayerId = localStorage.getItem("playerId");
-const isHost = computed(() => {
-  const me = players.value.find((p) => p.id === localPlayerId);
-  return me?.isHost || false;
-});
-const phase = ref("");
+// Get game state from socket service
+const gameState = computed(() => socketService.gameState.value);
+const players = computed(() => gameState.value?.players || []);
+const localPlayerId = computed(() => localStorage.getItem('playerId') ?? socketService.getSocketId() ?? undefined);
+const isHost = computed(() => gameState.value?.hostId === localPlayerId.value);
+const usedQuestionIds = computed(() => gameState.value?.usedQuestionIds || []);
 
-onMounted(async () => {
-  const roomRef = doc(db, "gameSessions", gameId.value);
-  const snap = await getDoc(roomRef);
-  currentRound.value = snap.data()?.currentRound || {};
-  players.value = snap.data()?.players || [];
-  gameId.value = route.params.gameId as string;
-  phase.value = currentRound.value.phase;
+// Generate consistent colors for players
+const playerColors = ['#9C27B0', '#FF9800', '#2196F3', '#4CAF50', '#F44336', '#00BCD4'];
+function getPlayerColor(playerId: string): string {
+  const hash = playerId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return playerColors[hash % playerColors.length];
+}
 
-  unsubscribeFn = onSnapshot(roomRef, (docSnap) => {
-    const updated = docSnap.data();
-    const questionId = updated?.currentRound?.questionId;
-    phase.value = updated?.currentRound?.phase;
-
-    if (
-      !isHost.value &&
-      phase.value === "question" &&
-      questionId &&
-      route.name !== "QuestionView"
-    ) {
-      console.log("[PREPARE] push to QuestionVIew");
-
-      router.push(`/question/${gameId.value}/${questionId}`);
-    }
-  });
+onMounted(() => {
+  console.log('[PrepareNextRound] Mounted, gameId:', gameId.value);
+  refreshSuggestions();
 });
 
-onBeforeUnmount(() => {
-  if (unsubscribeFn) {
-    unsubscribeFn();
-    console.log("[PREPARE] Unsubscribed on leave");
+function refreshSuggestions() {
+  const unused = questions.filter((q: any) => !usedQuestionIds.value.includes(q.id));
+  
+  if (unused.length === 0) {
+    suggestedQuestions.value = [];
+    return;
   }
-});
 
-const resetCurrentRound = async () => {
-  const roomRef = doc(db, "gameSessions", gameId.value);
-  await updateDoc(roomRef, {
-    "currentRound.answers": {},
-    "currentRound.estimationOrder": [],
-    "currentRound.placedPlayers": [],
-    "currentRound.sortingFinished": false,
-    "currentRound.sortingStarted": false,
-    "currentRound.secondTurnStartPlayer": false,
-    "currentRound.PrepNextRound": false,
-  });
-  console.log("[PREPAIRE 01]currentRound wurde bereinigt.");
-  console.log("[PREPAIRE 02]currentRound.answers wurde bereinigt.");
-  console.log("[PREPAIRE 03]currentRound.estimationOrder wurde bereinigt.");
-  console.log("[PREPAIRE 04]currentRound.placedPlayers wurde bereinigt.");
-  console.log("[PREPAIRE 05]currentRound.sortingFinished wurde bereinigt.");
-  console.log("[PREPAIRE 06]currentRound.sortingStarted wurde bereinigt.");
-  console.log(
-    "[PREPAIRE 07]currentRound.secondTurnStartPlayer wurde bereinigt."
-  );
-  console.log("[PREPAIRE 08]currentRound.phase wurde bereinigt.");
-  console.log(
-    "[PREPAIRE 09]currentRound.hasHostConfirmedNextRound wurde bereinigt."
-  );
-  console.log(
-    "[PREPAIRE 10]currentRound.hasHostConfirmedNextRound wurde bereinigt."
-  );
+  // Pick up to 3 random questions
+  const shuffled = [...unused].sort(() => 0.5 - Math.random());
+  suggestedQuestions.value = shuffled.slice(0, 3);
+}
 
-  const docSnap = await getDoc(roomRef);
-  if (docSnap.exists()) {
-    const data = docSnap.data();
-    const players = data.players || [];
+async function startNextRound(questionId: number) {
+  starting.value = true;
 
-    const updatedPlayers = players.map((player: any) => ({
-      ...player,
-      estimation: false, // oder `undefined` wenn du das Feld komplett loswerden willst
-    }));
-
-    await updateDoc(roomRef, {
-      players: updatedPlayers,
+  try {
+    await socketService.emit('startNextQuestion', {
+      roomCode: gameId.value,
+      questionId: questionId,
     });
-
-    console.log(
-      "[PREPAIRE 10] players[] wurde aktualisiert (estimation auf false gesetzt)."
-    );
+    console.log('[PrepareNextRound] Started round with question:', questionId);
+  } catch (error: any) {
+    console.error('[PrepareNextRound] Start error:', error);
+    alert(error.message || 'Fehler beim Starten der nächsten Runde');
+    starting.value = false;
   }
-CheckCleanDB.value = true
-  console.log("currentRound wurde bereinigt.");
-};
-
-const startNextRound = async () => {
-  const roomRef = doc(db, "gameSessions", gameId.value);
-  const snap = await getDoc(roomRef);
-  const data = snap.data();
-  const used = data?.usedQuestionIds || [];
-  // const questionsLibary = await fetch("./src/questions.json");
-
-  // //   /Users/gschenk/Dev/Ludonect/ludonect/src/questions.json
-  // const allQuestions = await questionsLibary.json();
-  // const unused = allQuestions.filter((q: any) => !used.includes(q.id));
-
-  const unused = questions.filter((q: any) => !used.includes(q.id));
-  if (unused.length === 0) return alert("Keine Fragen mehr verfügbar.");
-  const newQuestion = unused[Math.floor(Math.random() * unused.length)];
-  await updateDoc(roomRef, {
-    "currentRound.questionId": newQuestion.id,
-    usedQuestionIds: [...used, newQuestion.id],
-    "currentRound.phase": "question",
-  });
-  // alert("Neue Frage gesetzt: " + newQuestion.id);
-  console.log("prepaire URL");
-  const previewUrl = `/question/${gameId.value}/${newQuestion.id}`;
-  console.log("[PREPAIRE 10]prepaire URL: ", previewUrl);
-  //   const input = prompt("Bitte gib etwas ein, bevor es weitergeht:");
-  //   console.log("[LISTENER] Prüfe VOR router.push :", input);
-  console.log("[PREPAIRE 11] weiterleitung -> Start: ");
-CheckCleanDB.value = false
-  router.push(`/question/${gameId.value}/${newQuestion.id}`);
-};
+}
 </script>
+
 <style scoped>
-ion-title {
-  font-family: "Tenor Sans", Arial, sans-serif;
+.prepare-card {
+  max-width: 500px;
+  margin: 24px auto;
+}
+
+.prepare-card h2 {
   font-size: 1.3rem;
-  font-weight: 700;
-  color: #edffcc;
-  text-align: center;
-  letter-spacing: 0.01em;
-  padding: 0;
-  margin: 0;
-  width: 100%;
-  display: block;
-}
-.prepare-center-wrapper {
-  max-width: 540px;
-  margin: 0 auto;
-  padding: 0 18px;
-  width: 100%;
-  box-sizing: border-box;
   color: #385028;
-}
-.player-list-wrapper {
-  background: #f7fbe9;
-  border-radius: 14px;
-  box-shadow: 0 2px 12px 0 #d3e9b633;
-  margin-bottom: 18px;
-  padding: 20px 20px 10px 20px;
-  text-align: left;
-}
-.player-list-title {
-  color: #59981a;
-  font-family: 'Tenor Sans', Arial, sans-serif;
-  font-size: 1.15rem;
   font-weight: 700;
-  margin-bottom: 6px;
+  padding: 16px;
 }
-.player-order-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+
+.question-selection-list {
+  background: transparent;
 }
-.player-order-list li {
+
+.question-option {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #e8f5e9;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.question-option:hover {
+  border-color: #59981A;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(89, 152, 26, 0.15);
+}
+
+.text-wrap {
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.waiting-card {
+  max-width: 500px;
+  margin: 24px auto;
+  padding: 32px 16px;
+}
+
+.waiting-card h3 {
   color: #385028;
-  font-family: 'Tenor Sans', Arial, sans-serif;
-  font-size: 1.02rem;
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  font-size: 1.5rem;
+  font-weight: 700;
 }
-.host-label {
-  font-size: 0.92em;
-  color: #b7d065;
-  margin-left: 5px;
-}
-.prepare-buttons-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-width: 380px;
-  margin: 0 auto 0 auto;
-  align-items: center;
-}</style>
+</style>

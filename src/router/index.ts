@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from '@ionic/vue-router';
+import { createRouter, createWebHistory } from 'vue-router';
 import { RouteRecordRaw } from 'vue-router';
 // import LandingPageView from '../views/LandingPageView.vue';
 import LobbyView from '../views/LobbyView.vue';
@@ -20,6 +20,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/lobby',
     name: 'Lobby',
     component: LobbyView
+  },
+  {
+    path: '/join/:roomCode',
+    name: 'JoinRoom',
+    component: LobbyView,
+    props: true,
   },
   {
     path: '/question/:gameId/:questionId',
