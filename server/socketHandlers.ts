@@ -148,6 +148,11 @@ export function setupSocketHandlers(
           },
         });
 
+        // Mark the first question as used so it cannot appear again later
+        if (!game.usedQuestionIds.includes(questionId)) {
+          game.usedQuestionIds.push(questionId);
+        }
+
         callback({ success: true });
         io.to(roomCode).emit('gameUpdate', game);
         io.to(roomCode).emit('navigateTo', `/question/${roomCode}/${questionId}`);
