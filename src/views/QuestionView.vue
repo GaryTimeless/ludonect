@@ -138,7 +138,8 @@ onMounted(async () => {
   }
 
   // Check if this player has already answered
-  if (gameState.value?.currentRound?.answers[currentPlayerId.value]) {
+  const pid = currentPlayerId.value;
+  if (pid && gameState.value?.currentRound?.answers[pid]) {
     hasAnswered.value = true;
   }
 });
@@ -205,6 +206,9 @@ async function proceedToEstimation() {
   font-weight: 700;
   padding: 16px;
   line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .slider-container {

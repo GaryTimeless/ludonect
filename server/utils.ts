@@ -1,14 +1,14 @@
 /**
- * Generate a 6-character room code using nanoid
+ * Generate a 4-character room code using nanoid
  * Uses uppercase letters and numbers, excluding confusing characters (0, O, I, 1)
- * Example: "AB3XK9", "P7M2RS"
+ * Example: "AB3X", "P7M2"
  */
 export function generateRoomCode(): string {
   // Safe alphabet: excludes 0, O, I, 1 to avoid confusion
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
 
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 4; i++) {
     const randomIndex = Math.floor(Math.random() * chars.length);
     code += chars.charAt(randomIndex);
   }
@@ -34,8 +34,8 @@ export function generateShareableLink(roomCode: string, baseUrl: string): string
  * @returns true if valid format
  */
 export function isValidRoomCode(code: string): boolean {
-  if (!code || code.length !== 6) return false;
+  if (!code || code.length !== 4) return false;
 
-  const validChars = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/;
+  const validChars = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$/;
   return validChars.test(code);
 }
