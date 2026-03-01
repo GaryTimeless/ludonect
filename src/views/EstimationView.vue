@@ -9,12 +9,12 @@
       <v-card-text>
         <v-alert type="info" variant="tonal" class="mb-4">
           <div class="text-body-2">
-            {{ answeredCount }} / {{ totalPlayers }} haben geantwortet
+            {{ answeredCount }} / {{ totalPlayers }} haben schon geantwortet
           </div>
         </v-alert>
 
         <p class="text-center mb-4 text-medium-emphasis">
-          Ziehe die Spieler in die richtige Reihenfolge (niedrigste Antwort oben)
+          Ziehe die Spieler in die richtige Reihenfolge
         </p>
 
         <VueDraggable
@@ -61,7 +61,7 @@
             class="btn-press mb-2"
           >
             <v-icon start>mdi-content-save</v-icon>
-            Reihenfolge speichern
+            Reihenfolge aktualisieren
           </v-btn>
 
           <v-btn
