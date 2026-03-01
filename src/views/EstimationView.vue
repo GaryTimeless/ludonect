@@ -106,7 +106,7 @@
             </v-icon>
             <div>
               <div class="font-weight-bold">
-                {{ isMyTurn ? '🎯 Du bist an der Reihe!' : '⏳ Warte auf deinen Zug' }}
+                {{ isMyTurn ? `🎯 Hey ${localPlayerName}, du bist an der Reihe!` : `⏳ Hey ${localPlayerName}, warte auf deinen Zug` }}
               </div>
               <div v-if="activePlayerName && !isMyTurn" class="text-caption">
                 {{ activePlayerName }} platziert sich gerade
@@ -268,6 +268,7 @@ const totalPlayers = computed(() => gameState.value?.players.length || 0);
 const answeredCount = computed(() => Object.keys(answers.value).length);
 
 const isMyTurn = computed(() => activePlayerId.value === localPlayerId.value);
+const localPlayerName = computed(() => localPlayerId.value ? getPlayerName(localPlayerId.value) : '');
 
 // Local copy for drag-and-drop during our turn
 const placedPlayersLocal = ref<string[]>([]);
