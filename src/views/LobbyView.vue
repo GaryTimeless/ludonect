@@ -12,86 +12,81 @@
     <!-- Play Buttons -->
     <div v-if="!roomCode">
       <template v-if="mode === 'start'">
-        <div class="lobby-buttons">
+        <!-- Main Action Buttons -->
+        <div class="d-flex flex-column lobby-buttons">
+          <!-- Primary CTA -->
           <v-btn
             color="primary"
+            variant="elevated"
             size="large"
             block
             class="btn-press"
+            elevation="3"
             @click="mode = 'create'"
           >
             Neuen Raum erstellen
           </v-btn>
+
+          <!-- Secondary action — white elevated -->
           <v-btn
-            color="primary"
-            variant="outlined"
+            color="white"
+            variant="elevated"
             size="large"
             block
-            class="btn-press"
+            class="btn-press text-primary"
+            elevation="2"
             @click="mode = 'join'"
           >
             Trete Raum bei
           </v-btn>
+
+          <!-- Tertiary — How to Play -->
+          <v-btn
+            variant="outlined"
+            color="primary"
+            block
+            @click="showHowToPlay = !showHowToPlay"
+          >
+            {{ showHowToPlay ? 'Weniger anzeigen' : 'How to Play' }}
+          </v-btn>
+
+          <transition name="fade">
+            <v-card v-if="showHowToPlay" class="mt-2" elevation="2">
+              <v-card-text class="how-to-play">
+                <strong>So funktioniert Ludonect:</strong>
+
+                <ol>
+                  <li>Raum erstellen oder beitreten</li>
+                  <li>
+                    Jede*r beantwortet eine Frage geheim<br />
+                    <small>(Einigt euch grob, wie die Frage zu verstehen ist.)</small>
+                  </li>
+                  <li>Schätzt ein, wie die Antworten der Gruppe zueinander passen</li>
+                  <li>Antworten werden aufgedeckt und gemeinsam besprochen</li>
+                  <li>Nächste Runde!</li>
+                </ol>
+
+                <div class="example-questions">
+                  <div><strong>Beispiel-Fragen:</strong></div>
+                  <ul>
+                    <li>
+                      Wie oft schaust du Dokus?<br />
+                      <span class="example-scale">0 = gar nicht | 100 = lieber als alles andere</span>
+                    </li>
+                    <li>
+                      Wie spontan bist du?<br />
+                      <span class="example-scale">0 = gar nicht | 100 = Wer hat Bock auf ein Eis?</span>
+                    </li>
+                    <li>
+                      Wie gerne würdest du für einen Tag unsichtbar sein?<br />
+                      <span class="example-scale">0 = gar nicht | 100 = muhahahaha</span>
+                    </li>
+                  </ul>
+                </div>
+              </v-card-text>
+            </v-card>
+          </transition>
         </div>
-
-        <!-- Dev Reset -->
-        <v-btn
-          variant="outlined"
-          color="error"
-          size="small"
-          block
-          class="mt-2"
-          @click="resetLocalPlayer"
-        >
-          🧪 Dev Reset (Clear Storage)
-        </v-btn>
-
-        <!-- How to Play -->
-        <v-btn
-          variant="outlined"
-          color="primary"
-          block
-          class="mt-4"
-          @click="showHowToPlay = !showHowToPlay"
-        >
-          {{ showHowToPlay ? "Weniger anzeigen" : "How to Play" }}
-        </v-btn>
-        <transition name="fade">
-          <v-card v-if="showHowToPlay" class="mt-4" elevation="2">
-            <v-card-text class="how-to-play">
-              <strong>So funktioniert Ludonect:</strong>
-
-              <ol>
-                <li>Raum erstellen oder beitreten</li>
-                <li>
-                  Jede*r beantwortet eine Frage geheim<br />
-                  <small>(Einigt euch grob, wie die Frage zu verstehen ist.)</small>
-                </li>
-                <li>Schätzt ein, wie die Antworten der Gruppe zueinander passen</li>
-                <li>Antworten werden aufgedeckt und gemeinsam besprochen</li>
-                <li>Nächste Runde!</li>
-              </ol>
-
-              <div class="example-questions">
-                <div><strong>Beispiel-Fragen:</strong></div>
-                <ul>
-                  <li>
-                    Wie oft schaust du Dokus?<br />
-                    <span class="example-scale">0 = gar nicht | 100 = lieber als alles andere</span>
-                  </li>
-                  <li>
-                    Wie spontan bist du?<br />
-                    <span class="example-scale">0 = gar nicht | 100 = Wer hat Bock auf ein Eis?</span>
-                  </li>
-                  <li>
-                    Wie gerne würdest du für einen Tag unsichtbar sein?<br />
-                    <span class="example-scale">0 = gar nicht | 100 = muhahahaha</span>
-                  </li>
-                </ul>
-              </div>
-            </v-card-text>
-          </v-card>
-        </transition>
       </template>
 
       <!-- Raum erstellen -->
@@ -264,6 +259,18 @@
     <v-snackbar v-model="snackbar" :timeout="2000" color="success">
       {{ snackbarText }}
     </v-snackbar>
+
+    <!-- Dev Reset — dezenter Footer-Link -->
+    <div class="dev-footer">
+      <v-btn
+        variant="text"
+        size="small"
+        color="grey"
+        @click="resetLocalPlayer"
+      >
+        🧪 Dev Reset
+      </v-btn>
+    </div>
     </div> <!-- end lobby-content -->
   </v-container>
 </template>
@@ -483,8 +490,14 @@ async function nativeShare() {
 .lobby-buttons {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 24px;
+}
+
+.dev-footer {
+  text-align: center;
+  margin-top: 32px;
+  opacity: 0.5;
 }
 
 .lobby-room-card {
