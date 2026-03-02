@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { RouteRecordRaw } from 'vue-router';
-// import LandingPageView from '../views/LandingPageView.vue';
+import LandingPageView from '../views/LandingPageView.vue';
 import LobbyView from '../views/LobbyView.vue';
 import QuestionView from '../views/QuestionView.vue';
 import EstimationView from '../views/EstimationView.vue';
@@ -10,17 +10,22 @@ import GameRunningView from "@/views/GameRunningView.vue";
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
+    name: 'Landing',
+    component: LandingPageView,
+  },
+  {
+    path: '/play',
     name: 'LobbyRoot',
-    component: LobbyView
+    component: LobbyView,
   },
   {
     path: '/home',
-    redirect: '/'
+    redirect: '/play',
   },
   {
     path: '/lobby',
     name: 'Lobby',
-    component: LobbyView
+    component: LobbyView,
   },
   {
     path: '/join/:roomCode',
@@ -31,12 +36,12 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/question/:gameId/:questionId',
     name: 'question',
-    component: QuestionView
+    component: QuestionView,
   },
   {
     path: '/estimation/:gameId/:questionId',
     name: 'estimation',
-    component: EstimationView
+    component: EstimationView,
   },
   {
     path: "/prepare/:gameId",
