@@ -483,9 +483,16 @@ async function nativeShare() {
 .lobby-container {
   min-height: 100vh;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   padding: 24px 16px;
+}
+
+@media (max-height: 700px) {
+  .lobby-container {
+    align-items: flex-start;
+    padding-top: 32px;
+  }
 }
 
 .lobby-content {
