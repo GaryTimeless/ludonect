@@ -360,7 +360,8 @@ async function createRoom() {
       playerId,
     });
     roomCode.value = response.roomCode;
-    shareLink.value = response.shareLink;
+    // Build shareLink dynamically so it works on any domain (localhost / ludonect.de)
+    shareLink.value = `${window.location.origin}/join/${response.roomCode}`;
     console.log('[Lobby] Room created:', response);
   } catch (error: any) {
     console.error('[Lobby] Create room error:', error);
@@ -393,7 +394,11 @@ async function joinRoom() {
     console.log('[Lobby] Joined room:', code);
   } catch (error: any) {
     console.error('[Lobby] Join room error:', error);
-    alert(error.message || 'Raum existiert nicht!');
+    if (error.message === 'GAME_ALREADY_STARTED') {
+      router.push('/game-running');
+    } else {
+      alert(error.message || 'Raum existiert nicht!');
+    }
   }
 }
 

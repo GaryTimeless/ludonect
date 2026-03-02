@@ -85,6 +85,14 @@ export function setupSocketHandlers(
           return;
         }
 
+        // Hard door: block new players once the game has started
+        // Allow reconnects (same UUID already in the player list)
+        const isReconnect = game.players.some(p => p.id === playerId);
+        if (game.state !== 'waiting' && !isReconnect) {
+          callback({ success: false, error: 'GAME_ALREADY_STARTED' });
+          return;
+        }
+
         const player: Player = {
           id: playerId,
           socketId: socket.id,

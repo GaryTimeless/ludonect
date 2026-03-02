@@ -5,6 +5,7 @@ import LobbyView from '../views/LobbyView.vue';
 import QuestionView from '../views/QuestionView.vue';
 import EstimationView from '../views/EstimationView.vue';
 import PrepareNextRound from "@/views/PrepareNextRound.vue";
+import GameRunningView from "@/views/GameRunningView.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -41,6 +42,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/prepare/:gameId",
     name: "PrepareNextRound",
     component: PrepareNextRound,
+  },
+  {
+    path: "/game-running",
+    name: "GameRunning",
+    component: GameRunningView,
   },
 ];
 
