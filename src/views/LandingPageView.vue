@@ -9,8 +9,8 @@
         </router-link>
         <nav class="lp-nav-links">
           <a href="#how-it-works">Wie es funktioniert</a>
-          <a href="#pricing">Preise</a>
           <a href="#b2b">Für Teams</a>
+          <a href="#pricing">Preise</a>
           <v-btn color="primary" variant="elevated" rounded="pill" size="small" to="/play">
             Jetzt spielen
           </v-btn>
