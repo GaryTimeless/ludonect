@@ -627,9 +627,5 @@ async function nativeShare() {
   .room-code {
     font-size: 1.2rem;
   }
-
-  .ludonect-logo {
-    max-width: 160px;
-  }
 }
 </style>
