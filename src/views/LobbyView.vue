@@ -28,14 +28,13 @@
           >
             Neuen Raum erstellen
           </v-btn>
-
-          <!-- Secondary action — also solid green -->
+<!-- Secondary action — white elevated -->
           <v-btn
-            color="primary"
+            color="white"
             variant="elevated"
             size="large"
             block
-            class="btn-press"
+            class="btn-press text-primary"
             elevation="2"
             @click="mode = 'join'"
           >
