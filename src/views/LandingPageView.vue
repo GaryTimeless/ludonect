@@ -5,7 +5,7 @@
     <header class="lp-navbar">
       <div class="lp-navbar-inner">
         <router-link to="/" class="lp-logo-link">
-          <img src="@/assets/ludonect_combo.png" alt="Ludonect" class="lp-nav-logo" />
+          <img src="@/assets/ludonect_otter_logo-removebg.png" alt="Ludonect" class="lp-nav-logo" />
         </router-link>
         <nav class="lp-nav-links">
           <a href="#how-it-works">Wie es funktioniert</a>
@@ -261,8 +261,8 @@
             <p class="footer-made">Made with 🦦 in Germany</p>
           </div>
           <div class="footer-links">
-            <a href="/impressum">Impressum</a>
-            <a href="/datenschutz">Datenschutz</a>
+            <a href="/legal#impressum">Impressum</a>
+            <a href="/legal#datenschutz">Datenschutz</a>
             <a href="mailto:hello@ludonect.de">hello@ludonect.de</a>
           </div>
         </div>
@@ -428,31 +428,35 @@ const pricingPlans = [
 .lp-navbar-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 12px 24px;
+  padding: 8px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .lp-logo-link { text-decoration: none; }
-.lp-nav-logo { height: 36px; }
+.lp-nav-logo { height: 44px; width: auto; object-fit: contain; display: block; }
 .lp-nav-links {
   display: flex;
   align-items: center;
-  gap: 28px;
+  gap: 36px;
 }
 .lp-nav-links a {
   color: #385028;
   text-decoration: none;
-  font-size: 0.9rem;
-  opacity: 0.8;
+  font-size: 1rem;
+  opacity: 0.75;
   transition: opacity 0.2s;
+  letter-spacing: 0.01em;
 }
 .lp-nav-links a:hover { opacity: 1; }
 
 /* ===== HERO ===== */
 .hero-section {
   background: linear-gradient(160deg, #EDFFCC 0%, #f5ffe0 60%, #ffffff 100%);
-  padding: 100px 0 60px;
+  padding: 120px 0 80px;
+  min-height: 85vh;
+  display: flex;
+  align-items: center;
 }
 .hero-badge {
   display: inline-flex;
@@ -467,17 +471,17 @@ const pricingPlans = [
   letter-spacing: 0.02em;
 }
 .hero-headline {
-  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-size: clamp(2rem, 4.5vw, 4rem);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.15;
   color: #385028;
 }
 .hero-headline-accent { color: #59981A; }
 .hero-subheadline {
-  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-size: clamp(1rem, 1.5vw, 1.3rem);
   color: #5a7042;
   line-height: 1.7;
-  max-width: 600px;
+  max-width: 640px;
   margin: 0 auto;
 }
 .hero-cta {
