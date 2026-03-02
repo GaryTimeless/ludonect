@@ -5,6 +5,7 @@ export interface Player {
   isHost: boolean;
   joinedAt: number;
   estimation?: boolean; // Has submitted answer
+  animalIcon?: string;  // Emoji assigned by server on join
 }
 
 export interface GameSession {

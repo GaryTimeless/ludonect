@@ -25,6 +25,14 @@ export function setupSocketHandlers(
 ) {
   const BASE_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
+  // Animal icon pool — assigned to players in order of joining
+  const ANIMAL_ICONS = ['🦊', '🐼', '🦁', '🐨', '🦝', '🐸', '🐧', '🦄'];
+
+  function assignAnimalIcon(game: { players: { animalIcon?: string }[] }): string {
+    const used = new Set(game.players.map(p => p.animalIcon));
+    return ANIMAL_ICONS.find(icon => !used.has(icon)) ?? ANIMAL_ICONS[game.players.length % ANIMAL_ICONS.length];
+  }
+
   io.on('connection', (socket: Socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
 
@@ -47,6 +55,8 @@ export function setupSocketHandlers(
 
         const roomCode = generateRoomCode();
         const game = gameManager.createGame(roomCode, playerId, socket.id, playerName.trim());
+        // Assign first animal icon to the host
+        if (game.players[0]) game.players[0].animalIcon = ANIMAL_ICONS[0];
         socket.join(roomCode);
 
         const shareLink = generateShareableLink(roomCode, BASE_URL);
@@ -99,6 +109,7 @@ export function setupSocketHandlers(
           name: playerName.trim(),
           isHost: false,
           joinedAt: Date.now(),
+          animalIcon: assignAnimalIcon(game),
         };
 
         const result = gameManager.upsertPlayer(cleanRoomCode, player);

@@ -2,11 +2,13 @@
   <v-container class="lobby-container fade-in">
     <div class="lobby-content">
     <div class="lobby-header">
-      <img
-        src="@/assets/ludonect_combo.png"
-        alt="Ludonect Logo"
-        class="ludonect-logo scale-in"
-      />
+      <router-link to="/">
+        <img
+          src="@/assets/ludonect_combo.png"
+          alt="Ludonect Logo"
+          class="ludonect-logo scale-in"
+        />
+      </router-link>
     </div>
 
     <!-- Play Buttons -->
@@ -27,13 +29,13 @@
             Neuen Raum erstellen
           </v-btn>
 
-          <!-- Secondary action — white elevated -->
+          <!-- Secondary action — also solid green -->
           <v-btn
-            color="white"
+            color="primary"
             variant="elevated"
             size="large"
             block
-            class="btn-press text-primary"
+            class="btn-press"
             elevation="2"
             @click="mode = 'join'"
           >
@@ -216,8 +218,9 @@
               class="player-item"
             >
               <template #prepend>
-                <v-avatar :color="getPlayerColor(player.id)" size="40">
-                  <span class="text-white font-weight-bold">
+                <v-avatar size="40" color="transparent">
+                  <span v-if="player.animalIcon" class="animal-icon">{{ player.animalIcon }}</span>
+                  <span v-else :style="{ background: getPlayerColor(player.id) }" class="avatar-initial">
                     {{ player.name.charAt(0).toUpperCase() }}
                   </span>
                 </v-avatar>
@@ -488,15 +491,38 @@ async function nativeShare() {
 }
 
 .ludonect-logo {
-  max-width: 200px;
+  max-width: 160px;
   height: auto;
+}
+
+/* Remove router-link underline from logo */
+.lobby-header a {
+  text-decoration: none;
+  display: inline-block;
 }
 
 .lobby-buttons {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.animal-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.avatar-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .dev-footer {
