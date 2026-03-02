@@ -15,27 +15,30 @@
     <div v-if="!roomCode">
       <template v-if="mode === 'start'">
         <!-- Main Action Buttons -->
-        <div class="d-flex flex-column lobby-buttons">
+        <div class="lobby-buttons">
           <!-- Primary CTA -->
           <v-btn
             color="primary"
             variant="elevated"
             size="large"
             block
+            rounded="pill"
+            elevation="0"
             class="btn-press"
-            elevation="3"
             @click="mode = 'create'"
           >
             Neuen Raum erstellen
           </v-btn>
-<!-- Secondary action — white elevated -->
+
+          <!-- Secondary action — white elevated -->
           <v-btn
             color="white"
             variant="elevated"
             size="large"
             block
+            rounded="pill"
+            elevation="0"
             class="btn-press text-primary"
-            elevation="2"
             @click="mode = 'join'"
           >
             Trete Raum bei
@@ -46,6 +49,8 @@
             variant="outlined"
             color="primary"
             block
+            rounded="pill"
+            elevation="0"
             @click="showHowToPlay = !showHowToPlay"
           >
             {{ showHowToPlay ? 'Weniger anzeigen' : 'How to Play' }}
@@ -490,7 +495,9 @@ async function nativeShare() {
 }
 
 .ludonect-logo {
-  max-width: 160px;
+  width: 320px;
+  max-width: 92vw;
+  margin-bottom: 0;
   height: auto;
 }
 
@@ -501,10 +508,12 @@ async function nativeShare() {
 }
 
 .lobby-buttons {
+  width: 100%;
+  max-width: 250px;
+  margin: 32px auto 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 16px;
+  gap: 24px;
 }
 
 .animal-icon {
