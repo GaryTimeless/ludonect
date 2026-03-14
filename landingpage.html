@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ludonect – Eine Frage. Eine Zahl. So entstehen Insider.</title>
+  <meta name="description" content="Ludonect ist ein Kennenlernspiel fürs Handy. Alle beantworten eine Frage mit einer Zahl von 0 bis 100, dann schätzt ihr euch gegenseitig ein — der Rest passiert von allein." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Tenor+Sans&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7/css/materialdesignicons.min.css" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Tenor Sans', Arial, sans-serif; color: #385028; background: #fff; }
+
+    /* CONTAINER */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAVBAR */
+    .lp-navbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(89,152,26,0.12);
+    }
+    .lp-navbar-inner {
+      max-width: 1200px; margin: 0 auto; padding: 8px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .lp-nav-logo { height: 44px; width: auto; object-fit: contain; display: block; }
+    .lp-nav-links { display: flex; align-items: center; gap: 36px; }
+    .lp-nav-links a {
+      color: #385028; text-decoration: none; font-size: 1rem;
+      opacity: 0.75; transition: opacity 0.2s; letter-spacing: 0.01em;
+    }
+    .lp-nav-links a:hover { opacity: 1; }
+    .btn-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #59981A; color: #fff !important; border: none; cursor: pointer;
+      padding: 8px 20px; border-radius: 99px; font-size: 0.9rem;
+      font-weight: 600; text-decoration: none; transition: background 0.2s, transform 0.15s;
+      font-family: inherit; opacity: 1 !important;
+    }
+    .btn-pill:hover { background: #4a7e15; transform: translateY(-1px); }
+    .btn-pill.outlined {
+      background: transparent; color: #59981A !important;
+      border: 2px solid #59981A;
+    }
+    .btn-pill.outlined:hover { background: rgba(89,152,26,0.07); }
+    .btn-pill.white { background: #fff; color: #59981A !important; }
+    .btn-pill.white:hover { background: #f0f0f0; }
+    .btn-pill.block { width: 100%; justify-content: center; }
+
+    /* HERO */
+    .hero-section {
+      background: linear-gradient(160deg, #EDFFCC 0%, #f5ffe0 60%, #ffffff 100%);
+      padding: 120px 0 80px; min-height: 85vh;
+      display: flex; align-items: center;
+    }
+    .text-center { text-align: center; }
+    .col-center { max-width: 700px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-flex; align-items: center;
+      background: rgba(89,152,26,0.1); border: 1px solid rgba(89,152,26,0.3);
+      color: #59981A; font-size: 0.82rem; padding: 6px 14px;
+      border-radius: 99px; font-weight: 600; letter-spacing: 0.02em; gap: 6px;
+    }
+    .hero-headline {
+      font-size: clamp(2rem, 4.5vw, 4rem); font-weight: 700;
+      line-height: 1.15; color: #385028; margin-top: 24px;
+    }
+    .hero-headline-accent { color: #59981A; }
+    .hero-subheadline {
+      font-size: clamp(1rem, 1.5vw, 1.3rem); color: #5a7042;
+      line-height: 1.7; max-width: 640px; margin: 24px auto 0;
+    }
+    .hero-cta {
+      display: flex; align-items: center; justify-content: center;
+      gap: 28px; flex-wrap: wrap; margin-top: 40px;
+    }
+    .hero-btn-primary { min-width: 220px; font-size: 1.05rem; padding: 14px 32px; }
+    .hero-link-secondary {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: #59981A; text-decoration: none; font-size: 0.95rem; font-weight: 600;
+    }
+    .hero-trust {
+      display: flex; justify-content: center; flex-wrap: wrap;
+      gap: 24px; font-size: 0.85rem; color: #5a7042; margin-top: 48px;
+    }
+    .hero-trust span { display: flex; align-items: center; gap: 6px; }
+    .hero-trust-row {
+      display: flex; justify-content: center; flex-wrap: wrap;
+      gap: 24px; font-size: 0.85rem; color: #5a7042;
+    }
+    .hero-trust-row:first-child { margin-top: 48px; }
+    .hero-trust-row:last-child { margin-top: 8px; }
+    .hero-trust-row span { display: flex; align-items: center; gap: 6px; }
+
+    /* WAVE */
+    .wave-divider svg {
+      display: block; width: 100%; height: 60px;
+      background: linear-gradient(160deg, #EDFFCC 0%, #f5ffe0 100%);
+    }
+
+    /* SECTIONS */
+    .section-white { background: #ffffff; padding: 80px 0; }
+    .section-cream { background: #f7ffed; padding: 80px 0; }
+    .section-label {
+      text-align: center; font-size: 0.78rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: #59981A; margin-bottom: 16px;
+    }
+    .section-title {
+      text-align: center; font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+      font-weight: 700; color: #385028; line-height: 1.25;
+    }
+    .section-title.text-left { text-align: left; }
+    .section-subtitle {
+      text-align: center; max-width: 600px; margin: 16px auto 0;
+      color: #5a7042; font-size: 1rem; line-height: 1.7;
+    }
+
+    /* GRID */
+    .row { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; margin-top: 40px; }
+    .col-3 { flex: 1 1 calc(33.333% - 24px); min-width: 240px; }
+
+    /* STEPS */
+    .step-card { background: transparent; text-align: center; padding: 24px 16px; }
+    .step-number { font-size: 3rem; font-weight: 700; color: rgba(89,152,26,0.12); line-height: 1; margin-bottom: 8px; }
+    .step-icon-wrap {
+      background: rgba(89,152,26,0.08); width: 60px; height: 60px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .step-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .step-text { font-size: 0.92rem; color: #5a7042; line-height: 1.6; }
+
+    /* B2B */
+    .b2b-row { display: flex; flex-wrap: wrap; gap: 48px; align-items: center; justify-content: center; }
+    .b2b-col-text { flex: 1 1 420px; max-width: 560px; }
+    .b2b-col-visual { flex: 1 1 280px; max-width: 380px; display: flex; justify-content: center; }
+    .b2b-text { color: #385028; line-height: 1.7; margin-top: 16px; }
+    .b2b-quote {
+      background: rgba(89,152,26,0.07); border-left: 3px solid #59981A;
+      padding: 12px 16px; border-radius: 0 10px 10px 0;
+      color: #5a7042; font-size: 0.92rem; line-height: 1.8; margin-top: 16px;
+    }
+    .b2b-features { margin-top: 32px; }
+    .b2b-feature-item {
+      display: flex; align-items: center; padding: 8px 0;
+      border-bottom: 1px solid rgba(89,152,26,0.1); font-size: 0.92rem; gap: 12px;
+    }
+    .b2b-card-mock {
+      background: #fff; border: 1px solid rgba(89,152,26,0.15);
+      border-radius: 20px; padding: 28px; width: 100%; max-width: 340px;
+      box-shadow: 0 12px 40px rgba(89,152,26,0.1);
+    }
+    .mock-header { display: flex; align-items: center; margin-bottom: 20px; }
+    .mock-logo-placeholder {
+      display: flex; align-items: center; gap: 8px; font-size: 0.85rem;
+      color: #59981A; font-weight: 600; background: rgba(89,152,26,0.08);
+      padding: 6px 12px; border-radius: 10px;
+    }
+    .mock-question {
+      font-size: 0.95rem; font-weight: 600; color: #385028;
+      margin-bottom: 16px; line-height: 1.4;
+    }
+    .mock-scale { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .mock-scale-label { font-size: 0.75rem; color: #5a7042; }
+    .mock-scale-bar { flex: 1; height: 8px; background: rgba(89,152,26,0.15); border-radius: 99px; overflow: hidden; }
+    .mock-scale-fill { height: 100%; background: #59981A; border-radius: 99px; width: 72%; }
+    .mock-players { display: flex; gap: 8px; }
+    .mock-avatar {
+      width: 36px; height: 36px; background: rgba(89,152,26,0.08);
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 18px;
+    }
+
+    /* CAROUSEL for B2B */
+    .b2b-carousel {
+      position: relative;
+      overflow: hidden;
+    }
+    .b2b-carousel-track {
+      display: flex;
+      transition: transform 0.4s ease;
+    }
+    .b2b-carousel-slide {
+      min-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .b2b-carousel-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(89,152,26,0.1); border: 1px solid rgba(89,152,26,0.3);
+      color: #59981A; font-size: 0.82rem; padding: 6px 14px;
+      border-radius: 99px; font-weight: 600; margin-bottom: 16px;
+    }
+    .b2b-carousel-dots {
+      display: flex; justify-content: center; gap: 8px; margin-top: 20px;
+    }
+    .b2b-carousel-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(89,152,26,0.2); border: none; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .b2b-carousel-dot.active { background: #59981A; }
+
+    /* PRICING */
+    .pricing-grid { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 40px; }
+    .pricing-card {
+      background: #fff; border: 1px solid rgba(89,152,26,0.15);
+      border-radius: 20px; padding: 28px 20px; flex: 1 1 200px; max-width: 260px;
+      display: flex; flex-direction: column; position: relative;
+      transition: transform 0.2s;
+    }
+    .pricing-card:hover { transform: translateY(-4px); }
+    .pricing-card.featured {
+      background: #59981A; border-color: #59981A; color: #fff;
+      box-shadow: 0 16px 40px rgba(89,152,26,0.3); transform: scale(1.03);
+    }
+    .pricing-card.featured:hover { transform: scale(1.03) translateY(-4px); }
+    .pricing-badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      background: #385028; color: #fff; font-size: 0.75rem; font-weight: 700;
+      padding: 4px 14px; border-radius: 99px; white-space: nowrap;
+    }
+    .pricing-icon-wrap {
+      width: 52px; height: 52px; background: rgba(89,152,26,0.08);
+      border-radius: 14px; display: flex; align-items: center;
+      justify-content: center; margin-bottom: 16px;
+    }
+    .featured .pricing-icon-wrap { background: rgba(255,255,255,0.2); }
+    .pricing-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .pricing-price { display: flex; align-items: baseline; gap: 4px; margin-bottom: 8px; }
+    .pricing-amount { font-size: 2rem; font-weight: 700; color: #385028; }
+    .featured .pricing-amount { color: #fff; }
+    .pricing-period { font-size: 0.85rem; color: #5a7042; }
+    .featured .pricing-period { color: rgba(255,255,255,0.8); }
+    .pricing-tagline { font-size: 0.85rem; color: #5a7042; margin-bottom: 20px; line-height: 1.5; flex: none; }
+    .featured .pricing-tagline { color: rgba(255,255,255,0.85); }
+    .pricing-features { list-style: none; padding: 0; margin: 0 0 24px; flex: 1; }
+    .pricing-features li {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 0.87rem; padding: 5px 0; color: #385028; line-height: 1.4;
+    }
+    .featured .pricing-features li { color: rgba(255,255,255,0.9); }
+    .pricing-disclaimer { text-align: center; font-size: 0.82rem; color: #5a7042; opacity: 0.8; margin-top: 32px; }
+    .pricing-tip { font-size: 0.78rem; opacity: 0.85; margin-top: 4px; }
+    .icon-primary { color: #59981A; }
+    .icon-white { color: #fff; }
+    .mdi { font-size: 1.2em; vertical-align: middle; }
+    .mdi-sm { font-size: 1em; }
+
+    /* FOOTER */
+    .lp-footer { background: #385028; color: rgba(255,255,255,0.85); padding: 48px 0 24px; }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      flex-wrap: wrap; gap: 32px; margin-bottom: 32px;
+    }
+    .footer-logo { height: 32px; filter: brightness(0) invert(1); }
+    .footer-tagline { font-size: 0.85rem; opacity: 0.7; margin-top: 8px; }
+    .footer-made { font-size: 0.82rem; opacity: 0.5; margin-top: 4px; }
+    .footer-links { display: flex; flex-direction: column; gap: 10px; }
+    .footer-links a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.88rem; transition: color 0.2s; }
+    .footer-links a:hover { color: #fff; }
+    .footer-copy {
+      text-align: center; font-size: 0.78rem; opacity: 0.45;
+      border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .lp-nav-links a:not(:last-child) { display: none; }
+      .b2b-row { flex-direction: column; }
+      .hero-section { padding: 80px 0 60px; min-height: auto; }
+      .col-3 { flex: 1 1 100%; }
+      .pricing-card { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="lp-navbar">
+  <div class="lp-navbar-inner">
+    <a href="#"><img id="nav-logo" src="" alt="Ludonect" class="lp-nav-logo" /></a>
+    <nav class="lp-nav-links">
+      <a href="#how-it-works">So funktioniert's</a>
+      <a href="#b2b">Eigene Fragen</a>
+      <a href="#pricing">Preise</a>
+      <a href="#" class="btn-pill" style="font-size:0.85rem;padding:7px 18px;">Jetzt spielen</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero-section">
+  <div class="container">
+    <div class="col-center text-center">
+      <div class="hero-badge">
+        <i class="mdi mdi-check-circle icon-primary"></i>
+        Kostenlos · Ab 3 Spieler · Schnell erklärt
+      </div>
+      <h1 class="hero-headline">
+        Eine Frage. Eine Zahl.<br />
+        <span class="hero-headline-accent">So entstehen Insider.</span>
+      </h1>
+      <p class="hero-subheadline">
+        Ludonect ist ein Kennenlernspiel fürs Handy. Alle beantworten eine Frage
+        mit einer Zahl von 0 bis 100, dann schätzt ihr euch gegenseitig ein —
+        der Rest passiert von allein.
+      </p>
+      <div class="hero-cta">
+        <a href="#" class="btn-pill hero-btn-primary">
+          <i class="mdi mdi-rocket-launch"></i>
+          Jetzt Raum erstellen
+        </a>
+        <a href="#how-it-works" class="hero-link-secondary">
+          Wie funktioniert's?
+          <i class="mdi mdi-arrow-down mdi-sm"></i>
+        </a>
+      </div>
+      <div class="hero-trust-row">
+        <span><i class="mdi mdi-lock-open-outline icon-primary"></i> Kein Login</span>
+        <span><i class="mdi mdi-timer-outline icon-primary"></i> In 60 Sekunden loslegen</span>
+      </div>
+      <div class="hero-trust-row">
+        <span><i class="mdi mdi-cards-playing-outline icon-primary"></i> Egal ob Spieleabend oder Workshop</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WAVE DIVIDER -->
+<div class="wave-divider">
+  <svg viewBox="0 0 1440 60" preserveAspectRatio="none">
+    <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" fill="#ffffff" />
+  </svg>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works" class="section-white">
+  <div class="container">
+    <div class="section-label">So funktioniert's</div>
+    <h2 class="section-title">Drei Schritte. Clevere Fragen. Echte Oha-Momente.</h2>
+    <div class="row">
+      <div class="col-3">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <div class="step-icon-wrap"><i class="mdi mdi-comment-question-outline icon-primary" style="font-size:32px"></i></div>
+          <h3 class="step-title">Frage beantworten</h3>
+          <p class="step-text">Eine Frage erscheint — zum Beispiel: „Wie gut kochst du ohne Rezept?" Jeder gibt geheim eine Zahl von 0 bis 100 ab. Kein Richtig oder Falsch, nur deine ehrliche Einschätzung.</p>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="step-card">
+          <div class="step-number">02</div>
+          <div class="step-icon-wrap"><i class="mdi mdi-sort-variant icon-primary" style="font-size:32px"></i></div>
+          <h3 class="step-title">Gegenseitig einschätzen</h3>
+          <p class="step-text">Die Zahlen sind verdeckt. Nacheinander platziert sich jeder in einer Rangliste — nur anhand der Einschätzung: Wer hat wohl höher, wer niedriger geantwortet?</p>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <div class="step-icon-wrap"><i class="mdi mdi-lightbulb-on-outline icon-primary" style="font-size:32px"></i></div>
+          <h3 class="step-title">Auflösung &amp; Oha-Momente</h3>
+          <p class="step-text">Die Wahrheit kommt raus — und mit ihr die besten Gespräche. So entstehen Verbindungen, die bleiben. Von Praktikant bis Partner.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- B2B -->
+<section id="b2b" class="section-cream">
+  <div class="container">
+    <div class="b2b-row">
+      <div class="b2b-col-text">
+        <div class="section-label">Eigene Fragen. Eigenes Branding.</div>
+        <h2 class="section-title text-left">Dein Spiel.<br />Deine Fragen.</h2>
+        <p class="b2b-text">
+          Erstell eigene Fragen, die zu eurem Kontext passen — ob Team-Workshop,
+          Onboarding oder Spieleabend. Mit eigenem Logo und Farben wird Ludonect
+          zu deinem Format.
+        </p>
+        <div class="b2b-features">
+          <div class="b2b-feature-item"><i class="mdi mdi-file-question-outline icon-primary"></i><span>Eigene Fragen erstellen</span></div>
+          <div class="b2b-feature-item"><i class="mdi mdi-palette-outline icon-primary"></i><span>Eigene Markenfarben &amp; Logo</span></div>
+          <div class="b2b-feature-item"><i class="mdi mdi-account-multiple-plus-outline icon-primary"></i><span>Unbegrenzte Teilnehmer</span></div>
+        </div>
+        <a href="mailto:hello@ludonect.de" class="btn-pill outlined" style="margin-top:32px;">
+          <i class="mdi mdi-email-outline"></i>
+          Business-Anfrage stellen
+        </a>
+      </div>
+      <div class="b2b-col-visual">
+        <div class="b2b-carousel" id="b2bCarousel">
+          <div class="b2b-carousel-track" id="b2bTrack">
+            <!-- Slide 1: Consulting -->
+            <div class="b2b-carousel-slide">
+              <div class="b2b-carousel-label">
+                <i class="mdi mdi-briefcase-outline"></i> Consulting
+              </div>
+              <div class="b2b-card-mock">
+                <div class="mock-header">
+                  <div class="mock-logo-placeholder">
+                    <i class="mdi mdi-office-building icon-primary"></i>
+                    <span>Dein Logo</span>
+                  </div>
+                </div>
+                <div class="mock-question">„Wie sicher fühlst du dich, im Meeting zu widersprechen?"</div>
+                <div class="mock-scale">
+                  <span class="mock-scale-label">0</span>
+                  <div class="mock-scale-bar"><div class="mock-scale-fill" style="width:45%"></div></div>
+                  <span class="mock-scale-label">100</span>
+                </div>
+                <div class="mock-players">
+                  <span class="mock-avatar">🦊</span>
+                  <span class="mock-avatar">🐼</span>
+                  <span class="mock-avatar">🦁</span>
+                  <span class="mock-avatar">🐨</span>
+                </div>
+              </div>
+            </div>
+            <!-- Slide 2: Software Engineering -->
+            <div class="b2b-carousel-slide">
+              <div class="b2b-carousel-label">
+                <i class="mdi mdi-code-tags"></i> Software Engineering
+              </div>
+              <div class="b2b-card-mock">
+                <div class="mock-header">
+                  <div class="mock-logo-placeholder">
+                    <i class="mdi mdi-office-building icon-primary"></i>
+                    <span>Dein Logo</span>
+                  </div>
+                </div>
+                <div class="mock-question">„Wie sehr magst du Code Reviews?"</div>
+                <div class="mock-scale">
+                  <span class="mock-scale-label">0</span>
+                  <div class="mock-scale-bar"><div class="mock-scale-fill" style="width:62%"></div></div>
+                  <span class="mock-scale-label">100</span>
+                </div>
+                <div class="mock-players">
+                  <span class="mock-avatar">🦊</span>
+                  <span class="mock-avatar">🐼</span>
+                  <span class="mock-avatar">🦁</span>
+                  <span class="mock-avatar">🐨</span>
+                </div>
+              </div>
+            </div>
+            <!-- Slide 3: Finance & Accounting -->
+            <div class="b2b-carousel-slide">
+              <div class="b2b-carousel-label">
+                <i class="mdi mdi-calculator-variant"></i> Finance &amp; Accounting
+              </div>
+              <div class="b2b-card-mock">
+                <div class="mock-header">
+                  <div class="mock-logo-placeholder">
+                    <i class="mdi mdi-office-building icon-primary"></i>
+                    <span>Dein Logo</span>
+                  </div>
+                </div>
+                <div class="mock-question">„Wie wohl fühlst du dich mit Deadlines?"</div>
+                <div class="mock-scale">
+                  <span class="mock-scale-label">0</span>
+                  <div class="mock-scale-bar"><div class="mock-scale-fill" style="width:80%"></div></div>
+                  <span class="mock-scale-label">100</span>
+                </div>
+                <div class="mock-players">
+                  <span class="mock-avatar">🦊</span>
+                  <span class="mock-avatar">🐼</span>
+                  <span class="mock-avatar">🦁</span>
+                  <span class="mock-avatar">🐨</span>
+                </div>
+              </div>
+            </div>
+            <!-- Slide 4: Spieleabend -->
+            <div class="b2b-carousel-slide">
+              <div class="b2b-carousel-label">
+                <i class="mdi mdi-cards-playing-outline"></i> Spieleabend
+              </div>
+              <div class="b2b-card-mock">
+                <div class="mock-header">
+                  <div class="mock-logo-placeholder">
+                    <i class="mdi mdi-office-building icon-primary"></i>
+                    <span>Dein Logo</span>
+                  </div>
+                </div>
+                <div class="mock-question">„Wie gut kochst du ohne Rezept?"</div>
+                <div class="mock-scale">
+                  <span class="mock-scale-label">0</span>
+                  <div class="mock-scale-bar"><div class="mock-scale-fill" style="width:35%"></div></div>
+                  <span class="mock-scale-label">100</span>
+                </div>
+                <div class="mock-players">
+                  <span class="mock-avatar">🦊</span>
+                  <span class="mock-avatar">🐼</span>
+                  <span class="mock-avatar">🦁</span>
+                  <span class="mock-avatar">🐨</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="b2b-carousel-dots" id="b2bDots">
+            <button class="b2b-carousel-dot active" data-index="0"></button>
+            <button class="b2b-carousel-dot" data-index="1"></button>
+            <button class="b2b-carousel-dot" data-index="2"></button>
+            <button class="b2b-carousel-dot" data-index="3"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing" class="section-white">
+  <div class="container">
+    <div class="section-label">Preise</div>
+    <h2 class="section-title">Einfach losspielen. Zahlen nur wenn du mehr willst.</h2>
+    <div class="pricing-grid">
+
+      <!-- Free -->
+      <div class="pricing-card">
+        <div class="pricing-icon-wrap"><i class="mdi mdi-sprout icon-primary" style="font-size:28px"></i></div>
+        <div class="pricing-name">Free</div>
+        <div class="pricing-price"><span class="pricing-amount">0 €</span><span class="pricing-period">/ immer</span></div>
+        <p class="pricing-tagline">Perfekt zum Ausprobieren. Keine Kreditkarte.</p>
+        <ul class="pricing-features">
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> Unbegrenzte Spieler</li>
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> Standard-Fragenkatalog</li>
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> Unbegrenzte Runden</li>
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> Sofort startbereit</li>
+        </ul>
+        <a href="#" class="btn-pill outlined block">Kostenlos starten</a>
+      </div>
+
+      <!-- Event Pass (featured) -->
+      <div class="pricing-card featured">
+        <div class="pricing-badge">🏆 Bestseller</div>
+        <div class="pricing-icon-wrap"><i class="mdi mdi-ticket-outline icon-white" style="font-size:28px"></i></div>
+        <div class="pricing-name">Event Pass</div>
+        <div class="pricing-price"><span class="pricing-amount">5 €</span><span class="pricing-period">/ 24 Stunden</span></div>
+        <p class="pricing-tagline">Für Workshops &amp; Trainings. Einmal zahlen, 24h nutzen.</p>
+        <ul class="pricing-features">
+          <li><i class="mdi mdi-check icon-white mdi-sm"></i> Voller Premium-Zugriff</li>
+          <li><i class="mdi mdi-check icon-white mdi-sm"></i> Eigene Fragen erstellen</li>
+          <li><i class="mdi mdi-check icon-white mdi-sm"></i> Custom Branding</li>
+          <li><i class="mdi mdi-check icon-white mdi-sm"></i> Als „Digitale Materialien" abrechenbar</li>
+        </ul>
+        <p class="pricing-tip">💡 Tipp: Als „Digitale Materialien" absetzbar.</p>
+        <a href="mailto:hello@ludonect.de" class="btn-pill white block">Event Pass kaufen</a>
+      </div>
+
+      <!-- Pro -->
+      <div class="pricing-card">
+        <div class="pricing-icon-wrap"><i class="mdi mdi-briefcase-outline icon-primary" style="font-size:28px"></i></div>
+        <div class="pricing-name">Pro</div>
+        <div class="pricing-price"><span class="pricing-amount">15 €</span><span class="pricing-period">/ Monat</span></div>
+        <p class="pricing-tagline">Für Trainer mit regelmäßigen Workshops.</p>
+        <ul class="pricing-features">
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> Alles aus Event Pass</li>
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> Fragen dauerhaft speichern</li>
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> Unbegrenzte Premium-Räume</li>
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> Prioritäts-Support</li>
+        </ul>
+        <a href="mailto:hello@ludonect.de" class="btn-pill outlined block">Pro testen</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="pricing-card">
+        <div class="pricing-icon-wrap"><i class="mdi mdi-office-building-outline icon-primary" style="font-size:28px"></i></div>
+        <div class="pricing-name">Enterprise</div>
+        <div class="pricing-price"><span class="pricing-amount" style="font-size:1.4rem">Auf Anfrage</span></div>
+        <p class="pricing-tagline">Für Teams &amp; Unternehmen, die Ludonect zu ihrem eigenen Tool machen wollen.</p>
+        <ul class="pricing-features">
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> Full Whitelabel</li>
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> SSO-Integration</li>
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> Dedizierter Kundenbetreuer</li>
+          <li><i class="mdi mdi-check icon-primary mdi-sm"></i> SLA &amp; Datenschutzvertrag</li>
+        </ul>
+        <a href="mailto:hello@ludonect.de" class="btn-pill outlined block">Kontakt aufnehmen</a>
+      </div>
+
+    </div>
+    <p class="pricing-disclaimer">Keine Kreditkarte für Free erforderlich. Jederzeit kündbar. MwSt. ggf. zzgl.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="lp-footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div>
+        <img src="" alt="Ludonect" class="footer-logo" />
+        <p class="footer-tagline">play. connect. grow.</p>
+        <p class="footer-made">Made with 🦦 in Germany</p>
+      </div>
+      <div class="footer-links">
+        <a href="#">Impressum</a>
+        <a href="#">Datenschutz</a>
+        <a href="mailto:hello@ludonect.de">hello@ludonect.de</a>
+      </div>
+    </div>
+    <p class="footer-copy">© 2026 Ludonect. Alle Rechte vorbehalten.</p>
+  </div>
+</footer>
+
+<!-- Carousel Script -->
+<script>
+(function() {
+  const track = document.getElementById('b2bTrack');
+  const dots = document.querySelectorAll('.b2b-carousel-dot');
+  let current = 0;
+  const total = dots.length;
+  let interval;
+
+  function goTo(index) {
+    current = index;
+    track.style.transform = 'translateX(-' + (current * 100) + '%)';
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  function next() {
+    goTo((current + 1) % total);
+  }
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', function() {
+      goTo(parseInt(this.dataset.index));
+      clearInterval(interval);
+      interval = setInterval(next, 4000);
+    });
+  });
+
+  interval = setInterval(next, 4000);
+})();
+</script>
+
+</body>
+</html>
