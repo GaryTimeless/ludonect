@@ -8,8 +8,8 @@
           <img src="@/assets/ludonect_otter_logo-removebg.png" alt="Ludonect" class="lp-nav-logo" />
         </router-link>
         <nav class="lp-nav-links">
-          <a href="#how-it-works">Wie es funktioniert</a>
-          <a href="#b2b">Für Teams</a>
+          <a href="#how-it-works">So funktioniert's</a>
+          <a href="#b2b">Eigene Fragen</a>
           <a href="#pricing">Preise</a>
           <v-btn color="primary" variant="elevated" rounded="pill" size="small" to="/play">
             Jetzt spielen
@@ -26,18 +26,18 @@
 
             <div class="hero-badge mb-6">
               <v-icon icon="mdi-check-circle" size="16" color="primary" class="mr-1" />
-              Keine App. Kein Login. 100% Browserbasiert.
+              Kostenlos · Ab 3 Spieler · Schnell erklärt
             </div>
 
             <h1 class="hero-headline">
-              Schluss mit Small Talk.<br />
-              <span class="hero-headline-accent">Lernt euch wirklich kennen.</span>
+              Eine Frage. Eine Zahl.<br />
+              <span class="hero-headline-accent">So entstehen Insider.</span>
             </h1>
 
             <p class="hero-subheadline mt-6">
-              Die Engine für professionelle Team-Synchronisation.<br />
-              Verbindet Hierarchien in unter 5 Minuten — perfekt für
-              Workshops, Remote-Meetings und Onboardings.
+              Ludonect ist ein Kennenlernspiel fürs Handy. Alle beantworten eine Frage
+              mit einer Zahl von 0 bis 100, dann schätzt ihr euch gegenseitig ein —
+              der Rest passiert von allein.
             </p>
 
             <div class="hero-cta mt-10">
@@ -48,22 +48,30 @@
                 rounded="pill"
                 elevation="0"
                 class="hero-btn-primary"
+                to="/demo"
+              >
+                🎮 Demo spielen – 30 Sek.
+              </v-btn>
+              <v-btn
+                color="primary"
+                variant="outlined"
+                size="large"
+                rounded="pill"
+                elevation="0"
+                class="hero-btn-secondary"
                 to="/play"
               >
                 <v-icon icon="mdi-rocket-launch" class="mr-2" />
                 Jetzt Raum erstellen
               </v-btn>
-              <a href="#how-it-works" class="hero-link-secondary">
-                Wie funktioniert's?
-                <v-icon icon="mdi-arrow-down" size="16" />
-              </a>
             </div>
 
             <div class="hero-trust mt-12">
-              <span><v-icon icon="mdi-shield-check" color="primary" size="18" /> Cringe-Free</span>
-              <span><v-icon icon="mdi-account-group" color="primary" size="18" /> Bis zu 20 Spieler</span>
-              <span><v-icon icon="mdi-wifi" color="primary" size="18" /> Remote-Ready</span>
-              <span><v-icon icon="mdi-timer-outline" color="primary" size="18" /> Startbereit in 60s</span>
+              <span><v-icon icon="mdi-lock-open-outline" color="primary" size="18" /> Kein Login</span>
+              <span><v-icon icon="mdi-timer-outline" color="primary" size="18" /> In 60 Sekunden loslegen</span>
+            </div>
+            <div class="hero-trust mt-2">
+              <span><v-icon icon="mdi-cards-playing-outline" color="primary" size="18" /> Egal ob Spieleabend oder Workshop</span>
             </div>
 
           </v-col>
@@ -71,21 +79,11 @@
       </v-container>
     </section>
 
-    <!-- ===== WAVES DIVIDER ===== -->
-    <div class="wave-divider">
-      <svg viewBox="0 0 1440 60" preserveAspectRatio="none">
-        <path d="M0,30 C360,60 1080,0 1440,30 L1440,60 L0,60 Z" fill="#ffffff" />
-      </svg>
-    </div>
-
     <!-- ===== SEKTION 2: HOW IT WORKS ===== -->
     <section id="how-it-works" class="section-white">
       <v-container>
-        <div class="section-label">Spielmechanik</div>
-        <h2 class="section-title">In 3 Schritten zum echten Gespräch.</h2>
-        <p class="section-subtitle">
-          Kein Vortrag. Kein Warm-Up mit peinlichen Eiswürfeln. Nur Daten, Neugier und überraschende Erkenntnisse.
-        </p>
+        <div class="section-label">So funktioniert's</div>
+        <h2 class="section-title">Drei Schritte. Clevere Fragen. Echte Oha-Momente.</h2>
 
         <v-row class="mt-10" justify="center">
           <v-col v-for="step in steps" :key="step.number" cols="12" sm="4">
@@ -102,48 +100,17 @@
       </v-container>
     </section>
 
-    <!-- ===== SEKTION 3: USPs ===== -->
-    <section class="section-cream">
-      <v-container>
-        <div class="section-label">Für wen ist Ludonect?</div>
-        <h2 class="section-title">Professionell. Inklusiv. Ohne Cringe.</h2>
-        <p class="section-subtitle">
-          Ludonect wurde mit Blick auf Advisory, Tax, L&amp;D und Consulting entwickelt —
-          Umgebungen, in denen andere Tools schnell als „zu verspielt" gelten.
-        </p>
-
-        <v-row class="mt-10" justify="center">
-          <v-col v-for="usp in usps" :key="usp.title" cols="12" sm="6" md="4">
-            <div class="usp-card">
-              <div class="usp-icon-wrap">
-                <v-icon :icon="usp.icon" size="28" color="primary" />
-              </div>
-              <h3 class="usp-title">{{ usp.title }}</h3>
-              <p class="usp-text">{{ usp.text }}</p>
-            </div>
-          </v-col>
-        </v-row>
-      </v-container>
-    </section>
-
-    <!-- ===== SEKTION 4: B2B WHITELABEL ===== -->
-    <section id="b2b" class="section-white">
+    <!-- ===== SEKTION 4: B2B ===== -->
+    <section id="b2b" class="section-cream">
       <v-container>
         <v-row align="center" justify="center">
           <v-col cols="12" md="6" class="pr-md-12">
-            <div class="section-label">Für Unternehmen & Trainer</div>
-            <h2 class="section-title text-left">Dein Workshop.<br />Dein Branding.</h2>
+            <div class="section-label">Eigene Fragen. Eigenes Branding.</div>
+            <h2 class="section-title text-left">Dein Spiel.<br />Deine Fragen.</h2>
             <p class="b2b-text mt-4">
-              Stell dir vor: Du startest dein nächstes Team-Meeting mit einer Runde Ludonect —
-              aber die Fragen kommen nicht von uns. Sie kommen von dir.
-            </p>
-            <p class="b2b-quote mt-4">
-              <em>„Wie sehr freust du dich auf das neue Quartal?"<br />
-              „Wie klar ist dir deine aktuelle Priorität?"<br />
-              „Wie sicher fühlst du dich, Feedback zu geben?"</em>
-            </p>
-            <p class="b2b-text mt-4">
-              Das ist kein Icebreaker. Das ist ein <strong>Pulse-Check mit Spielspaß.</strong>
+              Erstell eigene Fragen, die zu eurem Kontext passen — ob Team-Workshop,
+              Onboarding oder Spieleabend. Mit eigenem Logo und Farben wird Ludonect
+              zu deinem Format.
             </p>
 
             <div class="b2b-features mt-8">
@@ -168,25 +135,42 @@
 
           <v-col cols="12" md="5" class="mt-8 mt-md-0">
             <div class="b2b-visual">
-              <div class="b2b-card-mock">
-                <div class="mock-header">
-                  <div class="mock-logo-placeholder">
-                    <v-icon icon="mdi-office-building" size="20" color="primary" />
-                    <span>Dein Logo</span>
+              <div class="b2b-carousel">
+                <div class="b2b-carousel-track" :style="{ transform: `translateX(-${carouselIndex * 100}%)` }">
+                  <div v-for="slide in carouselSlides" :key="slide.label" class="b2b-carousel-slide">
+                    <div class="b2b-carousel-label">
+                      <v-icon :icon="slide.icon" size="16" />
+                      {{ slide.label }}
+                    </div>
+                    <div class="b2b-card-mock">
+                      <div class="mock-header">
+                        <div class="mock-logo-placeholder">
+                          <v-icon icon="mdi-office-building" size="20" color="primary" />
+                          <span>Dein Logo</span>
+                        </div>
+                      </div>
+                      <div class="mock-question">{{ slide.question }}</div>
+                      <div class="mock-scale">
+                        <span class="mock-scale-label">0</span>
+                        <div class="mock-scale-bar">
+                          <div class="mock-scale-fill" :style="{ width: slide.fill + '%' }"></div>
+                        </div>
+                        <span class="mock-scale-label">100</span>
+                      </div>
+                      <div class="mock-players">
+                        <span v-for="emoji in ['🦊','🐼','🦁','🐨']" :key="emoji" class="mock-avatar">{{ emoji }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="mock-question">
-                  „Wie sehr fühlst du dich im Team gehört?"
-                </div>
-                <div class="mock-scale">
-                  <span class="mock-scale-label">0</span>
-                  <div class="mock-scale-bar">
-                    <div class="mock-scale-fill" style="width: 72%"></div>
-                  </div>
-                  <span class="mock-scale-label">100</span>
-                </div>
-                <div class="mock-players">
-                  <span v-for="icon in ['🦊','🐼','🦁','🐨']" :key="icon" class="mock-avatar">{{ icon }}</span>
+                <div class="b2b-carousel-dots">
+                  <button
+                    v-for="(_, i) in carouselSlides"
+                    :key="i"
+                    class="b2b-carousel-dot"
+                    :class="{ active: carouselIndex === i }"
+                    @click="goToSlide(i)"
+                  ></button>
                 </div>
               </div>
             </div>
@@ -196,14 +180,11 @@
     </section>
 
     <!-- ===== SEKTION 5: PRICING ===== -->
-    <section id="pricing" class="section-cream">
+    <section id="pricing" class="section-white">
       <v-container>
         <div class="section-label">Preise</div>
-        <h2 class="section-title">Transparent. Fair. Kein Abo-Zwang.</h2>
-        <p class="section-subtitle">
-          Besonders für Freelancer und Trainer: Rechne den <strong>Event Pass</strong> einfach
-          als „Digitale Materialien" ab — 5 € pro Workshop, keine Abonnement-Falle.
-        </p>
+        <h2 class="section-title">Einfach losspielen. Zahlen nur wenn du mehr willst.</h2>
+
 
         <v-row class="mt-10" justify="center">
           <v-col v-for="plan in pricingPlans" :key="plan.name" cols="12" sm="6" md="3">
@@ -274,24 +255,26 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue'
+
 const steps = [
   {
     number: '01',
     icon: 'mdi-comment-question-outline',
-    title: 'Frage stellen',
-    text: 'Jeder beantwortet eine Frage geheim mit einer Zahl von 0–100. Keine peinlichen Storys, purer Datenfokus. Null sozialer Druck.',
+    title: 'Frage beantworten',
+    text: 'Eine Frage erscheint — zum Beispiel: „Wie gut kochst du ohne Rezept?" Jeder gibt geheim eine Zahl von 0 bis 100 ab. Kein Richtig oder Falsch, nur deine ehrliche Einschätzung.',
   },
   {
     number: '02',
     icon: 'mdi-sort-variant',
-    title: 'Gruppe einschätzen',
-    text: 'Das Team kooperiert und sortiert die verdeckten Antworten gemeinsam. Wer kennt wen wirklich? Das kollektive Raten beginnt.',
+    title: 'Gegenseitig einschätzen',
+    text: 'Die Zahlen sind verdeckt. Nacheinander platziert sich jeder in einer Rangliste — nur anhand der Einschätzung: Wer hat wohl höher, wer niedriger geantwortet?',
   },
   {
     number: '03',
     icon: 'mdi-lightbulb-on-outline',
-    title: 'Auflösen & Wachsen',
-    text: 'Abweichungen decken blinde Flecken auf. Überraschungen starten tiefgründige Gespräche, die sonst nie stattgefunden hätten.',
+    title: 'Auflösung & Oha-Momente',
+    text: 'Die Wahrheit kommt raus — und mit ihr die besten Gespräche. So entstehen Verbindungen, die bleiben. Von Praktikant bis Partner.',
   },
 ]
 
@@ -329,12 +312,35 @@ const usps = [
 ]
 
 const b2bFeatures = [
+  { icon: 'mdi-file-question-outline', text: 'Eigene Fragen erstellen' },
   { icon: 'mdi-palette-outline', text: 'Eigene Markenfarben & Logo' },
-  { icon: 'mdi-file-question-outline', text: 'Maßgeschneiderte Fragenkataloge' },
   { icon: 'mdi-account-multiple-plus-outline', text: 'Unbegrenzte Teilnehmer' },
-  { icon: 'mdi-export-variant', text: 'Auswertungs-Export für Coaches (Roadmap)' },
-  { icon: 'mdi-lock-outline', text: 'Passwortgeschützte Räume (Roadmap)' },
 ]
+
+// Carousel
+const carouselSlides = [
+  { label: 'Consulting', icon: 'mdi-briefcase-outline', question: '„Wie sicher fühlst du dich, im Meeting zu widersprechen?"', fill: 45 },
+  { label: 'Software Engineering', icon: 'mdi-code-tags', question: '„Wie sehr magst du Code Reviews?"', fill: 62 },
+  { label: 'Finance & Accounting', icon: 'mdi-calculator-variant', question: '„Wie wohl fühlst du dich mit Deadlines?"', fill: 80 },
+  { label: 'Spieleabend', icon: 'mdi-cards-playing-outline', question: '„Wie gut kochst du ohne Rezept?"', fill: 35 },
+]
+
+const carouselIndex = ref(0)
+let carouselInterval: ReturnType<typeof setInterval> | null = null
+
+function goToSlide(i: number) {
+  carouselIndex.value = i
+  if (carouselInterval) { clearInterval(carouselInterval); startCarousel() }
+}
+
+function startCarousel() {
+  carouselInterval = setInterval(() => {
+    carouselIndex.value = (carouselIndex.value + 1) % carouselSlides.length
+  }, 4000)
+}
+
+onMounted(startCarousel)
+onBeforeUnmount(() => { if (carouselInterval) clearInterval(carouselInterval) })
 
 const pricingPlans = [
   {
@@ -359,7 +365,7 @@ const pricingPlans = [
     icon: 'mdi-ticket-outline',
     price: '5 €',
     period: '/ 24 Stunden',
-    tagline: 'Der Game-Changer für Freelancer & Trainer.',
+    tagline: 'Für Workshops & Trainings. Einmal zahlen, 24h nutzen.',
     features: [
       'Voller Premium-Zugriff',
       'Eigene Fragen erstellen',
@@ -492,6 +498,7 @@ const pricingPlans = [
   flex-wrap: wrap;
 }
 .hero-btn-primary { min-width: 220px; font-size: 1.05rem; }
+.hero-btn-secondary { min-width: 180px; font-size: 0.95rem; }
 .hero-link-secondary {
   display: inline-flex;
   align-items: center;
@@ -618,7 +625,53 @@ const pricingPlans = [
   border-bottom: 1px solid rgba(89,152,26,0.1);
   font-size: 0.92rem;
 }
-.b2b-visual { display: flex; justify-content: center; }
+.b2b-visual { display: flex; justify-content: center; width: 100%; }
+
+/* Carousel */
+.b2b-carousel {
+  width: 100%;
+  max-width: 360px;
+  overflow: hidden;
+}
+.b2b-carousel-track {
+  display: flex;
+  transition: transform 0.4s ease;
+}
+.b2b-carousel-slide {
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.b2b-carousel-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(89,152,26,0.1);
+  border: 1px solid rgba(89,152,26,0.3);
+  color: #59981A;
+  font-size: 0.82rem;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.b2b-carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+.b2b-carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(89,152,26,0.2);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.b2b-carousel-dot.active { background: #59981A; }
 .b2b-card-mock {
   background: #fff;
   border: 1px solid rgba(89,152,26,0.15);
@@ -679,6 +732,7 @@ const pricingPlans = [
   flex-direction: column;
   position: relative;
   transition: transform 0.2s;
+  overflow: visible;
 }
 .pricing-card:hover { transform: translateY(-4px); }
 .pricing-card-featured {
