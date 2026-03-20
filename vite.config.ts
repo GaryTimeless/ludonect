@@ -10,7 +10,10 @@ export default defineConfig(({ mode }) => ({
   base: '/',
   plugins: [
     vue(),
-    legacy()
+    legacy({
+      targets: ['Chrome >= 79', 'Safari >= 14', 'iOS >= 14', 'Firefox >= 70', 'Edge >= 79'],
+      modernPolyfills: true,
+    })
   ],
   server: {
     host: true, // Expose on all network interfaces (0.0.0.0)

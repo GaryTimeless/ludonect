@@ -35,7 +35,7 @@ class SocketService {
     console.log(`[SocketService] Environment: ${import.meta.env.PROD ? 'PRODUCTION' : 'DEVELOPMENT'}`);
 
     this.socket = io(serverUrl, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'], // polling first: more reliable on iOS/restricted networks
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

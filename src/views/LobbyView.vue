@@ -309,11 +309,26 @@ const isHost = computed(() => gameState.value?.hostId === currentPlayerId.value)
 const canStartGame = computed(() => isHost.value && playersInRoom.value.length >= 2);
 const canUseNativeShare = computed(() => 'share' in navigator);
 
+// iOS 14-compatible UUID generator (crypto.randomUUID requires Safari 15.4+)
+function generateUUID(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Fallback: uses crypto.getRandomValues (available since iOS 8)
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variant RFC4122
+  return [...bytes].map((b, i) =>
+    ([4, 6, 8, 10].includes(i) ? '-' : '') + b.toString(16).padStart(2, '0')
+  ).join('');
+}
+
 // Persistent player ID (UUID from localStorage)
 function getOrCreatePlayerId(): string {
   let id = localStorage.getItem('playerId');
   if (!id) {
-    id = crypto.randomUUID();
+    id = generateUUID();
     localStorage.setItem('playerId', id);
   }
   return id;

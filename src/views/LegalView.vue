@@ -33,9 +33,9 @@
               <div class="legal-block">
                 <h2 class="legal-h2">Verantwortlich für den Inhalt</h2>
                 <p>
-                  Gary Schenk<br />
-                  [Straße und Hausnummer]<br />
-                  [PLZ und Ort]<br />
+                  Greg Schenk<br />
+                  Kriegstraße 17<br />
+                  76137 Karlsruhe<br />
                   Deutschland
                 </p>
               </div>
@@ -127,12 +127,34 @@
               </div>
 
               <div class="legal-block">
-                <h2 class="legal-h2">3. Sitzungs-Ende & Datenlöschung</h2>
+                <h2 class="legal-h2">3. Fehlerprotokollierung (Error Logging)</h2>
+                <p>
+                  Um kritische Fehler auf der Website zu erkennen und zu beheben, 
+                  nutzen wir eine serverseitige Fehlerprotokollierung. Sollte im 
+                  Browser ein unerwarteter Fehler auftreten, werden folgende 
+                  technische Daten an unseren Server gesendet:
+                </p>
+                <ul class="legal-list">
+                  <li>Art des Fehlers (z.B. JavaScript-Fehlermeldung)</li>
+                  <li>Die URL der Seite, auf der der Fehler auftrat</li>
+                  <li>Browser-Typ und -Version (User-Agent)</li>
+                  <li>Zeitstempel des Fehlers</li>
+                </ul>
+                <p class="mt-3">
+                  Diese Daten werden ausschließlich zur technischen Fehlerbehebung 
+                  verwendet und lassen keine direkten Rückschlüsse auf deine Person zu. 
+                  Rechtsgrundlage hierfür ist unser berechtigtes Interesse an der 
+                  Sicherstellung der technischen Funktionsfähigkeit (Art. 6 Abs. 1 lit. f DSGVO).
+                </p>
+              </div>
+
+              <div class="legal-block">
+                <h2 class="legal-h2">4. Sitzungs-Ende & Datenlöschung</h2>
                 <p>
                   Sobald der Host eine Spielsitzung schließt oder die Verbindung
                   abbricht und kein anderer Spieler übernimmt, werden <strong>alle
                   Spieldaten sofort aus dem Arbeitsspeicher des Servers gelöscht</strong>.
-                  Es findet keine persistente Speicherung auf Servern statt.
+                  Es findet keine persistente Speicherung auf Datenbanken statt.
                 </p>
                 <p class="mt-3">
                   Die lokale Sitzungs-ID im Browser (<code>localStorage</code>) kann
@@ -141,7 +163,7 @@
               </div>
 
               <div class="legal-block">
-                <h2 class="legal-h2">4. Keine Cookies, kein Tracking</h2>
+                <h2 class="legal-h2">5. Keine Cookies, kein Tracking</h2>
                 <p>
                   Ludonect verwendet <strong>keine Cookies</strong> und keine
                   Analyse- oder Tracking-Tools (kein Google Analytics, kein Meta Pixel,
@@ -150,7 +172,7 @@
               </div>
 
               <div class="legal-block">
-                <h2 class="legal-h2">5. Betroffenenrechte (DSGVO)</h2>
+                <h2 class="legal-h2">6. Betroffenenrechte (DSGVO)</h2>
                 <p>
                   Da keine personenbezogenen Daten dauerhaft gespeichert werden, sind
                   Anfragen auf Auskunft, Berichtigung oder Löschung nach Sitzungsende in
@@ -160,7 +182,7 @@
               </div>
 
               <div class="legal-block">
-                <h2 class="legal-h2">6. Änderungen dieser Erklärung</h2>
+                <h2 class="legal-h2">7. Änderungen dieser Erklärung</h2>
                 <p>
                   Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf
                   anzupassen, um sie stets der aktuellen Rechtslage zu entsprechen.

@@ -19,6 +19,22 @@
       <v-icon start>mdi-crown</v-icon>
       {{ hostMigratedMessage }}
     </v-snackbar>
+
+    <!-- Global: Error Banner (from window.__ludonectShowError) -->
+    <v-snackbar
+      v-model="showErrorSnackbar"
+      color="error"
+      timeout="10000"
+      location="top"
+      rounded="lg"
+      multi-line
+    >
+      <v-icon start>mdi-alert-circle-outline</v-icon>
+      {{ errorSnackbarText }}
+      <template #actions>
+        <v-btn variant="text" color="white" @click="showErrorSnackbar = false">Schließen</v-btn>
+      </template>
+    </v-snackbar>
   </v-app>
 </template>
 
@@ -33,6 +49,10 @@ provide("questions", questions);
 const router = useRouter();
 const showHostMigratedSnackbar = ref(false);
 const hostMigratedMessage = ref('');
+
+// Global error toast (wired up by main.ts error handlers)
+const showErrorSnackbar = ref(false);
+const errorSnackbarText = ref('');
 
 const localPlayerId = computed(() => localStorage.getItem('playerId') ?? socketService.getSocketId() ?? undefined);
 
@@ -53,6 +73,12 @@ watch(
 );
 
 onMounted(() => {
+  // Register global error display hook (called by main.ts error handlers)
+  (window as any).__ludonectShowError = (msg: string) => {
+    errorSnackbarText.value = msg;
+    showErrorSnackbar.value = true;
+  };
+
   // Connect to WebSocket server
   socketService.connect();
 

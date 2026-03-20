@@ -1,10 +1,55 @@
-import { createServer } from 'http';
+import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { Server } from 'socket.io';
 import { GameManager } from './gameManager.js';
 import { ReconnectionManager } from './reconnectionManager.js';
 import { setupSocketHandlers } from './socketHandlers.js';
 
-// PORT: Railway setzt die Umgebungsvariable PORT dynamisch
+// ── Client-side Error Logging Endpoint ─────────────────────────────────────
+// Receives errors POSTed by the browser's global error handler (main.ts).
+// This lets you debug issues on devices you can't physically access.
+function handleLogError(req: IncomingMessage, res: ServerResponse) {
+  // Simple CORS headers so the browser can POST from the frontend origin
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  if (req.method !== 'POST') {
+    res.writeHead(405);
+    res.end();
+    return;
+  }
+
+  let body = '';
+  req.on('data', (chunk) => { body += chunk.toString(); });
+  req.on('end', () => {
+    try {
+      const { type, message, stack, url, userAgent, timestamp, href } = JSON.parse(body);
+      console.error('┌─────────────────────────────────────────────────────');
+      console.error(`│ 🐛 [CLIENT ERROR] ${timestamp}`);
+      console.error(`│ Type:    ${type}`);
+      console.error(`│ Message: ${message}`);
+      console.error(`│ URL:     ${href || url}`);
+      console.error(`│ UA:      ${userAgent}`);
+      if (stack) {
+        console.error(`│ Stack:`);
+        stack.split('\n').slice(0, 5).forEach((line: string) => console.error(`│   ${line}`));
+      }
+      console.error('└─────────────────────────────────────────────────────');
+    } catch {
+      console.error('[log-error] Failed to parse error body:', body.slice(0, 200));
+    }
+    res.writeHead(204);
+    res.end();
+  });
+}
+// ───────────────────────────────────────────────────────────────────────────
+
 // Mit dem || Fallback wird sichergestellt, dass immer ein Port gebunden wird
 const PORT = process.env.PORT || 3001;
 
@@ -17,8 +62,16 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:5173',            // Local Development Alt
 ];
 
-// Create HTTP server
-const httpServer = createServer();
+// Create HTTP server with /api/log-error handler
+const httpServer = createServer((req, res) => {
+  if (req.url === '/api/log-error') {
+    handleLogError(req, res);
+  } else {
+    // All other requests are handled by Socket.IO or ignored
+    res.writeHead(404);
+    res.end();
+  }
+});
 
 // Create Socket.io server with CORS
 const io = new Server(httpServer, {
@@ -39,7 +92,7 @@ const io = new Server(httpServer, {
     methods: ['GET', 'POST'],
     credentials: true,
   },
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'], // match client transport order
 });
 
 // Initialize managers
