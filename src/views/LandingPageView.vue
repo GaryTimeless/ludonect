@@ -434,13 +434,13 @@ const pricingPlans = [
 .lp-navbar-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 8px 24px;
+  padding: 8px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.lp-logo-link { text-decoration: none; }
-.lp-nav-logo { height: 44px; width: auto; object-fit: contain; display: block; }
+.lp-logo-link { text-decoration: none; flex-shrink: 0; }
+.lp-nav-logo { height: 40px; width: auto; object-fit: contain; display: block; }
 .lp-nav-links {
   display: flex;
   align-items: center;
@@ -455,6 +455,12 @@ const pricingPlans = [
   letter-spacing: 0.01em;
 }
 .lp-nav-links a:hover { opacity: 1; }
+
+@media (max-width: 600px) {
+  .lp-navbar-inner { padding: 8px 16px; }
+  .lp-nav-links a { display: none; }
+  .lp-nav-links { gap: 0; }
+}
 
 /* ===== HERO ===== */
 .hero-section {
