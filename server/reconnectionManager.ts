@@ -2,9 +2,11 @@ import { Server } from 'socket.io';
 import { GameManager } from './gameManager.js';
 
 const HOST_TIMEOUT_MS = 60000; // 60 seconds
+const PLAYER_TIMEOUT_MS = 60000; // 60 seconds grace period for regular players
 
 export class ReconnectionManager {
   private hostTimeouts = new Map<string, NodeJS.Timeout>();
+  private playerTimeouts = new Map<string, NodeJS.Timeout>(); // key: `${roomCode}:${playerId}`
 
   constructor(
     private io: Server,
@@ -143,6 +145,49 @@ export class ReconnectionManager {
   }
 
   /**
+   * Start grace period for a regular player who disconnected.
+   * If they don't reconnect within PLAYER_TIMEOUT_MS, remove them from the game.
+   */
+  startPlayerTimeout(roomCode: string, playerId: string, playerName: string): void {
+    const key = `${roomCode}:${playerId}`;
+    this.clearPlayerTimeout(roomCode, playerId);
+
+    this.gameManager.markPlayerDisconnected(roomCode, playerId);
+
+    const game = this.gameManager.getGame(roomCode);
+    if (game) {
+      this.io.to(roomCode).emit('gameUpdate', game);
+    }
+
+    const timeout = setTimeout(() => {
+      console.log(`[Reconnection] Player timeout expired: ${playerName} in room ${roomCode}`);
+      this.gameManager.removePlayer(roomCode, playerId);
+      this.playerTimeouts.delete(key);
+
+      const updatedGame = this.gameManager.getGame(roomCode);
+      if (updatedGame) {
+        this.io.to(roomCode).emit('gameUpdate', updatedGame);
+      }
+    }, PLAYER_TIMEOUT_MS);
+
+    this.playerTimeouts.set(key, timeout);
+    console.log(`[Reconnection] Started ${PLAYER_TIMEOUT_MS}ms player timeout for ${playerName} in ${roomCode}`);
+  }
+
+  /**
+   * Cancel a player's disconnect timeout (player reconnected in time).
+   */
+  clearPlayerTimeout(roomCode: string, playerId: string): void {
+    const key = `${roomCode}:${playerId}`;
+    const timeout = this.playerTimeouts.get(key);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.playerTimeouts.delete(key);
+      console.log(`[Reconnection] Cleared player timeout for ${playerId} in ${roomCode}`);
+    }
+  }
+
+  /**
    * Cleanup all timeouts for a room
    */
   cleanup(roomCode: string): void {
@@ -157,5 +202,9 @@ export class ReconnectionManager {
       clearTimeout(timeout);
     }
     this.hostTimeouts.clear();
+    for (const timeout of this.playerTimeouts.values()) {
+      clearTimeout(timeout);
+    }
+    this.playerTimeouts.clear();
   }
 }

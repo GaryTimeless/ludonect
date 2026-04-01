@@ -6,6 +6,7 @@ export interface Player {
   joinedAt: number;
   estimation?: boolean; // Has submitted answer
   animalIcon?: string;  // Emoji assigned by server on join
+  disconnectedAt?: number; // Set when player disconnects, cleared on reconnect
 }
 
 export interface GameSession {

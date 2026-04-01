@@ -367,6 +367,7 @@ async function createRoom() {
       playerId,
     });
     roomCode.value = response.roomCode;
+    localStorage.setItem('roomCode', response.roomCode);
     // Build shareLink dynamically so it works on any domain (localhost / ludonect.de)
     shareLink.value = `${window.location.origin}/join/${response.roomCode}`;
     console.log('[Lobby] Room created:', response);
@@ -398,6 +399,7 @@ async function joinRoom() {
       playerId,
     });
     roomCode.value = code;
+    localStorage.setItem('roomCode', code);
     console.log('[Lobby] Joined room:', code);
   } catch (error: any) {
     console.error('[Lobby] Join room error:', error);
@@ -412,6 +414,7 @@ async function joinRoom() {
 function resetLocalPlayer() {
   localStorage.removeItem('playerId');
   localStorage.removeItem('playerName');
+  localStorage.removeItem('roomCode');
   window.location.reload();
 }
 

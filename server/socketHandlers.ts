@@ -118,6 +118,12 @@ export function setupSocketHandlers(
           return;
         }
 
+        if (result.action === 'reconnected') {
+          // Cancel the grace-period timeout and clear disconnectedAt
+          reconnectionManager.clearPlayerTimeout(cleanRoomCode, playerId);
+          gameManager.markPlayerReconnected(cleanRoomCode, playerId, socket.id);
+        }
+
         socket.join(cleanRoomCode);
         callback({ success: true, game: result.game });
         io.to(cleanRoomCode).emit('gameUpdate', result.game);
@@ -648,12 +654,8 @@ export function setupSocketHandlers(
         console.log(`[Room ${roomCode}] Host disconnected, starting timeout`);
         reconnectionManager.startHostTimeout(roomCode);
       } else {
-        // Regular player disconnected — remove by persistent id
-        gameManager.removePlayer(roomCode, player.id);
-        const updatedGame = gameManager.getGame(roomCode);
-        if (updatedGame) {
-          io.to(roomCode).emit('gameUpdate', updatedGame);
-        }
+        // Regular player disconnected — start grace period instead of removing immediately
+        reconnectionManager.startPlayerTimeout(roomCode, player.id, player.name);
       }
     });
 

@@ -115,6 +115,33 @@ export class GameManager {
   }
 
   /**
+   * Mark a regular player as disconnected (grace period starts)
+   */
+  markPlayerDisconnected(roomCode: string, playerId: string): void {
+    const game = this.games.get(roomCode);
+    if (!game) return;
+    const player = game.players.find(p => p.id === playerId);
+    if (player) {
+      player.disconnectedAt = Date.now();
+      console.log(`[GameManager] Player ${player.name} marked disconnected in ${roomCode}`);
+    }
+  }
+
+  /**
+   * Mark a regular player as reconnected and update their socket
+   */
+  markPlayerReconnected(roomCode: string, playerId: string, newSocketId: string): void {
+    const game = this.games.get(roomCode);
+    if (!game) return;
+    const player = game.players.find(p => p.id === playerId);
+    if (player) {
+      player.disconnectedAt = undefined;
+      player.socketId = newSocketId;
+      console.log(`[GameManager] Player ${player.name} reconnected in ${roomCode}`);
+    }
+  }
+
+  /**
    * Mark host as disconnected
    */
   markHostDisconnected(roomCode: string): void {

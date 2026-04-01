@@ -74,6 +74,7 @@ class SocketService {
       console.log('[SocketService] Connected:', this.socket?.id);
       this.connected.value = true;
       this.error.value = null;
+      this.autoRejoinRoom();
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -146,6 +147,29 @@ class SocketService {
     return this.socket?.id;
   }
 
+  private autoRejoinRoom() {
+    const roomCode = localStorage.getItem('roomCode');
+    const playerId = localStorage.getItem('playerId');
+    const playerName = localStorage.getItem('playerName');
+
+    if (!roomCode || !playerId || !playerName || !this.socket) return;
+
+    // Only rejoin if we don't already have an active game state for this room
+    if (this.gameState.value?.roomCode === roomCode) return;
+
+    console.log('[SocketService] Auto-rejoining room:', roomCode);
+    this.socket.emit('joinRoom', { roomCode, playerName, playerId }, (response: any) => {
+      if (response?.success) {
+        console.log('[SocketService] Auto-rejoin successful');
+        this.gameState.value = response.game;
+      } else {
+        // Room no longer exists — clear stale roomCode
+        console.log('[SocketService] Auto-rejoin failed:', response?.error);
+        localStorage.removeItem('roomCode');
+      }
+    });
+  }
+
   disconnect() {
     if (this.socket) {
       console.log('[SocketService] Disconnecting...');
@@ -153,6 +177,7 @@ class SocketService {
       this.socket = null;
       this.gameState.value = null;
       this.connected.value = false;
+      localStorage.removeItem('roomCode');
     }
   }
 
