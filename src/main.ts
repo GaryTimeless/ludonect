@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import vuetify from './plugins/vuetify'
+import i18n from './plugins/i18n'
 
 // ── Remote Error Logging ────────────────────────────────────────────────────
 // POSTs client-side errors to the server so you can debug issues on devices
@@ -58,6 +59,7 @@ window.addEventListener('unhandledrejection', (event) => {
 const app = createApp(App)
   .use(router)
   .use(vuetify)
+  .use(i18n)
 
 // Vue-level error handler (catches errors inside Vue components/watchers)
 app.config.errorHandler = (err: unknown, _instance, info) => {
