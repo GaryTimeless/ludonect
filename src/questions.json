@@ -1,308 +1,53 @@
 [
-  {
-    "id": 1,
-    "text": "Wie wichtig sind die Traditionen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 2,
-    "text": "Wie gerne sprichst du mit fremden Menschen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 3,
-    "text": "Wie gut kannst du ohne Rezept kochen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 4,
-    "text": "Wie gesund ernährst du dich normalerweise?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 5,
-    "text": "Wie sehr magst du Musicals?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 6,
-    "text": "Wie sehr magst du Karaoke?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 7,
-    "text": "Wie sehr bist du jemand, der Dinge überstürzt?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 8,
-    "text": "Wie viel Angst hast du vor dem Zahnarzt?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 9,
-    "text": "Wie ungeschickt bist du?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 10,
-    "text": "Was denkst du, wie mutig du bist?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 11,
-    "text": "Wie viel besser war alles deiner Meinung nach früher?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 12,
-    "text": "Wie sehr magst du abstrakte Kunst?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 13,
-    "text": "Wie sehr magst du Umarmungen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 14,
-    "text": "Wie gerne würdest du in eine Geheimgesellschaft eintreten?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 15,
-    "text": "Wie wählerisch bist du beim Essen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 16,
-    "text": "Wie ehrgeizig bist du im Berufsleben?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 17,
-    "text": "Wie gerne würdest du auf der ersten Marskolonie leben?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 18,
-    "text": "Wie gerne gibst du Partys bei dir zu Hause?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 19,
-    "text": "Wie gerne kochst du?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 20,
-    "text": "Wie gerne bist du im Wasser?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 21,
-    "text": "Wie gerne trainierst du deine Fitness?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 22,
-    "text": "Wie sehr kümmert es dich, was andere Menschen von dir denken?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 23,
-    "text": "Wie gut wärst du darin, eine Zombie Apokalypse zu überleben?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 24,
-    "text": "Wie sehr magst du Tiere?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 25,
-    "text": "Wie gerne tanzt du?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 26,
-    "text": "Wie sehr magst du Disney Filme?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 27,
-    "text": "Wie sehr musst du immer das letzte Wort haben?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 28,
-    "text": "Wie sehr magst du Kostümpartys?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 29,
-    "text": "Wie viel Fantasie hast du?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 30,
-    "text": "Wie offen bist du für neue Erfahrungen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 31,
-    "text": "Wie sorgfältig trennst du deinen Müll?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 32,
-    "text": "Wie sehr magst du Horrorfilme?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 33,
-    "text": "Wie schwer fällt es dir etwas wegzuwerfen, weil man es ja vielleicht noch brauchen kann?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 34,
-    "text": "Wie gerne würdest du Geheimagent werden wollen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 35,
-    "text": "Wie sehr beeinflusst das Wetter deine Stimmung?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 36,
-    "text": "Wie sehr bist du jemand, der Dinge kurz vor knapp in der Minute erledigt?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 37,
-    "text": "Wie viel läge dir daran, berühmt zu sein?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 38,
-    "text": "Wie gerne feierst du deinen Geburtstag?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 39,
-    "text": "Wie groß ist dein Interesse an einer Reality Show teilzunehmen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 40,
-    "text": "Wie wohl fühlst du dich, wenn du vor größerem Publikum sprichst?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 41,
-    "text": "Wie gerne spielst du Computerspiele?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 42,
-    "text": "Wie sehr legt die Gartenarbeit?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 43,
-    "text": "Wie sehr fährst du auf die aktuellen neuesten technischen Geräte ab?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 44,
-    "text": "Wie gerne führst du Telefongespräche?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 45,
-    "text": "Wie wichtig es dir essen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 46,
-    "text": "Wie gut ist dein Gedächtnis?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 47,
-    "text": "Wie gut kannst du mit alten Menschen umgehen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 48,
-    "text": "Wie sehr bist du bereit, dein Essen mit anderen zu teilen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 49,
-    "text": "Wie gerne würdest du einmal Fallschirmspringen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 50,
-    "text": "Wie gut kannst du mit Kindern umgehen?",
-    "min": 0,
-    "max": 100
-  },
-  {
-    "id": 51,
-    "text": "Wie gerne gehst du auf Konzerte oder Musik Festivals?",
-    "min": 0,
-    "max": 100
-  }
+  { "id": 1,  "text": { "de": "Wie wichtig sind dir Traditionen?",                                               "en": "How important are traditions to you?" },                                        "min": 0, "max": 100 },
+  { "id": 2,  "text": { "de": "Wie gerne sprichst du mit fremden Menschen?",                                    "en": "How much do you enjoy talking to strangers?" },                              "min": 0, "max": 100 },
+  { "id": 3,  "text": { "de": "Wie gut kannst du ohne Rezept kochen?",                                         "en": "How well can you cook without a recipe?" },                                  "min": 0, "max": 100 },
+  { "id": 4,  "text": { "de": "Wie gesund ernährst du dich normalerweise?",                                    "en": "How healthy is your diet on a typical day?" },                              "min": 0, "max": 100 },
+  { "id": 5,  "text": { "de": "Wie sehr magst du Musicals?",                                                   "en": "How much do you enjoy musicals?" },                                          "min": 0, "max": 100 },
+  { "id": 6,  "text": { "de": "Wie sehr magst du Karaoke?",                                                    "en": "How much do you enjoy karaoke?" },                                           "min": 0, "max": 100 },
+  { "id": 7,  "text": { "de": "Wie sehr bist du jemand, der Dinge überstürzt?",                               "en": "How often do you rush into things impulsively?" },                          "min": 0, "max": 100 },
+  { "id": 8,  "text": { "de": "Wie viel Angst hast du vor dem Zahnarzt?",                                      "en": "How much does the dentist scare you?" },                                    "min": 0, "max": 100 },
+  { "id": 9,  "text": { "de": "Wie ungeschickt bist du?",                                                      "en": "How clumsy are you?" },                                                     "min": 0, "max": 100 },
+  { "id": 10, "text": { "de": "Was denkst du, wie mutig du bist?",                                             "en": "How brave do you think you are?" },                                         "min": 0, "max": 100 },
+  { "id": 11, "text": { "de": "Wie viel besser war alles deiner Meinung nach früher?",                        "en": "How much better do you think things were in the past?" },                   "min": 0, "max": 100 },
+  { "id": 12, "text": { "de": "Wie sehr magst du abstrakte Kunst?",                                            "en": "How much do you enjoy abstract art?" },                                     "min": 0, "max": 100 },
+  { "id": 13, "text": { "de": "Wie sehr magst du Umarmungen?",                                                 "en": "How much do you enjoy hugs?" },                                             "min": 0, "max": 100 },
+  { "id": 14, "text": { "de": "Wie gerne würdest du in eine Geheimgesellschaft eintreten?",                    "en": "How much would you like to join a secret society?" },                      "min": 0, "max": 100 },
+  { "id": 15, "text": { "de": "Wie wählerisch bist du beim Essen?",                                            "en": "How picky are you about food?" },                                           "min": 0, "max": 100 },
+  { "id": 16, "text": { "de": "Wie ehrgeizig bist du im Berufsleben?",                                         "en": "How ambitious are you in your professional life?" },                        "min": 0, "max": 100 },
+  { "id": 17, "text": { "de": "Wie gerne würdest du auf der ersten Marskolonie leben?",                        "en": "How much would you like to live on the first Mars colony?" },              "min": 0, "max": 100 },
+  { "id": 18, "text": { "de": "Wie gerne gibst du Partys bei dir zu Hause?",                                   "en": "How much do you enjoy hosting parties at home?" },                         "min": 0, "max": 100 },
+  { "id": 19, "text": { "de": "Wie gerne kochst du?",                                                          "en": "How much do you enjoy cooking?" },                                          "min": 0, "max": 100 },
+  { "id": 20, "text": { "de": "Wie gerne bist du im Wasser?",                                                  "en": "How much do you enjoy being in the water?" },                              "min": 0, "max": 100 },
+  { "id": 21, "text": { "de": "Wie gerne trainierst du deine Fitness?",                                        "en": "How much do you enjoy working out?" },                                     "min": 0, "max": 100 },
+  { "id": 22, "text": { "de": "Wie sehr kümmert es dich, was andere Menschen von dir denken?",                "en": "How much do you care about what others think of you?" },                   "min": 0, "max": 100 },
+  { "id": 23, "text": { "de": "Wie gut wärst du darin, eine Zombie-Apokalypse zu überleben?",                 "en": "How good would you be at surviving a zombie apocalypse?" },                "min": 0, "max": 100 },
+  { "id": 24, "text": { "de": "Wie sehr magst du Tiere?",                                                      "en": "How much do you love animals?" },                                           "min": 0, "max": 100 },
+  { "id": 25, "text": { "de": "Wie gerne tanzt du?",                                                           "en": "How much do you enjoy dancing?" },                                          "min": 0, "max": 100 },
+  { "id": 26, "text": { "de": "Wie sehr magst du Disney-Filme?",                                               "en": "How much do you enjoy Disney movies?" },                                   "min": 0, "max": 100 },
+  { "id": 27, "text": { "de": "Wie sehr musst du immer das letzte Wort haben?",                               "en": "How often do you need to have the last word?" },                           "min": 0, "max": 100 },
+  { "id": 28, "text": { "de": "Wie sehr magst du Kostümpartys?",                                               "en": "How much do you enjoy costume parties?" },                                 "min": 0, "max": 100 },
+  { "id": 29, "text": { "de": "Wie viel Fantasie hast du?",                                                    "en": "How much of an imagination do you have?" },                                "min": 0, "max": 100 },
+  { "id": 30, "text": { "de": "Wie offen bist du für neue Erfahrungen?",                                       "en": "How open are you to new experiences?" },                                   "min": 0, "max": 100 },
+  { "id": 31, "text": { "de": "Wie sorgfältig trennst du deinen Müll?",                                        "en": "How carefully do you sort your waste?" },                                  "min": 0, "max": 100 },
+  { "id": 32, "text": { "de": "Wie sehr magst du Horrorfilme?",                                                "en": "How much do you enjoy horror movies?" },                                   "min": 0, "max": 100 },
+  { "id": 33, "text": { "de": "Wie schwer fällt es dir, Dinge wegzuwerfen, weil man sie vielleicht noch braucht?", "en": "How hard is it for you to throw things away because you might need them someday?" }, "min": 0, "max": 100 },
+  { "id": 34, "text": { "de": "Wie gerne würdest du Geheimagent werden?",                                      "en": "How much would you like to become a secret agent?" },                       "min": 0, "max": 100 },
+  { "id": 35, "text": { "de": "Wie sehr beeinflusst das Wetter deine Stimmung?",                               "en": "How much does the weather affect your mood?" },                            "min": 0, "max": 100 },
+  { "id": 36, "text": { "de": "Wie sehr bist du jemand, der Dinge kurz vor knapp erledigt?",                   "en": "How often do you leave things until the last minute?" },                   "min": 0, "max": 100 },
+  { "id": 37, "text": { "de": "Wie viel liegt dir daran, berühmt zu sein?",                                    "en": "How much do you want to be famous?" },                                     "min": 0, "max": 100 },
+  { "id": 38, "text": { "de": "Wie gerne feierst du deinen Geburtstag?",                                       "en": "How much do you enjoy celebrating your birthday?" },                      "min": 0, "max": 100 },
+  { "id": 39, "text": { "de": "Wie groß ist dein Interesse, an einer Reality-Show teilzunehmen?",              "en": "How interested are you in participating in a reality TV show?" },          "min": 0, "max": 100 },
+  { "id": 40, "text": { "de": "Wie wohl fühlst du dich, wenn du vor größerem Publikum sprichst?",             "en": "How comfortable are you speaking in front of a large audience?" },         "min": 0, "max": 100 },
+  { "id": 41, "text": { "de": "Wie gerne spielst du Computerspiele?",                                          "en": "How much do you enjoy playing video games?" },                             "min": 0, "max": 100 },
+  { "id": 42, "text": { "de": "Wie sehr magst du Gartenarbeit?",                                               "en": "How much do you enjoy gardening?" },                                       "min": 0, "max": 100 },
+  { "id": 43, "text": { "de": "Wie sehr fährst du auf die neuesten technischen Geräte ab?",                   "en": "How much do you obsess over the latest tech gadgets?" },                   "min": 0, "max": 100 },
+  { "id": 44, "text": { "de": "Wie gerne führst du Telefongespräche?",                                         "en": "How much do you enjoy talking on the phone?" },                            "min": 0, "max": 100 },
+  { "id": 45, "text": { "de": "Wie wichtig ist dir Essen?",                                                    "en": "How important is food to you?" },                                          "min": 0, "max": 100 },
+  { "id": 46, "text": { "de": "Wie gut ist dein Gedächtnis?",                                                  "en": "How good is your memory?" },                                               "min": 0, "max": 100 },
+  { "id": 47, "text": { "de": "Wie gut kannst du mit älteren Menschen umgehen?",                               "en": "How well do you get along with elderly people?" },                         "min": 0, "max": 100 },
+  { "id": 48, "text": { "de": "Wie sehr bist du bereit, dein Essen mit anderen zu teilen?",                   "en": "How willing are you to share your food with others?" },                    "min": 0, "max": 100 },
+  { "id": 49, "text": { "de": "Wie gerne würdest du einmal Fallschirmspringen?",                               "en": "How much would you like to go skydiving?" },                               "min": 0, "max": 100 },
+  { "id": 50, "text": { "de": "Wie gut kannst du mit Kindern umgehen?",                                        "en": "How well do you get along with children?" },                               "min": 0, "max": 100 },
+  { "id": 51, "text": { "de": "Wie gerne gehst du auf Konzerte oder Musikfestivals?",                          "en": "How much do you enjoy going to concerts or music festivals?" },            "min": 0, "max": 100 }
 ]
