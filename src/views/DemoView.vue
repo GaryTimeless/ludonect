@@ -1,36 +1,38 @@
 <template>
   <div class="demo-wrapper">
     <!-- Close Button -->
-    <button class="demo-close" @click="closeDemo" aria-label="Demo schließen">✕</button>
+    <button class="demo-close" @click="closeDemo" :aria-label="t('demo.close')">✕</button>
+    <!-- Language switcher -->
+    <div class="demo-lang">
+      <LanguageSwitcher />
+    </div>
 
     <!-- ===== SCREEN 0: INTRO ===== -->
     <transition name="screen-fade">
       <div v-if="currentScreen === 0" class="demo-screen screen-intro" key="s0">
         <div class="demo-otter">🦦</div>
-        <h2 class="demo-title">Probier's aus!</h2>
+        <h2 class="demo-title">{{ t('demo.introTitle') }}</h2>
         <p class="demo-text">
-          Du steigst in eine laufende Runde ein.<br />
-          Vier andere haben schon gespielt – jetzt bist du dran.
+          {{ t('demo.introText1') }}<br />
+          {{ t('demo.introText2') }}
         </p>
-        <p class="demo-hint">Dauert nur 30 Sekunden.</p>
-        <button class="demo-btn-primary" @click="goToScreen(1)">
-          Los geht's →
-        </button>
+        <p class="demo-hint">{{ t('demo.introHint') }}</p>
+        <button class="demo-btn-primary" @click="goToScreen(1)">{{ t('demo.introCta') }}</button>
       </div>
     </transition>
 
-    <!-- ===== SCREEN 1: FRAGE ===== -->
+    <!-- ===== SCREEN 1: QUESTION ===== -->
     <transition name="screen-fade">
       <div v-if="currentScreen === 1" class="demo-screen screen-question" key="s1">
-        <div class="demo-round-label">Runde 1</div>
+        <div class="demo-round-label">{{ t('demo.round') }}</div>
         <div class="question-card">
-          <h2 class="question-text">Wie sehr lebst du nach Plan?</h2>
+          <h2 class="question-text">{{ t('demo.questionText') }}</h2>
         </div>
 
         <div class="slider-section">
           <div class="slider-poles">
-            <span>total chaotisch</span>
-            <span>durchgetaktet</span>
+            <span>{{ t('demo.sliderLow') }}</span>
+            <span>{{ t('demo.sliderHigh') }}</span>
           </div>
           <div class="slider-track-wrap">
             <input
@@ -52,9 +54,7 @@
           </div>
         </div>
 
-        <div v-if="!sliderMoved" class="demo-hint-inline">
-          ← Zieh den Slider auf deine Zahl
-        </div>
+        <div v-if="!sliderMoved" class="demo-hint-inline">{{ t('demo.sliderHint') }}</div>
 
         <button
           class="demo-btn-primary"
@@ -62,31 +62,29 @@
           :disabled="!sliderMoved"
           @click="submitAnswer"
         >
-          Antwort absenden ✓
+          {{ t('demo.submitAnswer') }}
         </button>
 
-        <div class="hint-card">
-          💡 Kein Richtig oder Falsch – nur deine ehrliche Einschätzung.
-        </div>
+        <div class="hint-card">{{ t('demo.noRightWrong') }}</div>
       </div>
     </transition>
 
-    <!-- ===== SCREEN 2: WARTEN ===== -->
+    <!-- ===== SCREEN 2: WAIT ===== -->
     <transition name="screen-fade">
       <div v-if="currentScreen === 2" class="demo-screen screen-wait" key="s2">
-        <h2 class="demo-title">Warte auf die anderen...</h2>
+        <h2 class="demo-title">{{ t('demo.waitTitle') }}</h2>
 
         <div class="player-status-list">
           <div v-for="player in waitingPlayers" :key="player.name" class="player-status-item">
             <span v-if="player.done" class="status-icon done">✓</span>
             <span v-else class="status-icon pending pulse-dot">⏳</span>
             <span class="player-status-name">{{ player.name }}</span>
-            <span class="player-status-label">{{ player.done ? 'hat geantwortet' : 'antwortet...' }}</span>
+            <span class="player-status-label">{{ player.done ? t('demo.hasAnswered') : t('demo.isAnswering') }}</span>
           </div>
           <div class="player-status-item you-row">
             <span class="status-icon done">✓</span>
-            <span class="player-status-name you-name">Du</span>
-            <span class="player-status-label">hast geantwortet</span>
+            <span class="player-status-name you-name">{{ t('demo.youLabel') }}</span>
+            <span class="player-status-label">{{ t('demo.youAnswered') }}</span>
           </div>
         </div>
 
@@ -95,48 +93,36 @@
             <div class="progress-bar-fill" :style="{ width: waitProgress + '%' }"></div>
           </div>
           <p class="progress-label">
-            {{ waitDone ? '5/5 – Alle sind fertig! ✓' : '4/5 haben geantwortet' }}
+            {{ waitDone ? t('demo.progress5of5') : t('demo.progress4of5') }}
           </p>
         </div>
 
         <transition name="fade">
-          <button
-            v-if="waitDone"
-            class="demo-btn-primary"
-            @click="goToScreen(3)"
-          >
-            Weiter zur Einschätzung →
+          <button v-if="waitDone" class="demo-btn-primary" @click="goToScreen(3)">
+            {{ t('demo.nextToEstimation') }}
           </button>
         </transition>
       </div>
     </transition>
 
-    <!-- ===== SCREEN 3: ERKLÄRUNG ===== -->
+    <!-- ===== SCREEN 3: EXPLAIN ===== -->
     <transition name="screen-fade">
       <div v-if="currentScreen === 3" class="demo-screen screen-explain" key="s3">
-        <h2 class="demo-title">Jetzt wird's spannend.</h2>
-        <p class="demo-text">
-          Die anderen haben sich bereits in eine Rangliste eingeordnet –
-          nur anhand ihrer Einschätzung, wer wohl höher oder niedriger geantwortet hat.
-        </p>
-        <p class="demo-highlight">Keine Zahlen. Nur Bauchgefühl.</p>
-        <p class="demo-text">
-          Du bist als Letzter dran.<br />
-          Platziere dich in der Liste.
-        </p>
-        <button class="demo-btn-primary" @click="goToScreen(4)">
-          Verstanden →
-        </button>
+        <h2 class="demo-title">{{ t('demo.explainTitle') }}</h2>
+        <p class="demo-text">{{ t('demo.explainText1') }}</p>
+        <p class="demo-highlight">{{ t('demo.explainHighlight') }}</p>
+        <p class="demo-text">{{ t('demo.explainText2') }}</p>
+        <button class="demo-btn-primary" @click="goToScreen(4)">{{ t('demo.explainCta') }}</button>
       </div>
     </transition>
 
-    <!-- ===== SCREEN 4: EINSCHÄTZUNG ===== -->
+    <!-- ===== SCREEN 4: RANK ===== -->
     <transition name="screen-fade">
       <div v-if="currentScreen === 4" class="demo-screen screen-rank" key="s4">
-        <h2 class="demo-title">Wo stehst du?</h2>
-        <p class="demo-subtitle">Platziere dich in der Liste.</p>
+        <h2 class="demo-title">{{ t('demo.rankTitle') }}</h2>
+        <p class="demo-subtitle">{{ t('demo.rankSubtitle') }}</p>
 
-        <p class="rank-pole-label top">↑ lebt mehr nach Plan</p>
+        <p class="rank-pole-label top">{{ t('demo.rankPoleTop') }}</p>
 
         <div class="rank-list">
           <template v-for="(item, index) in rankList" :key="item.id">
@@ -153,14 +139,12 @@
             >
               <span class="rank-number">{{ index + 1 }}.</span>
               <span v-if="item.id === 'you'" class="rank-you-avatar">🟢</span>
-              <span class="rank-name">{{ item.id === 'you' ? 'DU' : item.name }}</span>
-              <!-- Mobile move buttons only for "you" -->
+              <span class="rank-name">{{ item.id === 'you' ? t('demo.youLabelUpper') : item.name }}</span>
               <div v-if="item.id === 'you'" class="rank-move-btns">
-                <button @click="moveYouUp" :disabled="index === 0" class="move-btn" aria-label="Nach oben">▲</button>
-                <button @click="moveYouDown" :disabled="index === rankList.length - 1" class="move-btn" aria-label="Nach unten">▼</button>
+                <button @click="moveYouUp" :disabled="index === 0" class="move-btn" aria-label="Up">▲</button>
+                <button @click="moveYouDown" :disabled="index === rankList.length - 1" class="move-btn" aria-label="Down">▼</button>
               </div>
             </div>
-            <!-- Drop zone between items -->
             <div
               v-if="index < rankList.length - 1"
               class="drop-zone"
@@ -170,15 +154,11 @@
           </template>
         </div>
 
-        <p class="rank-pole-label bottom">↓ lebt weniger nach Plan</p>
+        <p class="rank-pole-label bottom">{{ t('demo.rankPoleBottom') }}</p>
 
-        <div class="placement-status">
-          {{ placementDescription }}
-        </div>
+        <div class="placement-status">{{ placementDescription }}</div>
 
-        <div v-if="!hasPlaced" class="demo-hint-inline">
-          Zieh „DU" oder nutze ▲▼ um dich einzuordnen
-        </div>
+        <div v-if="!hasPlaced" class="demo-hint-inline">{{ t('demo.rankHint') }}</div>
 
         <button
           class="demo-btn-primary"
@@ -186,16 +166,16 @@
           :disabled="!hasPlaced"
           @click="submitPlacement"
         >
-          Fertig ✓
+          {{ t('demo.rankDone') }}
         </button>
       </div>
     </transition>
 
-    <!-- ===== SCREEN 5: AUFLÖSUNG ===== -->
+    <!-- ===== SCREEN 5: REVEAL ===== -->
     <transition name="screen-fade">
       <div v-if="currentScreen === 5" class="demo-screen screen-reveal" key="s5">
-        <h2 class="demo-title">🎉 Die Auflösung!</h2>
-        <p class="demo-subtitle">So habt ihr euch eingeschätzt:</p>
+        <h2 class="demo-title">{{ t('demo.revealTitle') }}</h2>
+        <p class="demo-subtitle">{{ t('demo.revealSubtitle') }}</p>
 
         <div class="reveal-list">
           <div
@@ -208,7 +188,7 @@
             }"
           >
             <span class="reveal-rank">{{ index + 1 }}.</span>
-            <span class="reveal-name">{{ item.id === 'you' ? 'DU' : item.name }}</span>
+            <span class="reveal-name">{{ item.id === 'you' ? t('demo.youLabelUpper') : item.name }}</span>
             <span class="reveal-arrow">→</span>
             <span class="reveal-answer" :class="{ 'reveal-answer-you': item.id === 'you' }">
               {{ revealedCount > index ? item.answer : '?' }}
@@ -219,22 +199,14 @@
 
         <transition name="fade">
           <div v-if="revealedCount >= revealList.length" class="reveal-comment-box">
-            <div class="reveal-fact">
-              😮 Hättest du gedacht, dass Markus nur 12 gesagt hat? Total spontan!
-            </div>
-            <div class="reveal-feedback">
-              📍 {{ placementFeedback }}
-            </div>
+            <div class="reveal-fact">{{ t('demo.revealFact') }}</div>
+            <div class="reveal-feedback">📍 {{ placementFeedback }}</div>
           </div>
         </transition>
 
         <transition name="fade">
-          <button
-            v-if="revealedCount >= revealList.length"
-            class="demo-btn-primary"
-            @click="goToScreen(6)"
-          >
-            Weiter →
+          <button v-if="revealedCount >= revealList.length" class="demo-btn-primary" @click="goToScreen(6)">
+            {{ t('demo.next') }}
           </button>
         </transition>
       </div>
@@ -244,48 +216,33 @@
     <transition name="screen-fade">
       <div v-if="currentScreen === 6" class="demo-screen screen-outro" key="s6">
         <div class="demo-otter outro-otter">🦦</div>
-        <h2 class="demo-title">Stell dir das jetzt mit deinen Leuten vor.</h2>
-        <p class="demo-text">
-          Freunde, Team, Klasse, Verein &ndash;
-          eine Frage reicht und ihr wisst mehr übereinander
-          als nach 10 Smalltalks.
-        </p>
+        <h2 class="demo-title">{{ t('demo.outroTitle') }}</h2>
+        <p class="demo-text">{{ t('demo.outroText') }}</p>
 
-        <!-- Question catalog -->
         <div class="q-catalog">
           <button class="q-catalog-toggle" @click="catalogOpen = !catalogOpen">
-            <span>{{ catalogOpen ? '📕 Fragenkatalog schließen' : '📚 Was kann man fragen? 15 Beispiele' }}</span>
+            <span>{{ catalogOpen ? t('demo.catalogClose') : t('demo.catalogOpen') }}</span>
             <span class="q-catalog-chevron" :class="{ open: catalogOpen }">&#9660;</span>
           </button>
           <transition name="catalog-expand">
             <div v-if="catalogOpen" class="q-catalog-list">
-              <div
-                v-for="q in sampleQuestions"
-                :key="q.id"
-                class="q-catalog-item"
-              >
-                {{ q.text }}
+              <div v-for="q in sampleQuestions" :key="q.id" class="q-catalog-item">
+                {{ getQuestionText(q) }}
               </div>
             </div>
           </transition>
         </div>
 
-        <button class="demo-btn-primary" @click="goToPlay">
-          🚀 Jetzt Raum erstellen – kostenlos
-        </button>
+        <button class="demo-btn-primary" @click="goToPlay">{{ t('demo.playCta') }}</button>
 
         <div class="outro-trust">
-          <span>✅ Kein Login</span>
-          <span>✅ Kein Download</span>
-          <span>✅ In 60 Sekunden startklar</span>
+          <span>{{ t('demo.trustNoLogin') }}</span>
+          <span>{{ t('demo.trustNoDownload') }}</span>
+          <span>{{ t('demo.trustReady60') }}</span>
         </div>
 
-        <button class="demo-btn-secondary" @click="resetDemo">
-          ↺ Nochmal spielen
-        </button>
-        <button class="demo-btn-link" @click="closeDemo">
-          ← Zurück zur Übersicht
-        </button>
+        <button class="demo-btn-secondary" @click="resetDemo">{{ t('demo.playAgain') }}</button>
+        <button class="demo-btn-link" @click="closeDemo">{{ t('demo.backToOverview') }}</button>
       </div>
     </transition>
   </div>
@@ -294,9 +251,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { useLocaleQuestion } from '@/composables/useLocaleQuestion';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
 import allQuestions from '@/questions.json';
 
 const router = useRouter();
+const { t } = useI18n();
+const { getQuestionText } = useLocaleQuestion();
 
 // ── State ──────────────────────────────────────────────────────────────────
 const currentScreen = ref(0);
@@ -339,7 +301,7 @@ const rankList = ref([
   { id: 'jonas',  name: 'Jonas' },
   { id: 'anna',   name: 'Anna' },
   { id: 'markus', name: 'Markus' },
-  { id: 'you',    name: 'Du' },
+  { id: 'you',    name: 'you' },
 ]);
 
 // ── Helper: calculate actual position ─────────────────────────────────────
@@ -354,11 +316,20 @@ const youIndex = computed(() => rankList.value.findIndex(p => p.id === 'you'));
 const placementDescription = computed(() => {
   const idx = youIndex.value;
   if (idx < 0) return '';
-  if (idx === 0) return 'Du platzierst dich auf Platz 1 – ganz oben';
+  if (idx === 0) return t('demo.placementTop');
   const above = rankList.value[idx - 1]?.name;
   const below = rankList.value[idx + 1]?.name;
-  if (!below) return `Du platzierst dich auf Platz ${idx + 1} – hinter ${above}`;
-  return `Du platzierst dich auf Platz ${idx + 1} (zwischen ${above} und ${below})`;
+  if (!below) return t('demo.placementBehind', { pos: idx + 1, above });
+  return t('demo.placementBetween', { pos: idx + 1, above, below });
+});
+
+const placementFeedback = computed(() => {
+  if (userPlacement.value === null) return '';
+  const actual = getActualPosition(userAnswer.value);
+  const diff = Math.abs(userPlacement.value - actual);
+  if (diff === 0) return t('demo.feedbackExact');
+  if (diff === 1) return t('demo.feedbackClose');
+  return t('demo.feedbackSurprise');
 });
 
 // Reveal list: the ranking order the user created, with 'you' showing user answer
@@ -368,15 +339,6 @@ const revealList = computed(() => {
     const player = demoPlayers.find(dp => dp.id === p.id);
     return { id: p.id, name: p.name, answer: player?.answer ?? 0 };
   });
-});
-
-const placementFeedback = computed(() => {
-  if (userPlacement.value === null) return '';
-  const actual = getActualPosition(userAnswer.value);
-  const diff = Math.abs(userPlacement.value - actual);
-  if (diff === 0) return 'Du hast dich genau richtig eingeschätzt! Starkes Bauchgefühl.';
-  if (diff === 1) return 'Knapp! Du lagst nur einen Platz daneben. Im echten Spiel mit Freunden wird das noch spannender.';
-  return 'Überraschung! Du hast dich ganz anders eingeschätzt als deine Zahl vermuten lässt. Genau DAS sind die Oha-Momente!';
 });
 
 // ── Navigation ─────────────────────────────────────────────────────────────
@@ -411,7 +373,7 @@ function resetDemo() {
     { id: 'jonas',  name: 'Jonas' },
     { id: 'anna',   name: 'Anna' },
     { id: 'markus', name: 'Markus' },
-    { id: 'you',    name: 'Du' },
+    { id: 'you',    name: 'you' },
   ];
   goToScreen(0);
 }
@@ -566,6 +528,13 @@ onMounted(() => {
   z-index: 200;
 }
 .demo-close:hover { background: rgba(56,80,40,0.18); }
+
+.demo-lang {
+  position: fixed;
+  top: 22px;
+  left: 20px;
+  z-index: 200;
+}
 
 /* ── Typography ── */
 .demo-otter {
