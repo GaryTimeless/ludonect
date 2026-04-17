@@ -9,6 +9,9 @@ h<template>
           class="ludonect-logo scale-in"
         />
       </router-link>
+      <div class="lobby-lang-switcher">
+        <LanguageSwitcher />
+      </div>
     </div>
 
     <!-- Play Buttons -->
@@ -288,6 +291,7 @@ import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import questions from "@/questions.json";
 import FunButton from "@/components/FunButton.vue";
+import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 import { socketService } from "@/services/socketService";
 
 const { t } = useI18n();
@@ -486,6 +490,13 @@ async function nativeShare() {
 .lobby-header {
   text-align: center;
   margin-bottom: 32px;
+  position: relative;
+}
+
+.lobby-lang-switcher {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .lobby-container {
