@@ -183,6 +183,10 @@ export default {
       rights: '© {year} Ludonect. All rights reserved.',
     },
   },
+  funButton: {
+    label: 'Press me if you\'re impatient!',
+    clicks: 'clicks',
+  },
   demo: {
     close: 'Close demo',
     round: 'Round 1',
@@ -239,5 +243,6 @@ export default {
     backToOverview: '← Back to overview',
   },
 }
+
 
 

@@ -183,8 +183,11 @@ export default {
       rights: '© {year} Ludonect. Alle Rechte vorbehalten.',
     },
   },
+  funButton: {
+    label: 'Drück mich, wenn du ungeduldig bist!',
+    clicks: 'Klicks',
+  },
   demo: {
-    close: 'Demo schließen',
     round: 'Runde 1',
     introTitle: 'Probier\'s aus!',
     introText1: 'Du steigst in eine laufende Runde ein.',
@@ -239,5 +242,6 @@ export default {
     backToOverview: '← Zurück zur Übersicht',
   },
 }
+
 
 
