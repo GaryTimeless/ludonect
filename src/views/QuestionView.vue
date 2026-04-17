@@ -8,7 +8,7 @@
       <v-card-text>
         <div class="slider-container">
           <p class="slider-label text-center mb-2">
-            Deine Antwort ({{ min }}–{{ max }})
+            {{ t('question.yourAnswer', { min, max }) }}
           </p>
 
           <v-slider
@@ -43,7 +43,7 @@
           class="mt-6 mb-2"
         />
         <p class="text-center text-caption text-medium-emphasis">
-          {{ answeredCount }} / {{ totalPlayers }} haben bereits geantwortet
+          {{ t('question.answered', { count: answeredCount, total: totalPlayers }) }}
         </p>
 
         <v-btn
@@ -56,13 +56,13 @@
           class="btn-press mt-6"
         >
           <v-icon start v-if="hasAnswered">mdi-check-circle</v-icon>
-          {{ hasAnswered ? 'Antwort abgesendet' : 'Antwort absenden' }}
+          {{ hasAnswered ? t('question.submitted') : t('question.submit') }}
         </v-btn>
 
         <transition name="fade">
           <div v-if="hasAnswered" class="waiting-message mt-4 pulse">
             <v-icon color="success" size="small">mdi-clock-outline</v-icon>
-            <span class="ml-2">Warte auf andere Spieler...</span>
+            <span class="ml-2">{{ t('question.waitingForOthers') }}</span>
           </div>
         </transition>
 
@@ -77,7 +77,7 @@
           class="btn-press mt-6"
         >
           <v-icon start>mdi-arrow-right</v-icon>
-          Zur Schätzung
+          {{ t('question.toEstimation') }}
         </v-btn>
       </v-card-text>
     </v-card>
@@ -88,7 +88,12 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { inject } from "vue";
+import { useI18n } from "vue-i18n";
+import { useLocaleQuestion } from "@/composables/useLocaleQuestion";
 import { socketService } from "@/services/socketService";
+
+const { t } = useI18n();
+const { getQuestionText } = useLocaleQuestion();
 
 const questions = inject("questions", []) as any[];
 const route = useRoute();
@@ -130,7 +135,7 @@ onMounted(async () => {
   console.log('[QuestionView] Gefundene Frage:', question);
 
   if (question) {
-    questionText.value = question.text;
+    questionText.value = getQuestionText(question);
     min.value = question.min;
     max.value = question.max;
     answer.value = Math.floor((question.min + question.max) / 2);
@@ -172,7 +177,7 @@ async function submitAnswer() {
     hasAnswered.value = true;
   } catch (error: any) {
     console.error('[QuestionView] Fehler beim Speichern der Antwort:', error);
-    alert(error.message || 'Fehler beim Speichern der Antwort');
+    alert(error.message || t('question.submitError'));
   } finally {
     submitting.value = false;
   }
@@ -188,7 +193,7 @@ async function proceedToEstimation() {
     console.log('[QuestionView] Proceeding to estimation view');
   } catch (error: any) {
     console.error('[QuestionView] Fehler beim Weiterleiten:', error);
-    alert(error.message || 'Fehler beim Weiterleiten');
+    alert(error.message || t('question.proceedError'));
   } finally {
     proceeding.value = false;
   }

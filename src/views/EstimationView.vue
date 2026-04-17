@@ -3,18 +3,18 @@
     <!-- Pre-game: Host arranges player order -->
     <v-card v-if="!sortingStarted" class="estimation-card" elevation="3">
       <v-card-title class="text-center">
-        <h2>Spielerreihenfolge bestimmen</h2>
+        <h2>{{ t('estimation.determineOrder') }}</h2>
       </v-card-title>
 
       <v-card-text>
         <v-alert type="info" variant="tonal" class="mb-4">
           <div class="text-body-2">
-            {{ answeredCount }} / {{ totalPlayers }} haben schon geantwortet
+            {{ t('estimation.answeredCount', { count: answeredCount, total: totalPlayers }) }}
           </div>
         </v-alert>
 
         <p class="text-center mb-4 text-medium-emphasis">
-          Ziehe die Spieler in die richtige Reihenfolge
+          {{ t('estimation.dragInstruction') }}
         </p>
 
         <VueDraggable
@@ -61,7 +61,7 @@
             class="btn-press mb-2"
           >
             <v-icon start>mdi-content-save</v-icon>
-            Reihenfolge aktualisieren
+            {{ t('estimation.updateOrder') }}
           </v-btn>
 
           <v-btn
@@ -73,12 +73,12 @@
             class="btn-press"
           >
             <v-icon start>mdi-play</v-icon>
-            Spiel starten
+            {{ t('estimation.startGame') }}
           </v-btn>
         </div>
 
         <p v-else class="text-center text-medium-emphasis mt-4">
-          Warte auf den Host...
+          {{ t('estimation.waitForHost') }}
         </p>
 
         <div class="text-center mt-4">
@@ -90,7 +90,7 @@
     <!-- During game: Turn-based placement -->
     <v-card v-else-if="!sortingFinished" class="estimation-card" elevation="3">
       <v-card-title class="text-center">
-        <h2 v-if="currentQuestion">{{ currentQuestion.text }}</h2>
+        <h2 v-if="currentQuestion">{{ getQuestionText(currentQuestion) }}</h2>
       </v-card-title>
 
       <v-card-text>
@@ -106,17 +106,17 @@
             </v-icon>
             <div>
               <div class="font-weight-bold">
-                {{ isMyTurn ? `🎯 Hey ${localPlayerName}, du bist an der Reihe!` : `⏳ Hey ${localPlayerName}, warte auf deinen Zug` }}
+                {{ isMyTurn ? t('estimation.itsYourTurn', { name: localPlayerName }) : t('estimation.waitYourTurn', { name: localPlayerName }) }}
               </div>
               <div v-if="activePlayerName && !isMyTurn" class="text-caption">
-                {{ activePlayerName }} platziert sich gerade
+                {{ t('estimation.placing', { name: activePlayerName }) }}
               </div>
             </div>
           </div>
         </v-alert>
 
         <p class="text-center mb-4 text-medium-emphasis">
-          {{ isMyTurn ? 'Ziehe deinen Namen an die richtige Position' : 'Warte auf die anderen Spieler' }}
+          {{ isMyTurn ? t('estimation.dragYourName') : t('estimation.waitOthers') }}
         </p>
 
         <!-- Current placement order with drag and drop -->
@@ -163,7 +163,7 @@
                   size="small"
                   color="success"
                 >
-                  Du
+                  {{ t('common.you') }}
                 </v-chip>
               </v-card-text>
             </v-card>
@@ -181,7 +181,7 @@
             class="btn-press"
           >
             <v-icon start>mdi-check</v-icon>
-            Fertig
+            {{ t('estimation.done') }}
           </v-btn>
         </div>
       </v-card-text>
@@ -190,9 +190,9 @@
     <!-- Results: Final order with revealed answers -->
     <v-card v-else class="results-card" elevation="3">
       <v-card-title class="text-center results-title">
-        <h2>🎉 Finale Reihenfolge</h2>
+        <h2>{{ t('estimation.finalOrder') }}</h2>
         <p v-if="currentQuestion" class="results-question">
-          {{ currentQuestion.text }}
+          {{ getQuestionText(currentQuestion) }}
         </p>
       </v-card-title>
 
@@ -228,7 +228,7 @@
           class="btn-press mt-6"
         >
           <v-icon start>mdi-arrow-right</v-icon>
-          Nächste Runde vorbereiten
+          {{ t('estimation.nextRound') }}
         </v-btn>
       </v-card-text>
     </v-card>
@@ -238,9 +238,14 @@
 <script setup lang="ts">
 import { ref, computed, watch, inject } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import VueDraggable from "vuedraggable";
 import FunButton from "@/components/FunButton.vue";
+import { useLocaleQuestion } from "@/composables/useLocaleQuestion";
 import { socketService } from "@/services/socketService";
+
+const { t } = useI18n();
+const { getQuestionText } = useLocaleQuestion();
 
 const route = useRoute();
 const router = useRouter();
@@ -322,8 +327,7 @@ const maxPlayers = computed(() => allPlayers.value.length);
 
 function getPlayerAnswer(playerId: string): string {
   const answer = answers.value[playerId];
-  console.log(`[EstimationView] getPlayerAnswer(${playerId}):`, answer, 'all answers:', answers.value);
-  return answer !== undefined ? String(answer) : 'Keine Antwort';
+  return answer !== undefined ? String(answer) : t('common.noAnswer');
 }
 
 function getPlayerOrderingAtRank(playerId: string, rankIndex: number): string {

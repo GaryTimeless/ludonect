@@ -3,12 +3,12 @@
     <!-- Host View -->
     <v-card v-if="isHost" class="prepare-card" elevation="3">
       <v-card-title class="text-center">
-        <h2>Nächste Runde wählen</h2>
+        <h2>{{ t('prepareNext.chooseQuestion') }}</h2>
       </v-card-title>
 
       <v-card-text>
         <p class="text-center mb-4 text-medium-emphasis">
-          Wähle eine der folgenden Fragen für die nächste Runde:
+          {{ t('prepareNext.chooseSub') }}
         </p>
 
         <v-list class="question-selection-list mb-6">
@@ -23,14 +23,10 @@
               <v-icon color="primary">mdi-chat-question</v-icon>
             </template>
             <v-list-item-title class="text-wrap py-2">
-              {{ question.text }}
+              {{ getQuestionText(question) }}
             </v-list-item-title>
             <template #append>
-              <v-btn
-                icon="mdi-chevron-right"
-                variant="text"
-                color="primary"
-              ></v-btn>
+              <v-btn icon="mdi-chevron-right" variant="text" color="primary"></v-btn>
             </template>
           </v-list-item>
         </v-list>
@@ -44,7 +40,7 @@
           class="btn-press"
         >
           <v-icon start>mdi-refresh</v-icon>
-          Andere Vorschläge
+          {{ t('prepareNext.otherSuggestions') }}
         </v-btn>
       </v-card-text>
     </v-card>
@@ -53,13 +49,13 @@
     <v-card v-else class="waiting-card" elevation="3">
       <v-card-text class="text-center">
         <v-icon size="80" color="primary" class="pulse mb-4">mdi-clock-outline</v-icon>
-        <h3 class="mb-4">Warte auf den Host...</h3>
+        <h3 class="mb-4">{{ t('prepareNext.waitingForHost') }}</h3>
         <p class="text-medium-emphasis mb-4">
-          Der Host wählt gerade die nächste Frage aus.
+          {{ t('prepareNext.hostChoosing') }}
         </p>
         <img
           src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmwxcjQ3NzR3Nm5wdWd1bjJqZTJteWMxenFubnM2a2ZpMGw5enJzOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WFyqujMJoxIn9qSTf5/giphy.gif"
-          alt="Warten auf Host"
+          alt="Waiting"
           style="max-width: 80%; height: auto; border-radius: 16px"
           class="mt-4"
         />
@@ -72,7 +68,12 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { inject } from "vue";
+import { useI18n } from "vue-i18n";
+import { useLocaleQuestion } from "@/composables/useLocaleQuestion";
 import { socketService } from "@/services/socketService";
+
+const { t } = useI18n();
+const { getQuestionText } = useLocaleQuestion();
 
 const questions = inject("questions") as any[];
 const router = useRouter();
