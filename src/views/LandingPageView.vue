@@ -8,11 +8,12 @@
           <img src="@/assets/ludonect_otter_logo-removebg.png" alt="Ludonect" class="lp-nav-logo" />
         </router-link>
         <nav class="lp-nav-links">
-          <a href="#how-it-works">So funktioniert's</a>
-          <a href="#b2b">Eigene Fragen</a>
-          <a href="#pricing">Preise</a>
+          <a href="#how-it-works">{{ t('landing.nav.howItWorks') }}</a>
+          <a href="#b2b">{{ t('landing.nav.ownQuestions') }}</a>
+          <a href="#pricing">{{ t('landing.nav.pricing') }}</a>
+          <LanguageSwitcher />
           <v-btn color="primary" variant="elevated" rounded="pill" size="small" to="/play">
-            Jetzt spielen
+            {{ t('landing.nav.playNow') }}
           </v-btn>
         </nav>
       </div>
@@ -26,52 +27,32 @@
 
             <div class="hero-badge mb-6">
               <v-icon icon="mdi-check-circle" size="16" color="primary" class="mr-1" />
-              Kostenlos · Ab 3 Spieler · Schnell erklärt
+              {{ t('landing.hero.badge') }}
             </div>
 
             <h1 class="hero-headline">
-              Eine Frage. Eine Zahl.<br />
-              <span class="hero-headline-accent">So entstehen Insider.</span>
+              {{ t('landing.hero.headline1') }}<br />
+              <span class="hero-headline-accent">{{ t('landing.hero.headline2') }}</span>
             </h1>
 
-            <p class="hero-subheadline mt-6">
-              Ludonect ist ein Kennenlernspiel fürs Handy. Alle beantworten eine Frage
-              mit einer Zahl von 0 bis 100, dann schätzt ihr euch gegenseitig ein —
-              der Rest passiert von allein.
-            </p>
+            <p class="hero-subheadline mt-6">{{ t('landing.hero.sub') }}</p>
 
             <div class="hero-cta mt-10">
-              <v-btn
-                color="primary"
-                variant="elevated"
-                size="x-large"
-                rounded="pill"
-                elevation="0"
-                class="hero-btn-primary"
-                to="/demo"
-              >
-                🎮 Demo spielen – 30 Sek.
+              <v-btn color="primary" variant="elevated" size="x-large" rounded="pill" elevation="0" class="hero-btn-primary" to="/demo">
+                {{ t('landing.hero.playDemo') }}
               </v-btn>
-              <v-btn
-                color="primary"
-                variant="outlined"
-                size="large"
-                rounded="pill"
-                elevation="0"
-                class="hero-btn-secondary"
-                to="/play"
-              >
+              <v-btn color="primary" variant="outlined" size="large" rounded="pill" elevation="0" class="hero-btn-secondary" to="/play">
                 <v-icon icon="mdi-rocket-launch" class="mr-2" />
-                Jetzt Raum erstellen
+                {{ t('landing.hero.createRoom') }}
               </v-btn>
             </div>
 
             <div class="hero-trust mt-12">
-              <span><v-icon icon="mdi-lock-open-outline" color="primary" size="18" /> Kein Login</span>
-              <span><v-icon icon="mdi-timer-outline" color="primary" size="18" /> In 60 Sekunden loslegen</span>
+              <span><v-icon icon="mdi-lock-open-outline" color="primary" size="18" /> {{ t('landing.hero.noLogin') }}</span>
+              <span><v-icon icon="mdi-timer-outline" color="primary" size="18" /> {{ t('landing.hero.startIn60') }}</span>
             </div>
             <div class="hero-trust mt-2">
-              <span><v-icon icon="mdi-cards-playing-outline" color="primary" size="18" /> Egal ob Spieleabend oder Workshop</span>
+              <span><v-icon icon="mdi-cards-playing-outline" color="primary" size="18" /> {{ t('landing.hero.gameNight') }}</span>
             </div>
 
           </v-col>
@@ -82,8 +63,8 @@
     <!-- ===== SEKTION 2: HOW IT WORKS ===== -->
     <section id="how-it-works" class="section-white">
       <v-container>
-        <div class="section-label">So funktioniert's</div>
-        <h2 class="section-title">Drei Schritte. Clevere Fragen. Echte Oha-Momente.</h2>
+        <div class="section-label">{{ t('landing.howItWorks.label') }}</div>
+        <h2 class="section-title">{{ t('landing.howItWorks.title') }}</h2>
 
         <v-row class="mt-10" justify="center">
           <v-col v-for="step in steps" :key="step.number" cols="12" sm="4">
@@ -105,31 +86,20 @@
       <v-container>
         <v-row align="center" justify="center">
           <v-col cols="12" md="6" class="pr-md-12">
-            <div class="section-label">Eigene Fragen. Eigenes Branding.</div>
-            <h2 class="section-title text-left">Dein Spiel.<br />Deine Fragen.</h2>
-            <p class="b2b-text mt-4">
-              Erstell eigene Fragen, die zu eurem Kontext passen — ob Team-Workshop,
-              Onboarding oder Spieleabend. Mit eigenem Logo und Farben wird Ludonect
-              zu deinem Format.
-            </p>
+            <div class="section-label">{{ t('landing.b2b.label') }}</div>
+            <h2 class="section-title text-left">{{ t('landing.b2b.title1') }}<br />{{ t('landing.b2b.title2') }}</h2>
+            <p class="b2b-text mt-4">{{ t('landing.b2b.text') }}</p>
 
             <div class="b2b-features mt-8">
-              <div v-for="f in b2bFeatures" :key="f.text" class="b2b-feature-item">
+              <div v-for="f in b2bFeatures" :key="f.key" class="b2b-feature-item">
                 <v-icon :icon="f.icon" color="primary" size="20" class="mr-3" />
-                <span>{{ f.text }}</span>
+                <span>{{ t(f.key) }}</span>
               </div>
             </div>
 
-            <v-btn
-              href="mailto:hello@ludonect.de"
-              color="primary"
-              variant="outlined"
-              rounded="pill"
-              class="mt-8"
-              size="large"
-            >
+            <v-btn href="mailto:hello@ludonect.de" color="primary" variant="outlined" rounded="pill" class="mt-8" size="large">
               <v-icon icon="mdi-email-outline" class="mr-2" />
-              Business-Anfrage stellen
+              {{ t('landing.b2b.cta') }}
             </v-btn>
           </v-col>
 
@@ -137,19 +107,19 @@
             <div class="b2b-visual">
               <div class="b2b-carousel">
                 <div class="b2b-carousel-track" :style="{ transform: `translateX(-${carouselIndex * 100}%)` }">
-                  <div v-for="slide in carouselSlides" :key="slide.label" class="b2b-carousel-slide">
+                  <div v-for="slide in carouselSlides" :key="slide.labelKey" class="b2b-carousel-slide">
                     <div class="b2b-carousel-label">
                       <v-icon :icon="slide.icon" size="16" />
-                      {{ slide.label }}
+                      {{ t(slide.labelKey) }}
                     </div>
                     <div class="b2b-card-mock">
                       <div class="mock-header">
                         <div class="mock-logo-placeholder">
                           <v-icon icon="mdi-office-building" size="20" color="primary" />
-                          <span>Dein Logo</span>
+                          <span>{{ locale === 'en' ? 'Your logo' : 'Dein Logo' }}</span>
                         </div>
                       </div>
-                      <div class="mock-question">{{ slide.question }}</div>
+                      <div class="mock-question">{{ t(slide.questionKey) }}</div>
                       <div class="mock-scale">
                         <span class="mock-scale-label">0</span>
                         <div class="mock-scale-bar">
@@ -164,13 +134,7 @@
                   </div>
                 </div>
                 <div class="b2b-carousel-dots">
-                  <button
-                    v-for="(_, i) in carouselSlides"
-                    :key="i"
-                    class="b2b-carousel-dot"
-                    :class="{ active: carouselIndex === i }"
-                    @click="goToSlide(i)"
-                  ></button>
+                  <button v-for="(_, i) in carouselSlides" :key="i" class="b2b-carousel-dot" :class="{ active: carouselIndex === i }" @click="goToSlide(i)"></button>
                 </div>
               </div>
             </div>
@@ -182,31 +146,26 @@
     <!-- ===== SEKTION 5: PRICING ===== -->
     <section id="pricing" class="section-white">
       <v-container>
-        <div class="section-label">Preise</div>
-        <h2 class="section-title">Einfach losspielen. Zahlen nur wenn du mehr willst.</h2>
-
+        <div class="section-label">{{ t('landing.pricing.label') }}</div>
+        <h2 class="section-title">{{ t('landing.pricing.title') }}</h2>
 
         <v-row class="mt-10" justify="center">
-          <v-col v-for="plan in pricingPlans" :key="plan.name" cols="12" sm="6" md="3">
-            <v-card
-              class="pricing-card"
-              :class="{ 'pricing-card-featured': plan.featured }"
-              elevation="0"
-            >
-              <div v-if="plan.badge" class="pricing-badge">{{ plan.badge }}</div>
+          <v-col v-for="plan in pricingPlans" :key="plan.nameKey" cols="12" sm="6" md="3">
+            <v-card class="pricing-card" :class="{ 'pricing-card-featured': plan.featured }" elevation="0">
+              <div v-if="plan.badgeKey" class="pricing-badge">{{ t(plan.badgeKey) }}</div>
               <div class="pricing-icon-wrap">
                 <v-icon :icon="plan.icon" size="28" :color="plan.featured ? 'white' : 'primary'" />
               </div>
-              <h3 class="pricing-name">{{ plan.name }}</h3>
+              <h3 class="pricing-name">{{ t(plan.nameKey) }}</h3>
               <div class="pricing-price">
-                <span class="pricing-amount">{{ plan.price }}</span>
-                <span class="pricing-period" v-if="plan.period">{{ plan.period }}</span>
+                <span class="pricing-amount">{{ t(plan.priceKey) }}</span>
+                <span class="pricing-period" v-if="plan.periodKey">{{ t(plan.periodKey) }}</span>
               </div>
-              <p class="pricing-tagline">{{ plan.tagline }}</p>
+              <p class="pricing-tagline">{{ t(plan.taglineKey) }}</p>
               <ul class="pricing-features">
-                <li v-for="f in plan.features" :key="f">
+                <li v-for="fk in plan.featureKeys" :key="fk">
                   <v-icon icon="mdi-check" size="16" :color="plan.featured ? 'white' : 'primary'" />
-                  {{ f }}
+                  {{ t(fk) }}
                 </li>
               </ul>
               <v-btn
@@ -220,15 +179,13 @@
                 :to="plan.cta === '/play' ? '/play' : undefined"
                 :href="plan.cta !== '/play' ? plan.cta : undefined"
               >
-                {{ plan.ctaLabel }}
+                {{ t(plan.ctaKey) }}
               </v-btn>
             </v-card>
           </v-col>
         </v-row>
 
-        <p class="pricing-disclaimer mt-8">
-          Keine Kreditkarte für Free erforderlich. Jederzeit kündbar. MwSt. ggf. zzgl.
-        </p>
+        <p class="pricing-disclaimer mt-8">{{ t('landing.pricing.disclaimer') }}</p>
       </v-container>
     </section>
 
@@ -238,16 +195,16 @@
         <div class="footer-inner">
           <div class="footer-brand">
             <img src="@/assets/ludonect_combo.png" alt="Ludonect" class="footer-logo" />
-            <p class="footer-tagline">play. connect. grow.</p>
-            <p class="footer-made">Made with 🦦 in Germany</p>
+            <p class="footer-tagline">{{ t('landing.footer.tagline') }}</p>
+            <p class="footer-made">{{ t('landing.footer.made') }}</p>
           </div>
           <div class="footer-links">
-            <a href="/legal#impressum">Impressum</a>
-            <a href="/legal#datenschutz">Datenschutz</a>
+            <a href="/legal#impressum">{{ t('landing.footer.impressum') }}</a>
+            <a href="/legal#datenschutz">{{ t('landing.footer.datenschutz') }}</a>
             <a href="mailto:hello@ludonect.de">hello@ludonect.de</a>
           </div>
         </div>
-        <p class="footer-copy">© {{ new Date().getFullYear() }} Ludonect. Alle Rechte vorbehalten.</p>
+        <p class="footer-copy">{{ t('landing.footer.rights', { year: new Date().getFullYear() }) }}</p>
       </v-container>
     </footer>
 
@@ -255,74 +212,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
-const steps = [
-  {
-    number: '01',
-    icon: 'mdi-comment-question-outline',
-    title: 'Frage beantworten',
-    text: 'Eine Frage erscheint — zum Beispiel: „Wie gut kochst du ohne Rezept?" Jeder gibt geheim eine Zahl von 0 bis 100 ab. Kein Richtig oder Falsch, nur deine ehrliche Einschätzung.',
-  },
-  {
-    number: '02',
-    icon: 'mdi-sort-variant',
-    title: 'Gegenseitig einschätzen',
-    text: 'Die Zahlen sind verdeckt. Nacheinander platziert sich jeder in einer Rangliste — nur anhand der Einschätzung: Wer hat wohl höher, wer niedriger geantwortet?',
-  },
-  {
-    number: '03',
-    icon: 'mdi-lightbulb-on-outline',
-    title: 'Auflösung & Oha-Momente',
-    text: 'Die Wahrheit kommt raus — und mit ihr die besten Gespräche. So entstehen Verbindungen, die bleiben. Von Praktikant bis Partner.',
-  },
-]
+const { t, locale } = useI18n()
 
-const usps = [
-  {
-    icon: 'mdi-emoticon-cool-outline',
-    title: 'Cringe-Free & Inklusiv',
-    text: 'Zahlen sind objektiv. Kein soziales Spotlighting, kein Zwang zur persönlichen Offenbarung — perfekt für introvertierte und internationale Teams.',
-  },
-  {
-    icon: 'mdi-shield-account-outline',
-    title: 'Psychologische Sicherheit',
-    text: 'Das kooperative Raten kollektiviert den „Fehler". Niemand steht allein da. Ein sicherer Raum, in dem jeder mitmacht.',
-  },
-  {
-    icon: 'mdi-laptop-off',
-    title: 'Zoom-Fatigue Killer',
-    text: 'Kognitiv leichtgewichtig, keine chaotischen Avatare oder 3D-Welten. Ludonect läuft im Browser — ohne IT-Freigabe, ohne Installations-Chaos.',
-  },
-  {
-    icon: 'mdi-wifi',
-    title: '100% Browserbasiert',
-    text: 'Keine App-Downloads. Kein firmeneigener IT-Freigabeprozess. Einfach Link teilen — und alle sind dabei. In 60 Sekunden.',
-  },
-  {
-    icon: 'mdi-earth',
-    title: 'Remote & Hybrid',
-    text: 'Ob alle im Raum sitzen oder verteilt über drei Zeitzonen: Ludonect funktioniert nahtlos für in-person und remote gleichzeitig.',
-  },
-  {
-    icon: 'mdi-chart-timeline-variant',
-    title: 'Für L&D & Advisory',
-    text: 'Pulse-Checks, Retrospektiven, Onboardings, Kick-offs — Ludonect passt sich jedem Format an, ohne wie ein Kinderspiel auszusehen.',
-  },
-]
+const steps = computed(() => [
+  { number: '01', icon: 'mdi-comment-question-outline', title: t('landing.howItWorks.step1title'), text: t('landing.howItWorks.step1text') },
+  { number: '02', icon: 'mdi-sort-variant',             title: t('landing.howItWorks.step2title'), text: t('landing.howItWorks.step2text') },
+  { number: '03', icon: 'mdi-lightbulb-on-outline',     title: t('landing.howItWorks.step3title'), text: t('landing.howItWorks.step3text') },
+])
 
 const b2bFeatures = [
-  { icon: 'mdi-file-question-outline', text: 'Eigene Fragen erstellen' },
-  { icon: 'mdi-palette-outline', text: 'Eigene Markenfarben & Logo' },
-  { icon: 'mdi-account-multiple-plus-outline', text: 'Unbegrenzte Teilnehmer' },
+  { icon: 'mdi-file-question-outline',          key: 'landing.b2b.feature1' },
+  { icon: 'mdi-palette-outline',                key: 'landing.b2b.feature2' },
+  { icon: 'mdi-account-multiple-plus-outline',  key: 'landing.b2b.feature3' },
 ]
 
-// Carousel
 const carouselSlides = [
-  { label: 'Consulting', icon: 'mdi-briefcase-outline', question: '„Wie sicher fühlst du dich, im Meeting zu widersprechen?"', fill: 45 },
-  { label: 'Software Engineering', icon: 'mdi-code-tags', question: '„Wie sehr magst du Code Reviews?"', fill: 62 },
-  { label: 'Finance & Accounting', icon: 'mdi-calculator-variant', question: '„Wie wohl fühlst du dich mit Deadlines?"', fill: 80 },
-  { label: 'Spieleabend', icon: 'mdi-cards-playing-outline', question: '„Wie gut kochst du ohne Rezept?"', fill: 35 },
+  { labelKey: 'landing.b2b.slide1label', icon: 'mdi-briefcase-outline',      questionKey: 'landing.b2b.slide1q', fill: 45 },
+  { labelKey: 'landing.b2b.slide2label', icon: 'mdi-code-tags',              questionKey: 'landing.b2b.slide2q', fill: 62 },
+  { labelKey: 'landing.b2b.slide3label', icon: 'mdi-calculator-variant',     questionKey: 'landing.b2b.slide3q', fill: 80 },
+  { labelKey: 'landing.b2b.slide4label', icon: 'mdi-cards-playing-outline',  questionKey: 'landing.b2b.slide4q', fill: 35 },
 ]
 
 const carouselIndex = ref(0)
@@ -344,72 +256,32 @@ onBeforeUnmount(() => { if (carouselInterval) clearInterval(carouselInterval) })
 
 const pricingPlans = [
   {
-    name: 'Free',
-    icon: 'mdi-sprout',
-    price: '0 €',
-    period: '/ immer',
-    tagline: 'Perfekt zum Ausprobieren. Keine Kreditkarte.',
-    features: [
-      'Unbegrenzte Spieler',
-      'Standard-Fragenkatalog',
-      'Unbegrenzte Runden',
-      'Sofort startbereit',
-    ],
-    cta: '/play',
-    ctaLabel: 'Kostenlos starten',
-    featured: false,
-    badge: null,
+    nameKey: 'landing.pricing.freeName', icon: 'mdi-sprout',
+    priceKey: 'landing.pricing.freePrice', periodKey: 'landing.pricing.freePeriod',
+    taglineKey: 'landing.pricing.freeTagline',
+    featureKeys: ['landing.pricing.freeF1','landing.pricing.freeF2','landing.pricing.freeF3','landing.pricing.freeF4'],
+    cta: '/play', ctaKey: 'landing.pricing.freeCta', featured: false, badgeKey: null,
   },
   {
-    name: 'Event Pass',
-    icon: 'mdi-ticket-outline',
-    price: '5 €',
-    period: '/ 24 Stunden',
-    tagline: 'Für Workshops & Trainings. Einmal zahlen, 24h nutzen.',
-    features: [
-      'Voller Premium-Zugriff',
-      'Eigene Fragen erstellen',
-      'Custom Branding',
-      'Als „Digitale Materialien" abrechenbar',
-    ],
-    cta: 'mailto:hello@ludonect.de',
-    ctaLabel: 'Event Pass kaufen',
-    featured: true,
-    badge: '🏆 Bestseller',
+    nameKey: 'landing.pricing.eventName', icon: 'mdi-ticket-outline',
+    priceKey: 'landing.pricing.eventPrice', periodKey: 'landing.pricing.eventPeriod',
+    taglineKey: 'landing.pricing.eventTagline',
+    featureKeys: ['landing.pricing.eventF1','landing.pricing.eventF2','landing.pricing.eventF3','landing.pricing.eventF4'],
+    cta: 'mailto:hello@ludonect.de', ctaKey: 'landing.pricing.eventCta', featured: true, badgeKey: 'landing.pricing.eventBadge',
   },
   {
-    name: 'Pro',
-    icon: 'mdi-briefcase-outline',
-    price: '15 €',
-    period: '/ Monat',
-    tagline: 'Für Trainer mit regelmäßigen Workshops.',
-    features: [
-      'Alles aus Event Pass',
-      'Fragen dauerhaft speichern',
-      'Unbegrenzte Premium-Räume',
-      'Prioritäts-Support',
-    ],
-    cta: 'mailto:hello@ludonect.de',
-    ctaLabel: 'Pro testen',
-    featured: false,
-    badge: null,
+    nameKey: 'landing.pricing.proName', icon: 'mdi-briefcase-outline',
+    priceKey: 'landing.pricing.proPrice', periodKey: 'landing.pricing.proPeriod',
+    taglineKey: 'landing.pricing.proTagline',
+    featureKeys: ['landing.pricing.proF1','landing.pricing.proF2','landing.pricing.proF3','landing.pricing.proF4'],
+    cta: 'mailto:hello@ludonect.de', ctaKey: 'landing.pricing.proCta', featured: false, badgeKey: null,
   },
   {
-    name: 'Enterprise',
-    icon: 'mdi-office-building-outline',
-    price: 'Auf Anfrage',
-    period: '',
-    tagline: 'Full-Whitelabel für Beratungshäuser & Konzerne.',
-    features: [
-      'Full Whitelabel',
-      'SSO-Integration',
-      'Dedizierter Kundenbetreuer',
-      'SLA & Datenschutzvertrag',
-    ],
-    cta: 'mailto:hello@ludonect.de',
-    ctaLabel: 'Kontakt aufnehmen',
-    featured: false,
-    badge: null,
+    nameKey: 'landing.pricing.entName', icon: 'mdi-office-building-outline',
+    priceKey: 'landing.pricing.entPrice', periodKey: null,
+    taglineKey: 'landing.pricing.entTagline',
+    featureKeys: ['landing.pricing.entF1','landing.pricing.entF2','landing.pricing.entF3','landing.pricing.entF4'],
+    cta: 'mailto:hello@ludonect.de', ctaKey: 'landing.pricing.entCta', featured: false, badgeKey: null,
   },
 ]
 </script>
