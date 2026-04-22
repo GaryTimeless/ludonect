@@ -47,12 +47,20 @@
 </template>
 
 <script setup lang="ts">
-import { provide, onMounted, onUnmounted, ref, watch, computed } from 'vue';
+import { provide, onMounted, onUnmounted, ref, watch, computed, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import questions from "@/questions.json";
+import { getCatalogQuestions } from '@/catalogs';
 import { socketService } from '@/services/socketService';
 
-provide("questions", questions);
+const activeQuestions = reactive(getCatalogQuestions('basic'));
+watch(
+  () => socketService.gameState.value?.catalog,
+  (catalog) => {
+    const next = getCatalogQuestions(catalog ?? 'basic');
+    activeQuestions.splice(0, activeQuestions.length, ...next);
+  }
+);
+provide("questions", activeQuestions);
 
 const router = useRouter();
 const route = useRoute();

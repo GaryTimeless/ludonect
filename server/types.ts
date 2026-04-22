@@ -17,6 +17,7 @@ export interface GameSession {
   players: Player[];
   currentRound: CurrentRound | null;
   usedQuestionIds: number[];
+  catalog: string;      // Key of the question catalog (e.g. 'basic', 'SmartCoachBerlin')
 }
 
 export interface CurrentRound {
@@ -36,6 +37,7 @@ export interface CurrentRound {
 export interface CreateRoomData {
   playerName: string;
   playerId: string; // Persistent UUID from localStorage
+  catalog?: string; // Selected question catalog key
 }
 
 export interface CreateRoomResponse {

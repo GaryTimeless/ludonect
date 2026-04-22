@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "text": "Wie sehr vertraust du deinem Bauchgefühl bei wichtigen Entscheidungen?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 2,
+    "text": "Wie wohl fühlst du dich damit, Feedback zu geben?",
+    "min": 0,
+    "max": 100
+  },
+  {
+    "id": 3,
+    "text": "Wie sehr lebst du nach deinen eigenen Werten im Arbeitsalltag?",
+    "min": 0,
+    "max": 100
+  }
+]

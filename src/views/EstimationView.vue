@@ -30,9 +30,6 @@
               elevation="2"
             >
               <v-card-text class="d-flex align-center py-2">
-                <v-icon v-if="isHost" class="drag-handle mr-3" size="small">
-                  mdi-drag
-                </v-icon>
                 <v-avatar :color="getPlayerColor(element.id)" size="36" class="mr-3">
                   <span class="text-white font-weight-bold text-caption">
                     {{ element.name.charAt(0).toUpperCase() }}
@@ -43,9 +40,12 @@
                     {{ index + 1 }}. {{ element.name }}
                   </div>
                 </div>
-                <v-chip v-if="element.isHost" size="small" color="accent">
+                <v-chip v-if="element.isHost" size="small" color="accent" class="mr-2">
                   Host
                 </v-chip>
+                <v-icon v-if="isHost" class="drag-handle" size="small">
+                  mdi-swap-vertical
+                </v-icon>
               </v-card-text>
             </v-card>
           </template>
@@ -138,16 +138,6 @@
               elevation="2"
             >
               <v-card-text class="d-flex align-center py-2">
-                <!-- Only show drag handle for own card -->
-                <v-icon
-                  v-if="element === localPlayerId && isMyTurn"
-                  class="drag-handle mr-3"
-                  size="small"
-                >
-                  mdi-drag
-                </v-icon>
-                <!-- Spacer so layout stays consistent when no handle shown -->
-                <span v-else-if="isMyTurn" class="drag-handle-spacer mr-3" />
                 <v-avatar :color="getPlayerColor(element)" size="36" class="mr-3">
                   <span class="text-white font-weight-bold text-caption">
                     {{ getPlayerName(element).charAt(0).toUpperCase() }}
@@ -162,9 +152,20 @@
                   v-if="element === localPlayerId && isMyTurn"
                   size="small"
                   color="success"
+                  class="mr-2"
                 >
                   Du
                 </v-chip>
+                <!-- Only show drag handle for own card -->
+                <v-icon
+                  v-if="element === localPlayerId && isMyTurn"
+                  class="drag-handle"
+                  size="small"
+                >
+                  mdi-swap-vertical
+                </v-icon>
+                <!-- Spacer so layout stays consistent when no handle shown -->
+                <span v-else-if="isMyTurn" class="drag-handle-spacer" style="width:20px" />
               </v-card-text>
             </v-card>
           </template>
@@ -475,7 +476,7 @@ async function prepareNextRound() {
 
 .drag-handle-spacer {
   display: inline-block;
-  width: 20px; /* matches mdi-drag icon size */
+  width: 20px; /* matches mdi-swap-vertical icon size */
 }
 
 .placement-list {

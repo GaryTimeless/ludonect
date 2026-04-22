@@ -47,14 +47,14 @@ export function setupSocketHandlers(
     // =========================================================================
     socket.on('createRoom', (data: CreateRoomData, callback: (response: CreateRoomResponse) => void) => {
       try {
-        const { playerName, playerId } = data;
+        const { playerName, playerId, catalog } = data;
         if (!playerName || playerName.trim().length === 0 || !playerId) {
           callback({ success: false, error: 'Player name and ID are required' });
           return;
         }
 
         const roomCode = generateRoomCode();
-        const game = gameManager.createGame(roomCode, playerId, socket.id, playerName.trim());
+        const game = gameManager.createGame(roomCode, playerId, socket.id, playerName.trim(), catalog ?? 'basic');
         // Assign first animal icon to the host
         if (game.players[0]) game.players[0].animalIcon = ANIMAL_ICONS[0];
         socket.join(roomCode);

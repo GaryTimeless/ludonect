@@ -107,6 +107,15 @@
               counter
               class="mb-4"
             />
+            <v-select
+              v-model="selectedCatalog"
+              :items="catalogOptions"
+              item-title="name"
+              item-value="key"
+              label="Fragenkatalog"
+              variant="outlined"
+              class="mb-4"
+            />
             <v-btn
               color="primary"
               size="x-large"
@@ -285,9 +294,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import questions from "@/questions.json";
 import FunButton from "@/components/FunButton.vue";
 import { socketService } from "@/services/socketService";
+import { catalogs, getCatalogQuestions } from "@/catalogs";
+
+const catalogOptions = catalogs.map(c => ({ key: c.key, name: c.name }));
+const selectedCatalog = ref('basic');
 
 const showHowToPlay = ref(false);
 const router = useRouter();
@@ -379,6 +391,7 @@ async function createRoom() {
   try {
     const response = await socketService.emit('createRoom', {
       playerName: playerName.value.trim(),
+      catalog: selectedCatalog.value,
       playerId,
     });
     roomCode.value = response.roomCode;
@@ -432,6 +445,8 @@ function resetLocalPlayer() {
 
 async function startGame() {
   try {
+    const catalog = socketService.gameState.value?.catalog ?? 'basic';
+    const questions = getCatalogQuestions(catalog);
     const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
     await socketService.emit('startGame', {
       roomCode: roomCode.value,
