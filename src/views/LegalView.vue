@@ -33,9 +33,9 @@
               <div class="legal-block">
                 <h2 class="legal-h2">Verantwortlich für den Inhalt</h2>
                 <p>
-                  Greg Schenk<br />
+                  Gregory Schenk<br />
                   Kriegstraße 17<br />
-                  76137 Karlsruhe<br />
+                  76199 Karlsruhe<br />
                   Deutschland
                 </p>
               </div>
@@ -93,7 +93,7 @@
               <div class="legal-block">
                 <h2 class="legal-h2">1. Verantwortlicher</h2>
                 <p>
-                  Verantwortlicher im Sinne der DSGVO ist Gary Schenk
+                  Verantwortlicher im Sinne der DSGVO ist Gregory Schenk
                   (Kontakt: <a href="mailto:hello@ludonect.de">hello@ludonect.de</a>).
                 </p>
               </div>
