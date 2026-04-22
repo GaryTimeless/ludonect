@@ -229,8 +229,8 @@
                 block
                 elevation="0"
                 class="mt-auto"
-                :to="plan.cta === '/play' ? '/play' : undefined"
-                :href="plan.cta !== '/play' ? plan.cta : undefined"
+                  :to="plan.cta === '/play' ? '/play' : undefined"
+                @click="plan.cta !== '/play' ? openContactPopup(plan) : undefined"
               >
                 {{ plan.ctaLabel }}
               </v-btn>
@@ -263,6 +263,40 @@
       </v-container>
     </footer>
 
+  <!-- ===== KONTAKT POPUP ===== -->
+  <v-dialog v-model="contactPopup" max-width="420">
+    <v-card rounded="xl">
+      <v-card-title class="pt-6 px-6 text-h6 font-weight-bold" style="color:#385028">
+        {{ contactPopupPlan?.ctaLabel }}
+      </v-card-title>
+      <v-card-text class="px-6 pb-2" style="color:#5a7042">
+        Schreib uns eine kurze Mail — wir melden uns innerhalb von 24 Stunden bei dir.
+      </v-card-text>
+      <v-card-actions class="px-6 pb-6 gap-3 flex-column">
+        <v-btn
+          color="primary"
+          variant="elevated"
+          rounded="pill"
+          block
+          :href="`mailto:hello@ludonect.de?subject=${encodeURIComponent(contactPopupPlan?.name + ' Anfrage')}`"
+          @click="contactPopup = false"
+        >
+          <v-icon start>mdi-email-outline</v-icon>
+          hello@ludonect.de schreiben
+        </v-btn>
+        <v-btn
+          variant="text"
+          color="secondary"
+          rounded="pill"
+          block
+          @click="contactPopup = false"
+        >
+          Schließen
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   </div>
 </template>
 
@@ -270,6 +304,13 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const mobileMenuOpen = ref(false)
+
+const contactPopup = ref(false)
+const contactPopupPlan = ref<any>(null)
+function openContactPopup(plan: any) {
+  contactPopupPlan.value = plan
+  contactPopup.value = true
+}
 
 const steps = [
   {
@@ -404,7 +445,7 @@ const pricingPlans = [
       'Prioritäts-Support',
     ],
     cta: 'mailto:hello@ludonect.de',
-    ctaLabel: 'Pro testen',
+    ctaLabel: 'Pro kaufen',
     featured: false,
     badge: null,
   },
