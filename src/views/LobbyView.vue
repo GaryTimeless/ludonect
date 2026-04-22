@@ -151,7 +151,7 @@
               class="mb-4"
             />
             <v-btn
-              color="secondary"
+              color="primary"
               size="x-large"
               block
               :disabled="!joinCode || !playerName"
@@ -495,6 +495,13 @@ async function nativeShare() {
   margin-bottom: 32px;
 }
 
+.ludonect-logo {
+  width: 320px;
+  max-width: 92vw;
+  margin-bottom: 0;
+  height: auto;
+}
+
 .lobby-container {
   min-height: 100vh;
   display: flex;
@@ -516,12 +523,6 @@ async function nativeShare() {
   margin: 0 auto;
 }
 
-.ludonect-logo {
-  width: 320px;
-  max-width: 92vw;
-  margin-bottom: 0;
-  height: auto;
-}
 
 /* Remove router-link underline from logo */
 .lobby-header a {

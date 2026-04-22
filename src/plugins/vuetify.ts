@@ -17,9 +17,9 @@ export default createVuetify({
           'primary-darken-1': '#4A7F15',
           'primary-lighten-1': '#6FAA2E',
 
-          secondary: '#9C27B0',
-          'secondary-darken-1': '#7B1FA2',
-          'secondary-lighten-1': '#BA68C8',
+          secondary: '#385028',
+          'secondary-darken-1': '#2a3d1e',
+          'secondary-lighten-1': '#4a6635',
 
           accent: '#FF9800',
           'accent-darken-1': '#F57C00',
