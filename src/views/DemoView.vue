@@ -27,6 +27,10 @@
           <h2 class="question-text">Wie sehr lebst du nach Plan?</h2>
         </div>
 
+        <div class="slider-value-display">
+          <span class="slider-value">{{ userAnswer }}</span>
+        </div>
+
         <div class="slider-section">
           <div class="slider-poles">
             <span>total chaotisch</span>
@@ -41,14 +45,12 @@
               v-model.number="userAnswer"
               @input="sliderMoved = true"
               class="demo-slider"
+              :style="{ '--val': userAnswer }"
             />
           </div>
           <div class="slider-poles">
             <span>0</span>
             <span>100</span>
-          </div>
-          <div class="slider-value-display">
-            <span class="slider-value">{{ userAnswer }}</span>
           </div>
         </div>
 
