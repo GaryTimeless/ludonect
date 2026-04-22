@@ -12,10 +12,20 @@
           <a href="#b2b">{{ t('landing.nav.ownQuestions') }}</a>
           <a href="#pricing">{{ t('landing.nav.pricing') }}</a>
           <LanguageSwitcher />
+        </nav>
+        <div class="lp-nav-actions">
           <v-btn color="primary" variant="elevated" rounded="pill" size="small" to="/play">
             {{ t('landing.nav.playNow') }}
           </v-btn>
-        </nav>
+        </div>
+        <button class="lp-hamburger" :class="{ open: mobileMenuOpen }" @click="mobileMenuOpen = !mobileMenuOpen" aria-label="Menü öffnen">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <div class="lp-mobile-menu" :class="{ open: mobileMenuOpen }" @click="mobileMenuOpen = false">
+        <a href="#how-it-works">So funktioniert's</a>
+        <a href="#b2b">Eigene Fragen</a>
+        <a href="#pricing">Preise</a>
       </div>
     </header>
 
@@ -25,14 +35,16 @@
         <v-row justify="center">
           <v-col cols="12" md="8" lg="7" class="text-center">
 
+            <img src="@/assets/ludonect_combo.png" alt="Ludonect" class="hero-combo-logo mb-8" />
+
             <div class="hero-badge mb-6">
               <v-icon icon="mdi-check-circle" size="16" color="primary" class="mr-1" />
               {{ t('landing.hero.badge') }}
             </div>
 
             <h1 class="hero-headline">
-              {{ t('landing.hero.headline1') }}<br />
-              <span class="hero-headline-accent">{{ t('landing.hero.headline2') }}</span>
+              <span class="hero-headline-nowrap">{{ t('landing.hero.headline1') }}</span><br />
+              <span class="hero-headline-accent hero-headline-nowrap">{{ t('landing.hero.headline2') }}</span>
             </h1>
 
             <p class="hero-subheadline mt-6">{{ t('landing.hero.sub') }}</p>
@@ -176,8 +188,8 @@
                 block
                 elevation="0"
                 class="mt-auto"
-                :to="plan.cta === '/play' ? '/play' : undefined"
-                :href="plan.cta !== '/play' ? plan.cta : undefined"
+                  :to="plan.cta === '/play' ? '/play' : undefined"
+                @click="plan.cta !== '/play' ? openContactPopup(plan) : undefined"
               >
                 {{ t(plan.ctaKey) }}
               </v-btn>
@@ -208,6 +220,40 @@
       </v-container>
     </footer>
 
+  <!-- ===== KONTAKT POPUP ===== -->
+  <v-dialog v-model="contactPopup" max-width="420">
+    <v-card rounded="xl">
+      <v-card-title class="pt-6 px-6 text-h6 font-weight-bold" style="color:#385028">
+        {{ contactPopupPlan?.ctaLabel }}
+      </v-card-title>
+      <v-card-text class="px-6 pb-2" style="color:#5a7042">
+        Schreib uns eine kurze Mail — wir melden uns innerhalb von 24 Stunden bei dir.
+      </v-card-text>
+      <v-card-actions class="px-6 pb-6 gap-3 flex-column">
+        <v-btn
+          color="primary"
+          variant="elevated"
+          rounded="pill"
+          block
+          :href="`mailto:hello@ludonect.de?subject=${encodeURIComponent(contactPopupPlan?.name + ' Anfrage')}`"
+          @click="contactPopup = false"
+        >
+          <v-icon start>mdi-email-outline</v-icon>
+          hello@ludonect.de schreiben
+        </v-btn>
+        <v-btn
+          variant="text"
+          color="secondary"
+          rounded="pill"
+          block
+          @click="contactPopup = false"
+        >
+          Schließen
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   </div>
 </template>
 
@@ -217,6 +263,15 @@ import { useI18n } from 'vue-i18n'
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 
 const { t, locale } = useI18n()
+
+const mobileMenuOpen = ref(false)
+
+const contactPopup = ref(false)
+const contactPopupPlan = ref<any>(null)
+function openContactPopup(plan: any) {
+  contactPopupPlan.value = plan
+  contactPopup.value = true
+}
 
 const steps = computed(() => [
   { number: '01', icon: 'mdi-comment-question-outline', title: t('landing.howItWorks.step1title'), text: t('landing.howItWorks.step1text') },
@@ -306,13 +361,13 @@ const pricingPlans = [
 .lp-navbar-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 8px 24px;
+  padding: 8px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-.lp-logo-link { text-decoration: none; }
-.lp-nav-logo { height: 44px; width: auto; object-fit: contain; display: block; }
+.lp-logo-link { text-decoration: none; flex-shrink: 0; }
+.lp-nav-logo { height: 40px; width: auto; object-fit: contain; display: block; }
 .lp-nav-links {
   display: flex;
   align-items: center;
@@ -328,13 +383,81 @@ const pricingPlans = [
 }
 .lp-nav-links a:hover { opacity: 1; }
 
+.lp-nav-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.lp-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.lp-hamburger span {
+  display: block;
+  height: 2px;
+  background: #385028;
+  border-radius: 2px;
+  transition: transform 0.25s, opacity 0.25s;
+}
+.lp-hamburger.open span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+.lp-hamburger.open span:nth-child(2) { opacity: 0; }
+.lp-hamburger.open span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+.lp-mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px 20px;
+  background: #f4f9ee;
+  border-bottom: 1px solid rgba(89,152,26,0.15);
+}
+.lp-mobile-menu a {
+  color: #385028;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 6px 0;
+}
+
+@media (max-width: 640px) {
+  .lp-navbar-inner { position: relative; }
+  .lp-nav-links { display: none; }
+  .lp-nav-actions {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .lp-hamburger { display: flex; }
+  .lp-mobile-menu.open { display: flex; }
+}
+
 /* ===== HERO ===== */
 .hero-section {
-  background: linear-gradient(160deg, #EDFFCC 0%, #f5ffe0 60%, #ffffff 100%);
-  padding: 120px 0 80px;
+  background: linear-gradient(180deg, #EDFFCC 0%, #EDFFCC 85%, #ffffff 100%);
+  padding: 40px 0 80px;
   min-height: 85vh;
   display: flex;
   align-items: center;
+}
+.hero-combo-logo {
+  display: block;
+  margin: 0 auto;
+  height: 400px;
+  width: auto;
+}
+@media (max-width: 480px) {
+  .hero-combo-logo {
+    height: auto;
+    width: 90%;
+  }
 }
 .hero-badge {
   display: inline-flex;
@@ -349,11 +472,12 @@ const pricingPlans = [
   letter-spacing: 0.02em;
 }
 .hero-headline {
-  font-size: clamp(2rem, 4.5vw, 4rem);
+  font-size: clamp(1rem, 5vw, 3.5rem);
   font-weight: 700;
   line-height: 1.15;
   color: #385028;
 }
+.hero-headline-nowrap { white-space: nowrap; }
 .hero-headline-accent { color: #59981A; }
 .hero-subheadline {
   font-size: clamp(1rem, 1.5vw, 1.3rem);

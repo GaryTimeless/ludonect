@@ -11,26 +11,21 @@
             {{ t('question.yourAnswer', { min, max }) }}
           </p>
 
+          <div class="slider-value-display mb-4">
+            <v-chip color="primary" size="large" class="value-chip">
+              {{ answer }}
+            </v-chip>
+          </div>
+
           <v-slider
             v-model="answer"
             :min="min"
             :max="max"
             :step="1"
-            thumb-label="always"
             color="primary"
             track-color="grey-lighten-2"
             class="question-slider"
-          >
-            <template #thumb-label="{ modelValue }">
-              <span class="slider-thumb-value">{{ modelValue }}</span>
-            </template>
-          </v-slider>
-
-          <div class="slider-value-display">
-            <v-chip color="primary" size="large" class="value-chip">
-              {{ answer }}
-            </v-chip>
-          </div>
+          />
         </div>
 
         <v-progress-linear

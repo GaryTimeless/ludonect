@@ -11,37 +11,49 @@
           {{ t('prepareNext.chooseSub') }}
         </p>
 
-        <v-list class="question-selection-list mb-6">
-          <v-list-item
-            v-for="question in suggestedQuestions"
-            :key="question.id"
-            class="question-option mb-3"
-            @click="startNextRound(question.id)"
-            :disabled="starting"
-          >
-            <template #prepend>
-              <v-icon color="primary">mdi-chat-question</v-icon>
-            </template>
-            <v-list-item-title class="text-wrap py-2">
-              {{ getQuestionText(question) }}
-            </v-list-item-title>
-            <template #append>
-              <v-btn icon="mdi-chevron-right" variant="text" color="primary"></v-btn>
-            </template>
-          </v-list-item>
-        </v-list>
-
-        <v-btn
-          color="secondary"
+        <v-alert
+          v-if="availableQuestions.length === 0"
+          type="info"
           variant="tonal"
-          block
-          @click="refreshSuggestions"
-          :disabled="starting"
-          class="btn-press"
+          class="mb-4"
+          icon="mdi-check-circle-outline"
         >
-          <v-icon start>mdi-refresh</v-icon>
-          {{ t('prepareNext.otherSuggestions') }}
-        </v-btn>
+          Alle Fragen wurden beantwortet! Das Spiel ist zu Ende.
+        </v-alert>
+
+        <template v-else>
+          <v-list class="question-selection-list mb-6">
+            <v-list-item
+              v-for="question in suggestedQuestions"
+              :key="question.id"
+              class="question-option mb-3"
+              @click="startNextRound(question.id)"
+              :disabled="starting"
+            >
+              <template #prepend>
+                <v-icon color="primary">mdi-chat-question</v-icon>
+              </template>
+              <v-list-item-title class="text-wrap py-2">
+                {{ getQuestionText(question) }}
+              </v-list-item-title>
+              <template #append>
+                <v-btn icon="mdi-chevron-right" variant="text" color="primary"></v-btn>
+              </template>
+            </v-list-item>
+          </v-list>
+
+          <v-btn
+            color="secondary"
+            variant="tonal"
+            block
+            @click="refreshSuggestions"
+            :disabled="starting"
+            class="btn-press"
+          >
+            <v-icon start>mdi-refresh</v-icon>
+            {{ t('prepareNext.otherSuggestions') }}
+          </v-btn>
+        </template>
       </v-card-text>
     </v-card>
 
@@ -88,6 +100,9 @@ const players = computed(() => gameState.value?.players || []);
 const localPlayerId = computed(() => localStorage.getItem('playerId') ?? socketService.getSocketId() ?? undefined);
 const isHost = computed(() => gameState.value?.hostId === localPlayerId.value);
 const usedQuestionIds = computed(() => gameState.value?.usedQuestionIds || []);
+const availableQuestions = computed(() =>
+  questions.filter((q: any) => !usedQuestionIds.value.includes(q.id))
+);
 
 // Generate consistent colors for players
 const playerColors = ['#9C27B0', '#FF9800', '#2196F3', '#4CAF50', '#F44336', '#00BCD4'];

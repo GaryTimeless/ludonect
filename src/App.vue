@@ -1,5 +1,13 @@
 <template>
   <v-app>
+    <header v-if="route.name !== 'Landing'" class="game-navbar">
+      <router-link to="/" class="game-navbar-brand">
+        <svg class="game-navbar-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+        Ludonect
+      </router-link>
+    </header>
     <v-main>
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
@@ -39,17 +47,26 @@
 </template>
 
 <script setup lang="ts">
-import { provide, onMounted, onUnmounted, ref, watch, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { provide, onMounted, onUnmounted, ref, watch, computed, reactive } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import questions from "@/questions.json";
+import { getCatalogQuestions } from '@/catalogs';
 import { socketService } from '@/services/socketService';
 
 const { t, locale } = useI18n();
 
-provide("questions", questions);
+const activeQuestions = reactive(getCatalogQuestions('basic'));
+watch(
+  () => socketService.gameState.value?.catalog,
+  (catalog) => {
+    const next = getCatalogQuestions(catalog ?? 'basic');
+    activeQuestions.splice(0, activeQuestions.length, ...next);
+  }
+);
+provide("questions", activeQuestions);
 
 const router = useRouter();
+const route = useRoute();
 const showHostMigratedSnackbar = ref(false);
 const hostMigratedMessage = ref('');
 
@@ -103,5 +120,36 @@ onUnmounted(() => {
 <style>
 @import './styles/animations.css';
 @import './styles/global.css';
+</style>
+
+<style scoped>
+.game-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(89,152,26,0.12);
+}
+.game-navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Tenor Sans', Arial, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #385028;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+}
+.game-navbar-brand:hover { opacity: 0.75; }
+.game-navbar-arrow {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
 </style>
 

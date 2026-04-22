@@ -110,6 +110,15 @@ h<template>
               counter
               class="mb-4"
             />
+            <v-select
+              v-model="selectedCatalog"
+              :items="catalogOptions"
+              item-title="name"
+              item-value="key"
+              label="Fragenkatalog"
+              variant="outlined"
+              class="mb-4"
+            />
             <v-btn
               color="primary"
               size="x-large"
@@ -154,7 +163,7 @@ h<template>
               class="mb-4"
             />
             <v-btn
-              color="secondary"
+              color="primary"
               size="x-large"
               block
               :disabled="!joinCode || !playerName"
@@ -289,10 +298,13 @@ h<template>
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
-import questions from "@/questions.json";
 import FunButton from "@/components/FunButton.vue";
 import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 import { socketService } from "@/services/socketService";
+import { catalogs, getCatalogQuestions } from "@/catalogs";
+
+const catalogOptions = catalogs.map(c => ({ key: c.key, name: c.name }));
+const selectedCatalog = ref('basic');
 
 const { t } = useI18n();
 
@@ -360,6 +372,12 @@ onMounted(() => {
     joinCode.value = roomCodeFromRoute.toUpperCase();
     mode.value = 'join';
   }
+
+  // Restore room code if we already have an active game (e.g. after reconnect)
+  const existingGame = socketService.gameState.value;
+  if (existingGame?.roomCode) {
+    roomCode.value = existingGame.roomCode;
+  }
 });
 
 // Watch for game state changes to update room code
@@ -384,9 +402,12 @@ async function createRoom() {
   try {
     const response = await socketService.emit('createRoom', {
       playerName: playerName.value.trim(),
+      catalog: selectedCatalog.value,
       playerId,
     });
     roomCode.value = response.roomCode;
+    socketService.setRoomContext(response.roomCode);
+    // Build shareLink dynamically so it works on any domain (localhost / ludonect.de)
     shareLink.value = `${window.location.origin}/join/${response.roomCode}`;
     console.log('[Lobby] Room created:', response);
   } catch (error: any) {
@@ -414,6 +435,7 @@ async function joinRoom() {
       playerId,
     });
     roomCode.value = code;
+    socketService.setRoomContext(code);
     console.log('[Lobby] Joined room:', code);
   } catch (error: any) {
     console.error('[Lobby] Join room error:', error);
@@ -428,11 +450,14 @@ async function joinRoom() {
 function resetLocalPlayer() {
   localStorage.removeItem('playerId');
   localStorage.removeItem('playerName');
+  socketService.clearRoomContext();
   window.location.reload();
 }
 
 async function startGame() {
   try {
+    const catalog = socketService.gameState.value?.catalog ?? 'basic';
+    const questions = getCatalogQuestions(catalog);
     const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
     await socketService.emit('startGame', {
       roomCode: roomCode.value,
@@ -499,6 +524,13 @@ async function nativeShare() {
   right: 0;
 }
 
+.ludonect-logo {
+  width: 320px;
+  max-width: 92vw;
+  margin-bottom: 0;
+  height: auto;
+}
+
 .lobby-container {
   min-height: 100vh;
   display: flex;
@@ -520,12 +552,6 @@ async function nativeShare() {
   margin: 0 auto;
 }
 
-.ludonect-logo {
-  width: 320px;
-  max-width: 92vw;
-  margin-bottom: 0;
-  height: auto;
-}
 
 /* Remove router-link underline from logo */
 .lobby-header a {

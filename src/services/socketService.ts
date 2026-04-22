@@ -8,6 +8,7 @@ class SocketService {
   public connected: Ref<boolean> = ref(false);
   public error: Ref<string | null> = ref(null);
   public hostMigratedEvent: Ref<{ newHostId: string; newHostName: string } | null> = ref(null);
+  private visibilityHandler: (() => void) | null = null;
 
   /**
    * Connect to the WebSocket server
@@ -43,6 +44,18 @@ class SocketService {
     });
 
     this.setupEventListeners();
+
+    // Page Visibility API: reconnect immediately when tab becomes active again
+    if (!this.visibilityHandler) {
+      this.visibilityHandler = () => {
+        if (!document.hidden && !this.socket?.connected) {
+          console.log('[SocketService] Tab visible, triggering reconnect');
+          this.socket?.connect();
+        }
+      };
+      document.addEventListener('visibilitychange', this.visibilityHandler);
+    }
+
     return this.socket;
   }
 
@@ -74,6 +87,7 @@ class SocketService {
       console.log('[SocketService] Connected:', this.socket?.id);
       this.connected.value = true;
       this.error.value = null;
+      this.tryAutoRejoin();
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -109,6 +123,7 @@ class SocketService {
       console.log('[SocketService] Game ended:', data);
       alert(data.message);
       this.gameState.value = null;
+      this.clearRoomContext();
     });
   }
 
@@ -146,7 +161,34 @@ class SocketService {
     return this.socket?.id;
   }
 
+  setRoomContext(roomCode: string): void {
+    localStorage.setItem('currentRoomCode', roomCode);
+  }
+
+  clearRoomContext(): void {
+    localStorage.removeItem('currentRoomCode');
+  }
+
+  private async tryAutoRejoin(): Promise<void> {
+    const roomCode = localStorage.getItem('currentRoomCode');
+    const playerId = localStorage.getItem('playerId');
+    const playerName = localStorage.getItem('playerName');
+    if (!roomCode || !playerId || !playerName) return;
+
+    try {
+      await this.emit('joinRoom', { roomCode, playerName, playerId });
+      console.log('[SocketService] Auto-rejoined room:', roomCode);
+    } catch (error: any) {
+      console.log('[SocketService] Auto-rejoin failed, clearing room context:', error.message);
+      this.clearRoomContext();
+    }
+  }
+
   disconnect() {
+    if (this.visibilityHandler) {
+      document.removeEventListener('visibilitychange', this.visibilityHandler);
+      this.visibilityHandler = null;
+    }
     if (this.socket) {
       console.log('[SocketService] Disconnecting...');
       this.socket.disconnect();

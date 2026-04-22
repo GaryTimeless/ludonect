@@ -6,7 +6,7 @@ export class GameManager {
   /**
    * Create a new game session
    */
-  createGame(roomCode: string, playerId: string, socketId: string, hostName: string): GameSession {
+  createGame(roomCode: string, playerId: string, socketId: string, hostName: string, catalog = 'basic'): GameSession {
     const session: GameSession = {
       roomCode,
       createdAt: Date.now(),
@@ -24,6 +24,7 @@ export class GameManager {
       ],
       currentRound: null,
       usedQuestionIds: [],
+      catalog,
     };
 
     this.games.set(roomCode, session);
