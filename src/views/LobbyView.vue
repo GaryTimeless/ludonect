@@ -365,6 +365,12 @@ onMounted(() => {
     joinCode.value = roomCodeFromRoute.toUpperCase();
     mode.value = 'join';
   }
+
+  // Restore room code if we already have an active game (e.g. after reconnect)
+  const existingGame = socketService.gameState.value;
+  if (existingGame?.roomCode) {
+    roomCode.value = existingGame.roomCode;
+  }
 });
 
 // Watch for game state changes to update room code
@@ -395,6 +401,7 @@ async function createRoom() {
       playerId,
     });
     roomCode.value = response.roomCode;
+    socketService.setRoomContext(response.roomCode);
     // Build shareLink dynamically so it works on any domain (localhost / ludonect.de)
     shareLink.value = `${window.location.origin}/join/${response.roomCode}`;
     console.log('[Lobby] Room created:', response);
@@ -426,6 +433,7 @@ async function joinRoom() {
       playerId,
     });
     roomCode.value = code;
+    socketService.setRoomContext(code);
     console.log('[Lobby] Joined room:', code);
   } catch (error: any) {
     console.error('[Lobby] Join room error:', error);
@@ -440,6 +448,7 @@ async function joinRoom() {
 function resetLocalPlayer() {
   localStorage.removeItem('playerId');
   localStorage.removeItem('playerName');
+  socketService.clearRoomContext();
   window.location.reload();
 }
 

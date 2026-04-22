@@ -4,8 +4,9 @@ export interface Player {
   name: string;
   isHost: boolean;
   joinedAt: number;
-  estimation?: boolean; // Has submitted answer
-  animalIcon?: string;  // Emoji assigned by server on join
+  estimation?: boolean;    // Has submitted answer
+  animalIcon?: string;     // Emoji assigned by server on join
+  disconnectedAt?: number; // Timestamp of disconnect (set during grace period)
 }
 
 export interface GameSession {

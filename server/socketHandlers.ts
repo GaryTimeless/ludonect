@@ -18,6 +18,8 @@ import {
   UpdatePlacedPlayersData,
 } from './types.js';
 
+const PLAYER_TIMEOUT_MS = 120000; // 2 minutes grace period for regular players
+
 export function setupSocketHandlers(
   io: Server,
   gameManager: GameManager,
@@ -122,6 +124,24 @@ export function setupSocketHandlers(
         callback({ success: true, game: result.game });
         io.to(cleanRoomCode).emit('gameUpdate', result.game);
         console.log(`[Room ${cleanRoomCode}] ${playerName} ${result.action} (${playerId})`);
+
+        if (result.action === 'reconnected') {
+          // Clear grace period flag
+          const rejoiningPlayer = result.game.players.find(p => p.id === playerId);
+          if (rejoiningPlayer) rejoiningPlayer.disconnectedAt = undefined;
+
+          // Navigate player back to the correct view
+          const g = result.game;
+          if (g.currentRound) {
+            if (g.state === 'question') {
+              socket.emit('navigateTo', `/question/${cleanRoomCode}/${g.currentRound.questionId}`);
+            } else if (g.state === 'estimation') {
+              socket.emit('navigateTo', `/estimation/${cleanRoomCode}/${g.currentRound.questionId}`);
+            } else if (g.state === 'prepare') {
+              socket.emit('navigateTo', `/prepare/${cleanRoomCode}`);
+            }
+          }
+        }
       } catch (error) {
         console.error('[JoinRoom] Error:', error);
         callback({ success: false, error: 'Failed to join room' });
@@ -648,12 +668,25 @@ export function setupSocketHandlers(
         console.log(`[Room ${roomCode}] Host disconnected, starting timeout`);
         reconnectionManager.startHostTimeout(roomCode);
       } else {
-        // Regular player disconnected — remove by persistent id
-        gameManager.removePlayer(roomCode, player.id);
-        const updatedGame = gameManager.getGame(roomCode);
-        if (updatedGame) {
-          io.to(roomCode).emit('gameUpdate', updatedGame);
-        }
+        // Regular player disconnected — grace period, do not remove immediately
+        player.disconnectedAt = Date.now();
+        io.to(roomCode).emit('gameUpdate', game);
+        console.log(`[Room ${roomCode}] Player ${player.name} disconnected, grace period started`);
+
+        setTimeout(() => {
+          const currentGame = gameManager.getGame(roomCode);
+          if (!currentGame) return;
+          const stillDisconnected = currentGame.players.find(p => p.id === player.id);
+          // Only remove if player never reconnected (disconnectedAt still set)
+          if (stillDisconnected?.disconnectedAt) {
+            gameManager.removePlayer(roomCode, player.id);
+            const updatedGame = gameManager.getGame(roomCode);
+            if (updatedGame) {
+              io.to(roomCode).emit('gameUpdate', updatedGame);
+            }
+            console.log(`[Room ${roomCode}] Player ${player.name} removed after grace period`);
+          }
+        }, PLAYER_TIMEOUT_MS);
       }
     });
 
