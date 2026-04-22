@@ -11,10 +11,20 @@
           <a href="#how-it-works">So funktioniert's</a>
           <a href="#b2b">Eigene Fragen</a>
           <a href="#pricing">Preise</a>
+        </nav>
+        <div class="lp-nav-actions">
           <v-btn color="primary" variant="elevated" rounded="pill" size="small" to="/play">
             Jetzt spielen
           </v-btn>
-        </nav>
+        </div>
+        <button class="lp-hamburger" :class="{ open: mobileMenuOpen }" @click="mobileMenuOpen = !mobileMenuOpen" aria-label="Menü öffnen">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <div class="lp-mobile-menu" :class="{ open: mobileMenuOpen }" @click="mobileMenuOpen = false">
+        <a href="#how-it-works">So funktioniert's</a>
+        <a href="#b2b">Eigene Fragen</a>
+        <a href="#pricing">Preise</a>
       </div>
     </header>
 
@@ -24,14 +34,16 @@
         <v-row justify="center">
           <v-col cols="12" md="8" lg="7" class="text-center">
 
+            <img src="@/assets/ludonect_combo.png" alt="Ludonect" class="hero-combo-logo mb-8" />
+
             <div class="hero-badge mb-6">
               <v-icon icon="mdi-check-circle" size="16" color="primary" class="mr-1" />
               Kostenlos · Ab 3 Spieler · Schnell erklärt
             </div>
 
             <h1 class="hero-headline">
-              Eine Frage. Eine Zahl.<br />
-              <span class="hero-headline-accent">So entstehen Insider.</span>
+              <span class="hero-headline-nowrap">Eine Frage. Eine Zahl.</span><br />
+              <span class="hero-headline-accent hero-headline-nowrap">So entstehen Insider.</span>
             </h1>
 
             <p class="hero-subheadline mt-6">
@@ -257,6 +269,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
+const mobileMenuOpen = ref(false)
+
 const steps = [
   {
     number: '01',
@@ -456,19 +470,81 @@ const pricingPlans = [
 }
 .lp-nav-links a:hover { opacity: 1; }
 
-@media (max-width: 600px) {
-  .lp-navbar-inner { padding: 8px 16px; }
-  .lp-nav-links a { display: none; }
-  .lp-nav-links { gap: 0; }
+.lp-nav-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.lp-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+.lp-hamburger span {
+  display: block;
+  height: 2px;
+  background: #385028;
+  border-radius: 2px;
+  transition: transform 0.25s, opacity 0.25s;
+}
+.lp-hamburger.open span:nth-child(1) { transform: translateY(9px) rotate(45deg); }
+.lp-hamburger.open span:nth-child(2) { opacity: 0; }
+.lp-hamburger.open span:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
+
+.lp-mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px 20px;
+  background: #f4f9ee;
+  border-bottom: 1px solid rgba(89,152,26,0.15);
+}
+.lp-mobile-menu a {
+  color: #385028;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 6px 0;
+}
+
+@media (max-width: 640px) {
+  .lp-navbar-inner { position: relative; }
+  .lp-nav-links { display: none; }
+  .lp-nav-actions {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .lp-hamburger { display: flex; }
+  .lp-mobile-menu.open { display: flex; }
 }
 
 /* ===== HERO ===== */
 .hero-section {
-  background: linear-gradient(160deg, #EDFFCC 0%, #f5ffe0 60%, #ffffff 100%);
-  padding: 120px 0 80px;
+  background: linear-gradient(180deg, #EDFFCC 0%, #EDFFCC 85%, #ffffff 100%);
+  padding: 40px 0 80px;
   min-height: 85vh;
   display: flex;
   align-items: center;
+}
+.hero-combo-logo {
+  display: block;
+  margin: 0 auto;
+  height: 400px;
+  width: auto;
+}
+@media (max-width: 480px) {
+  .hero-combo-logo {
+    height: auto;
+    width: 90%;
+  }
 }
 .hero-badge {
   display: inline-flex;
@@ -483,11 +559,12 @@ const pricingPlans = [
   letter-spacing: 0.02em;
 }
 .hero-headline {
-  font-size: clamp(2rem, 4.5vw, 4rem);
+  font-size: clamp(1rem, 5vw, 3.5rem);
   font-weight: 700;
   line-height: 1.15;
   color: #385028;
 }
+.hero-headline-nowrap { white-space: nowrap; }
 .hero-headline-accent { color: #59981A; }
 .hero-subheadline {
   font-size: clamp(1rem, 1.5vw, 1.3rem);
