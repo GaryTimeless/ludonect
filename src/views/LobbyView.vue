@@ -1,4 +1,4 @@
-h<template>
+<template>
   <v-container class="lobby-container fade-in">
     <div class="lobby-content">
     <div class="lobby-header">
@@ -115,7 +115,7 @@ h<template>
               :items="catalogOptions"
               item-title="name"
               item-value="key"
-              label="Fragenkatalog"
+              :label="t('lobby.catalogLabel')"
               variant="outlined"
               class="mb-4"
             />

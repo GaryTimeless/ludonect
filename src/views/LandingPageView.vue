@@ -23,9 +23,9 @@
         </button>
       </div>
       <div class="lp-mobile-menu" :class="{ open: mobileMenuOpen }" @click="mobileMenuOpen = false">
-        <a href="#how-it-works">So funktioniert's</a>
-        <a href="#b2b">Eigene Fragen</a>
-        <a href="#pricing">Preise</a>
+        <a href="#how-it-works">{{ t('landing.nav.howItWorks') }}</a>
+        <a href="#b2b">{{ t('landing.nav.ownQuestions') }}</a>
+        <a href="#pricing">{{ t('landing.nav.pricing') }}</a>
       </div>
     </header>
 
@@ -128,7 +128,7 @@
                       <div class="mock-header">
                         <div class="mock-logo-placeholder">
                           <v-icon icon="mdi-office-building" size="20" color="primary" />
-                          <span>{{ locale === 'en' ? 'Your logo' : 'Dein Logo' }}</span>
+                          <span>{{ t('landing.b2b.yourLogo') }}</span>
                         </div>
                       </div>
                       <div class="mock-question">{{ t(slide.questionKey) }}</div>
@@ -224,10 +224,10 @@
   <v-dialog v-model="contactPopup" max-width="420">
     <v-card rounded="xl">
       <v-card-title class="pt-6 px-6 text-h6 font-weight-bold" style="color:#385028">
-        {{ contactPopupPlan?.ctaLabel }}
+        {{ contactPopupPlan ? t(contactPopupPlan.ctaKey) : '' }}
       </v-card-title>
       <v-card-text class="px-6 pb-2" style="color:#5a7042">
-        Schreib uns eine kurze Mail — wir melden uns innerhalb von 24 Stunden bei dir.
+        {{ t('landing.contact.message') }}
       </v-card-text>
       <v-card-actions class="px-6 pb-6 gap-3 flex-column">
         <v-btn
@@ -235,11 +235,11 @@
           variant="elevated"
           rounded="pill"
           block
-          :href="`mailto:hello@ludonect.de?subject=${encodeURIComponent(contactPopupPlan?.name + ' Anfrage')}`"
+          :href="`mailto:hello@ludonect.de?subject=${encodeURIComponent(contactPopupPlan ? t(contactPopupPlan.nameKey) + ' ' + t('landing.contact.subject') : '')}`"
           @click="contactPopup = false"
         >
           <v-icon start>mdi-email-outline</v-icon>
-          hello@ludonect.de schreiben
+          {{ t('landing.contact.emailButton') }}
         </v-btn>
         <v-btn
           variant="text"
@@ -248,7 +248,7 @@
           block
           @click="contactPopup = false"
         >
-          Schließen
+          {{ t('common.close') }}
         </v-btn>
       </v-card-actions>
     </v-card>

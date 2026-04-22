@@ -29,6 +29,7 @@ export default {
     exampleQ2scale: '0 = not at all | 100 = Who wants ice cream?',
     exampleQ3: 'How much would you like to be invisible for a day?',
     exampleQ3scale: '0 = not at all | 100 = muhahaha',
+    catalogLabel: 'Question catalog',
     yourName: 'Your name',
     enterRoomCode: 'Enter room code',
     create: 'Create room',
@@ -80,6 +81,7 @@ export default {
     otherSuggestions: 'Other suggestions',
     waitingForHost: 'Waiting for host...',
     hostChoosing: 'The host is choosing the next question.',
+    allAnswered: 'All questions have been answered! The game is over.',
     startError: 'Error starting next round',
   },
   gameRunning: {
@@ -124,6 +126,7 @@ export default {
       feature1: 'Create custom questions',
       feature2: 'Custom brand colors & logo',
       feature3: 'Unlimited participants',
+      yourLogo: 'Your logo',
       cta: 'Request business inquiry',
       slide1label: 'Consulting',
       slide1q: '"How comfortable are you disagreeing in a meeting?"',
@@ -174,6 +177,11 @@ export default {
       entF3: 'Dedicated account manager',
       entF4: 'SLA & data processing agreement',
       entCta: 'Contact us',
+    },
+    contact: {
+      message: "Send us a quick email — we'll get back to you within 24 hours.",
+      emailButton: 'Write to hello@ludonect.de',
+      subject: 'Inquiry',
     },
     footer: {
       tagline: 'play. connect. grow.',

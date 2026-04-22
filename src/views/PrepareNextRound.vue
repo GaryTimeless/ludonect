@@ -18,7 +18,7 @@
           class="mb-4"
           icon="mdi-check-circle-outline"
         >
-          Alle Fragen wurden beantwortet! Das Spiel ist zu Ende.
+          {{ t('prepareNext.allAnswered') }}
         </v-alert>
 
         <template v-else>

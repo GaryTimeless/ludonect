@@ -29,6 +29,7 @@ export default {
     exampleQ2scale: '0 = gar nicht | 100 = Wer hat Bock auf ein Eis?',
     exampleQ3: 'Wie gerne würdest du für einen Tag unsichtbar sein?',
     exampleQ3scale: '0 = gar nicht | 100 = muhahahaha',
+    catalogLabel: 'Fragenkatalog',
     yourName: 'Dein Name',
     enterRoomCode: 'Raumcode eingeben',
     create: 'Raum erstellen',
@@ -80,6 +81,7 @@ export default {
     otherSuggestions: 'Andere Vorschläge',
     waitingForHost: 'Warte auf den Host...',
     hostChoosing: 'Der Host wählt gerade die nächste Frage aus.',
+    allAnswered: 'Alle Fragen wurden beantwortet! Das Spiel ist zu Ende.',
     startError: 'Fehler beim Starten der nächsten Runde',
   },
   gameRunning: {
@@ -124,6 +126,7 @@ export default {
       feature1: 'Eigene Fragen erstellen',
       feature2: 'Eigene Markenfarben & Logo',
       feature3: 'Unbegrenzte Teilnehmer',
+      yourLogo: 'Dein Logo',
       cta: 'Business-Anfrage stellen',
       slide1label: 'Consulting',
       slide1q: '„Wie sicher fühlst du dich, im Meeting zu widersprechen?"',
@@ -175,6 +178,11 @@ export default {
       entF4: 'SLA & Datenschutzvertrag',
       entCta: 'Kontakt aufnehmen',
     },
+    contact: {
+      message: 'Schreib uns eine kurze Mail — wir melden uns innerhalb von 24 Stunden bei dir.',
+      emailButton: 'hello@ludonect.de schreiben',
+      subject: 'Anfrage',
+    },
     footer: {
       tagline: 'play. connect. grow.',
       made: 'Made with 🦦 in Germany',
@@ -188,6 +196,7 @@ export default {
     clicks: 'Klicks',
   },
   demo: {
+    close: 'Demo schließen',
     round: 'Runde 1',
     introTitle: 'Probier\'s aus!',
     introText1: 'Du steigst in eine laufende Runde ein.',
