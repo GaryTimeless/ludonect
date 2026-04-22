@@ -4,19 +4,15 @@
       <!-- Animated icon -->
       <div class="emoji-bounce">🎉</div>
 
-      <h1 class="game-running-title">Die Party läuft schon!</h1>
+      <h1 class="game-running-title">{{ t('gameRunning.title') }}</h1>
 
-      <p class="game-running-subtitle">
-        Du warst leider einen Tick zu spät.<br />
-        Das Spiel in diesem Raum hat bereits begonnen<br />
-        und die Tür ist verschlossen.
+      <p class="game-running-subtitle" style="white-space: pre-line;">
+        {{ t('gameRunning.subtitle') }}
       </p>
 
       <v-divider class="my-6" color="primary" opacity="0.3" />
 
-      <p class="game-running-hint">
-        Aber kein Problem — starte einfach dein eigenes Spiel!
-      </p>
+      <p class="game-running-hint">{{ t('gameRunning.hint') }}</p>
 
       <v-btn
         color="primary"
@@ -26,7 +22,7 @@
         elevation="3"
         @click="router.push('/')"
       >
-        Eigenes Spiel gründen
+        {{ t('gameRunning.startOwn') }}
       </v-btn>
     </div>
   </v-container>
@@ -34,7 +30,9 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 const router = useRouter();
+const { t } = useI18n();
 </script>
 
 <style scoped>

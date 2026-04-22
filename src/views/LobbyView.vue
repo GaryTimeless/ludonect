@@ -1,4 +1,4 @@
-<template>
+h<template>
   <v-container class="lobby-container fade-in">
     <div class="lobby-content">
     <div class="lobby-header">
@@ -9,6 +9,9 @@
           class="ludonect-logo scale-in"
         />
       </router-link>
+      <div class="lobby-lang-switcher">
+        <LanguageSwitcher />
+      </div>
     </div>
 
     <!-- Play Buttons -->
@@ -27,7 +30,7 @@
             class="btn-press"
             @click="mode = 'create'"
           >
-            Neuen Raum erstellen
+            {{ t('lobby.createRoom') }}
           </v-btn>
 
           <!-- Secondary action — white elevated -->
@@ -41,7 +44,7 @@
             class="btn-press text-primary"
             @click="mode = 'join'"
           >
-            Trete Raum bei
+            {{ t('lobby.joinRoom') }}
           </v-btn>
 
           <!-- Tertiary — How to Play -->
@@ -53,39 +56,39 @@
             elevation="0"
             @click="showHowToPlay = !showHowToPlay"
           >
-            {{ showHowToPlay ? 'Weniger anzeigen' : 'How to Play' }}
+            {{ showHowToPlay ? t('lobby.showLess') : t('lobby.howToPlay') }}
           </v-btn>
 
           <transition name="fade">
             <v-card v-if="showHowToPlay" class="mt-2" elevation="2">
               <v-card-text class="how-to-play">
-                <strong>So funktioniert Ludonect:</strong>
+                <strong>{{ t('lobby.howToPlayTitle') }}</strong>
 
                 <ol>
-                  <li>Raum erstellen oder beitreten</li>
+                  <li>{{ t('lobby.howToPlayStep1') }}</li>
                   <li>
-                    Jede*r beantwortet eine Frage geheim<br />
-                    <small>(Einigt euch grob, wie die Frage zu verstehen ist.)</small>
+                    {{ t('lobby.howToPlayStep2') }}<br />
+                    <small>{{ t('lobby.howToPlayStep2sub') }}</small>
                   </li>
-                  <li>Schätzt ein, wie die Antworten der Gruppe zueinander passen</li>
-                  <li>Antworten werden aufgedeckt und gemeinsam besprochen</li>
-                  <li>Nächste Runde!</li>
+                  <li>{{ t('lobby.howToPlayStep3') }}</li>
+                  <li>{{ t('lobby.howToPlayStep4') }}</li>
+                  <li>{{ t('lobby.howToPlayStep5') }}</li>
                 </ol>
 
                 <div class="example-questions">
-                  <div><strong>Beispiel-Fragen:</strong></div>
+                  <div><strong>{{ t('lobby.exampleQuestions') }}</strong></div>
                   <ul>
                     <li>
-                      Wie oft schaust du Dokus?<br />
-                      <span class="example-scale">0 = gar nicht | 100 = lieber als alles andere</span>
+                      {{ t('lobby.exampleQ1') }}<br />
+                      <span class="example-scale">{{ t('lobby.exampleQ1scale') }}</span>
                     </li>
                     <li>
-                      Wie spontan bist du?<br />
-                      <span class="example-scale">0 = gar nicht | 100 = Wer hat Bock auf ein Eis?</span>
+                      {{ t('lobby.exampleQ2') }}<br />
+                      <span class="example-scale">{{ t('lobby.exampleQ2scale') }}</span>
                     </li>
                     <li>
-                      Wie gerne würdest du für einen Tag unsichtbar sein?<br />
-                      <span class="example-scale">0 = gar nicht | 100 = muhahahaha</span>
+                      {{ t('lobby.exampleQ3') }}<br />
+                      <span class="example-scale">{{ t('lobby.exampleQ3scale') }}</span>
                     </li>
                   </ul>
                 </div>
@@ -101,7 +104,7 @@
           <v-card-text>
             <v-text-field
               v-model="playerName"
-              label="Dein Name"
+              :label="t('lobby.yourName')"
               variant="outlined"
               :maxlength="20"
               counter
@@ -124,7 +127,7 @@
               @click="createRoom"
               class="btn-press mb-2"
             >
-              Raum erstellen
+              {{ t('lobby.create') }}
             </v-btn>
             <v-btn
               variant="outlined"
@@ -133,7 +136,7 @@
               @click="mode = 'start'"
               class="btn-press"
             >
-              Zurück
+              {{ t('common.back') }}
             </v-btn>
           </v-card-text>
         </v-card>
@@ -145,7 +148,7 @@
           <v-card-text>
             <v-text-field
               v-model="joinCode"
-              label="Raumcode eingeben"
+              :label="t('lobby.enterRoomCode')"
               variant="outlined"
               :maxlength="6"
               @input="onJoinCodeInput"
@@ -153,7 +156,7 @@
             />
             <v-text-field
               v-model="playerName"
-              label="Dein Name"
+              :label="t('lobby.yourName')"
               variant="outlined"
               :maxlength="20"
               counter
@@ -167,7 +170,7 @@
               @click="joinRoom"
               class="btn-press mb-2"
             >
-              Beitreten
+              {{ t('lobby.join') }}
             </v-btn>
             <v-btn
               variant="outlined"
@@ -176,7 +179,7 @@
               @click="mode = 'start'"
               class="btn-press"
             >
-              Zurück
+              {{ t('common.back') }}
             </v-btn>
           </v-card-text>
         </v-card>
@@ -188,14 +191,14 @@
       <v-card class="lobby-room-card" elevation="3">
         <v-card-text>
           <h2 class="room-code text-center text-primary">
-            Raumcode: <strong>{{ roomCode }}</strong>
+            {{ t('lobby.roomCode') }}: <strong>{{ roomCode }}</strong>
           </h2>
 
           <!-- Shareable Link Section -->
           <v-card v-if="shareLink" class="share-section" color="surface-variant" elevation="0">
             <v-card-text>
               <p class="text-caption text-medium-emphasis mb-2">
-                Teile diesen Link:
+                {{ t('lobby.shareLink') }}
               </p>
               <div class="share-link-container">
                 <input
@@ -223,7 +226,7 @@
             </v-card-text>
           </v-card>
 
-          <p class="player-label">Spieler:</p>
+          <p class="player-label">{{ t('lobby.players') }}</p>
           <v-list class="player-list" bg-color="transparent">
             <v-list-item
               v-for="player in playersInRoom"
@@ -241,7 +244,7 @@
               <v-list-item-title>
                 {{ player.name }}
                 <v-chip v-if="player.id === currentPlayerId" size="x-small" class="ml-2" color="accent">
-                  Du
+                  {{ t('common.you') }}
                 </v-chip>
               </v-list-item-title>
               <template #append v-if="player.isHost">
@@ -258,10 +261,10 @@
             @click="startGame"
             class="btn-press mt-4"
           >
-            Spiel starten
+            {{ t('lobby.startGame') }}
           </v-btn>
           <p v-else-if="isHost" class="text-center text-medium-emphasis text-caption mt-4">
-            Mindestens 2 Spieler benötigt
+            {{ t('lobby.minPlayers') }}
           </p>
 
           <div class="mt-4">
@@ -294,12 +297,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import FunButton from "@/components/FunButton.vue";
+import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 import { socketService } from "@/services/socketService";
 import { catalogs, getCatalogQuestions } from "@/catalogs";
 
 const catalogOptions = catalogs.map(c => ({ key: c.key, name: c.name }));
 const selectedCatalog = ref('basic');
+
+const { t } = useI18n();
 
 const showHowToPlay = ref(false);
 const router = useRouter();
@@ -387,13 +394,11 @@ function onJoinCodeInput(event: Event) {
 
 async function createRoom() {
   if (!playerName.value.trim()) {
-    alert('Bitte gib einen Namen ein');
+    alert(t('lobby.nameRequired'));
     return;
   }
-
   const playerId = getOrCreatePlayerId();
   localStorage.setItem('playerName', playerName.value.trim());
-
   try {
     const response = await socketService.emit('createRoom', {
       playerName: playerName.value.trim(),
@@ -407,24 +412,21 @@ async function createRoom() {
     console.log('[Lobby] Room created:', response);
   } catch (error: any) {
     console.error('[Lobby] Create room error:', error);
-    alert(error.message || 'Fehler beim Erstellen des Raums');
+    alert(error.message || t('lobby.createError'));
   }
 }
 
 async function joinRoom() {
   if (!playerName.value.trim()) {
-    alert('Bitte gib einen Namen ein');
+    alert(t('lobby.nameRequired'));
     return;
   }
-
   if (!joinCode.value.trim()) {
-    alert('Bitte gib einen Raumcode ein');
+    alert(t('lobby.codeRequired'));
     return;
   }
-
   const playerId = getOrCreatePlayerId();
   localStorage.setItem('playerName', playerName.value.trim());
-
   try {
     const code = joinCode.value.toUpperCase().trim();
     await socketService.emit('joinRoom', {
@@ -440,7 +442,7 @@ async function joinRoom() {
     if (error.message === 'GAME_ALREADY_STARTED') {
       router.push('/game-running');
     } else {
-      alert(error.message || 'Raum existiert nicht!');
+      alert(error.message || t('lobby.joinError'));
     }
   }
 }
@@ -476,16 +478,15 @@ function selectLinkText(event: Event) {
 async function copyShareLink() {
   try {
     await navigator.clipboard.writeText(shareLink.value);
-    snackbarText.value = 'Link kopiert!';
+    snackbarText.value = t('lobby.linkCopied');
     snackbar.value = true;
   } catch (error) {
     console.error('Copy failed:', error);
-    // Fallback: select the text
     const input = document.querySelector('.share-link-input') as HTMLInputElement;
     if (input) {
       input.select();
       document.execCommand('copy');
-      snackbarText.value = 'Link kopiert!';
+      snackbarText.value = t('lobby.linkCopied');
       snackbar.value = true;
     }
   }
@@ -496,17 +497,14 @@ async function nativeShare() {
     copyShareLink();
     return;
   }
-
   try {
     await navigator.share({
-      title: 'Ludonect Spiel',
-      text: `Tritt meinem Ludonect Raum bei! Code: ${roomCode.value}`,
+      title: 'Ludonect',
+      text: `${t('lobby.roomCode')}: ${roomCode.value}`,
       url: shareLink.value,
     });
   } catch (error: any) {
-    // User cancelled or error occurred
     if (error.name !== 'AbortError') {
-      console.error('Share failed:', error);
       copyShareLink();
     }
   }
@@ -517,6 +515,13 @@ async function nativeShare() {
 .lobby-header {
   text-align: center;
   margin-bottom: 32px;
+  position: relative;
+}
+
+.lobby-lang-switcher {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .ludonect-logo {
