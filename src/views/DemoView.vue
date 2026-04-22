@@ -135,61 +135,64 @@
     <!-- ===== SCREEN 4: EINSCHÄTZUNG ===== -->
     <transition name="screen-fade">
       <div v-if="currentScreen === 4" class="demo-screen screen-rank" key="s4">
-        <h2 class="demo-title">Wo stehst du?</h2>
-        <p class="demo-subtitle">Platziere dich in der Liste.</p>
+        <v-card class="estimation-card" elevation="3">
+          <v-card-title class="text-center pt-4">
+            <h2 style="font-size:1.2rem;color:#385028">Wo stehst du?</h2>
+          </v-card-title>
+          <v-card-text>
+            <v-alert type="success" variant="tonal" class="mb-4" icon="mdi-account-arrow-right">
+              <span style="color:#385028;font-weight:600">Hey DU, du bist an der Reihe!</span>
+            </v-alert>
 
-        <p class="rank-pole-label top">↑ lebt mehr nach Plan</p>
+            <p class="text-center mb-4 text-medium-emphasis">Ziehe deinen Namen an die richtige Position</p>
 
-        <div class="rank-list">
-          <template v-for="(item, index) in rankList" :key="item.id">
-            <div
-              class="rank-item"
-              :class="{
-                'rank-item-you': item.id === 'you',
-                'rank-item-other': item.id !== 'you'
-              }"
-              :draggable="item.id === 'you'"
-              @dragstart="onDragStart(index)"
-              @dragover.prevent="onDragOver(index)"
-              @dragend="onDragEnd"
+            <VueDraggable
+              v-model="rankList"
+              item-key="id"
+              handle=".drag-handle"
+              class="player-drag-list"
+              @end="onDragEnd"
             >
-              <span class="rank-number">{{ index + 1 }}.</span>
-              <span v-if="item.id === 'you'" class="rank-you-avatar">🟢</span>
-              <span class="rank-name">{{ item.id === 'you' ? 'DU' : item.name }}</span>
-              <!-- Mobile move buttons only for "you" -->
-              <div v-if="item.id === 'you'" class="rank-move-btns">
-                <button @click="moveYouUp" :disabled="index === 0" class="move-btn" aria-label="Nach oben">▲</button>
-                <button @click="moveYouDown" :disabled="index === rankList.length - 1" class="move-btn" aria-label="Nach unten">▼</button>
-              </div>
+              <template #item="{ element, index }">
+                <v-card
+                  class="placement-drag-item mb-2"
+                  :class="{ 'my-turn': element.id === 'you' }"
+                  elevation="2"
+                >
+                  <v-card-text class="d-flex align-center py-2">
+                    <v-avatar :color="element.id === 'you' ? '#59981A' : getPlayerColor(element.id)" size="36" class="mr-3">
+                      <span class="text-white font-weight-bold text-caption">
+                        {{ (element.id === 'you' ? 'DU' : element.name).charAt(0) }}
+                      </span>
+                    </v-avatar>
+                    <div class="flex-grow-1">
+                      <div class="font-weight-medium">{{ index + 1 }}. {{ element.id === 'you' ? 'DU' : element.name }}</div>
+                    </div>
+                    <v-chip v-if="element.id === 'you'" size="small" color="success" class="mr-2">Du</v-chip>
+                    <v-icon v-if="element.id === 'you'" class="drag-handle" size="small">mdi-swap-vertical</v-icon>
+                    <span v-else style="width:20px;display:inline-block" />
+                  </v-card-text>
+                </v-card>
+              </template>
+            </VueDraggable>
+
+            <div v-if="!hasPlaced" class="text-center mt-3" style="color:#59981A;font-size:0.9rem">
+              Zieh „DU" um dich einzuordnen
             </div>
-            <!-- Drop zone between items -->
-            <div
-              v-if="index < rankList.length - 1"
-              class="drop-zone"
-              @dragover.prevent="onDragOver(index + 0.5)"
-              @drop="onDrop(index + 1)"
-            ></div>
-          </template>
-        </div>
 
-        <p class="rank-pole-label bottom">↓ lebt weniger nach Plan</p>
-
-        <div class="placement-status">
-          {{ placementDescription }}
-        </div>
-
-        <div v-if="!hasPlaced" class="demo-hint-inline">
-          Zieh „DU" oder nutze ▲▼ um dich einzuordnen
-        </div>
-
-        <button
-          class="demo-btn-primary"
-          :class="{ 'btn-disabled': !hasPlaced }"
-          :disabled="!hasPlaced"
-          @click="submitPlacement"
-        >
-          Fertig ✓
-        </button>
+            <v-btn
+              color="success"
+              size="x-large"
+              block
+              :disabled="!hasPlaced"
+              @click="submitPlacement"
+              class="mt-4"
+            >
+              <v-icon start>mdi-check</v-icon>
+              Fertig
+            </v-btn>
+          </v-card-text>
+        </v-card>
       </div>
     </transition>
 
@@ -296,6 +299,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import VueDraggable from 'vuedraggable';
 import allQuestions from '@/questions.json';
 
 const router = useRouter();
@@ -466,8 +470,15 @@ function onDragOver(index: number) {
   // highlight handled via CSS :dragover if needed
 }
 
+const playerColors = ['#FF9800', '#2196F3', '#4CAF50', '#F44336', '#00BCD4'];
+function getPlayerColor(id: string): string {
+  const hash = id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return playerColors[hash % playerColors.length];
+}
+
 function onDragEnd() {
   dragIndex.value = null;
+  hasPlaced.value = true;
 }
 
 // Drop zones call this with target index (insert-before position)
