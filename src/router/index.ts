@@ -8,6 +8,7 @@ import PrepareNextRound from "@/views/PrepareNextRound.vue";
 import GameRunningView from "@/views/GameRunningView.vue";
 import LegalView from "@/views/LegalView.vue";
 import DemoView from "@/views/DemoView.vue";
+import { setupRouterGuards } from './guards';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -71,5 +72,7 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
 });
+
+setupRouterGuards(router);
 
 export default router;

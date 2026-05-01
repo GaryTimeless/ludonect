@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { ref, Ref } from 'vue';
 import type { GameSession } from '../../server/types';
+import router from '@/router';
 
 class SocketService {
   private socket: Socket | null = null;
@@ -169,18 +170,43 @@ class SocketService {
     localStorage.removeItem('currentRoomCode');
   }
 
+  private isAutoRejoining = false;
+
   private async tryAutoRejoin(): Promise<void> {
+    // Prevent concurrent auto-rejoin attempts
+    if (this.isAutoRejoining) {
+      console.log('[SocketService] Auto-rejoin already in progress, skipping');
+      return;
+    }
+
     const roomCode = localStorage.getItem('currentRoomCode');
     const playerId = localStorage.getItem('playerId');
     const playerName = localStorage.getItem('playerName');
     if (!roomCode || !playerId || !playerName) return;
 
+    this.isAutoRejoining = true;
+
     try {
+      // Register a one-time navigateTo listener BEFORE calling joinRoom,
+      // so we catch the server's redirect even if App.vue hasn't mounted yet.
+      let navigated = false;
+      const onNavigateTo = (path: string) => {
+        if (navigated) return;
+        navigated = true;
+        console.log('[SocketService] Auto-rejoin navigateTo:', path);
+        if (router.currentRoute.value.path !== path) {
+          router.push(path);
+        }
+      };
+      this.socket?.once('navigateTo', onNavigateTo);
+
       await this.emit('joinRoom', { roomCode, playerName, playerId });
       console.log('[SocketService] Auto-rejoined room:', roomCode);
     } catch (error: any) {
       console.log('[SocketService] Auto-rejoin failed, clearing room context:', error.message);
       this.clearRoomContext();
+    } finally {
+      this.isAutoRejoining = false;
     }
   }
 

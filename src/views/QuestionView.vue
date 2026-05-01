@@ -1,6 +1,6 @@
 <template>
   <v-container class="mobile-container fade-in">
-    <v-card class="question-card" elevation="3">
+    <v-card v-if="isStateReady" class="question-card" elevation="3">
       <v-card-title class="question-title text-center">
         <h2>{{ questionText }}</h2>
       </v-card-title>
@@ -76,6 +76,9 @@
         </v-btn>
       </v-card-text>
     </v-card>
+    <v-card v-else elevation="3" class="question-card d-flex justify-center align-center" style="min-height:200px">
+      <v-progress-circular indeterminate color="primary" size="64" width="4"/>
+    </v-card>
   </v-container>
 </template>
 
@@ -108,6 +111,8 @@ const proceeding = ref(false);
 
 // Get game state from socket service
 const gameState = computed(() => socketService.gameState.value);
+// Only render the card once the socket state is settled
+const isStateReady = computed(() => socketService.connected.value || gameState.value);
 const currentPlayerId = computed(() => localStorage.getItem('playerId') ?? socketService.getSocketId() ?? undefined);
 const isHost = computed(() => gameState.value?.hostId === currentPlayerId.value);
 const totalPlayers = computed(() => gameState.value?.players.length || 0);
@@ -156,6 +161,25 @@ watch(
   },
   { deep: true }
 );
+
+    // Watch: validate we're in the right room once socket is connected
+    watch(
+      () => ({ connected: socketService.connected.value, roomCode: gameState.value?.roomCode }),
+      ({ connected, roomCode }) => {
+        if (!connected) return; // socket still connecting, wait
+        // No room at all — user is not in any game
+        if (!roomCode) {
+          console.log('[QuestionView] Not in any room, redirecting to /');
+          router.push('/');
+          return;
+        }
+        // Room code mismatch
+        if (roomCode !== gameId) {
+          console.log('[QuestionView] Room mismatch, redirecting to /');
+          router.push('/');
+        }
+      }
+    );
 
 async function submitAnswer() {
   if (hasAnswered.value) return;

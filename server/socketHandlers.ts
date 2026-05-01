@@ -214,6 +214,11 @@ export function setupSocketHandlers(
           return;
         }
 
+        if (game.state !== 'question') {
+          callback({ success: false, error: 'Game is not in question phase' });
+          return;
+        }
+
         // Find player by socketId to get persistent UUID
         const player = game.players.find(p => p.socketId === socket.id);
         if (!player) {
@@ -335,6 +340,11 @@ export function setupSocketHandlers(
           return;
         }
 
+        if (game.state !== 'estimation') {
+          callback({ success: false, error: 'Game is not in estimation phase' });
+          return;
+        }
+
         // Add player to placed list
         if (!game.currentRound.placedPlayers.includes(playerId)) {
           game.currentRound.placedPlayers.push(playerId);
@@ -437,6 +447,11 @@ export function setupSocketHandlers(
 
         if (!game) {
           callback({ success: false, error: 'Room not found' });
+          return;
+        }
+
+        if (game.state !== 'prepare') {
+          callback({ success: false, error: 'Game is not in prepare phase' });
           return;
         }
 
@@ -591,6 +606,11 @@ export function setupSocketHandlers(
 
         if (!game || !game.currentRound) {
           callback({ success: false, error: 'Invalid game state' });
+          return;
+        }
+
+        if (game.state !== 'estimation') {
+          callback({ success: false, error: 'Game is not in estimation phase' });
           return;
         }
 

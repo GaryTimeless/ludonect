@@ -306,6 +306,21 @@ watch(
   { deep: true }
 );
 
+    // Watch: validate we are in the right room once socket is connected
+    watch(
+      () => ({ connected: socketService.connected.value, roomCode: gameState.value?.roomCode }),
+      ({ connected, roomCode }) => {
+        if (!connected) return;
+        if (!roomCode) {
+          router.push('/');
+          return;
+        }
+        if (roomCode !== gameId.value) {
+          router.push('/');
+        }
+      }
+    );
+
 const currentQuestion = computed(() => {
   if (!currentRound.value?.questionId) return null;
   return questions.find((q: any) => q.id === currentRound.value?.questionId);

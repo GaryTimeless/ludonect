@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { inject } from "vue";
 import { useI18n } from "vue-i18n";
@@ -102,6 +102,21 @@ const isHost = computed(() => gameState.value?.hostId === localPlayerId.value);
 const usedQuestionIds = computed(() => gameState.value?.usedQuestionIds || []);
 const availableQuestions = computed(() =>
   questions.filter((q: any) => !usedQuestionIds.value.includes(q.id))
+);
+
+// Watch: validate we are in the right room once socket is connected
+watch(
+  () => ({ connected: socketService.connected.value, roomCode: gameState.value?.roomCode }),
+  ({ connected, roomCode }) => {
+    if (!connected) return;
+    if (!roomCode) {
+      router.push('/');
+      return;
+    }
+    if (roomCode !== gameId.value) {
+      router.push('/');
+    }
+  }
 );
 
 // Generate consistent colors for players
