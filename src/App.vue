@@ -40,7 +40,7 @@
       <v-icon start>mdi-alert-circle-outline</v-icon>
       {{ errorSnackbarText }}
       <template #actions>
-        <v-btn variant="text" color="white" @click="showErrorSnackbar = false">Schließen</v-btn>
+        <v-btn variant="text" color="white" @click="showErrorSnackbar = false">{{ t('common.close') }}</v-btn>
       </template>
     </v-snackbar>
   </v-app>
@@ -49,8 +49,11 @@
 <script setup lang="ts">
 import { provide, onMounted, onUnmounted, ref, watch, computed, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { getCatalogQuestions } from '@/catalogs';
 import { socketService } from '@/services/socketService';
+
+const { t, locale } = useI18n();
 
 const activeQuestions = reactive(getCatalogQuestions('basic'));
 watch(
@@ -79,9 +82,9 @@ watch(
   (event) => {
     if (!event) return;
     if (event.newHostId === localPlayerId.value) {
-      hostMigratedMessage.value = '👑 Du bist jetzt der neue Host!';
+      hostMigratedMessage.value = t('app.youAreNewHost');
     } else {
-      hostMigratedMessage.value = `${event.newHostName} ist jetzt der neue Host.`;
+      hostMigratedMessage.value = t('app.newHost', { name: event.newHostName });
     }
     showHostMigratedSnackbar.value = true;
     // Reset so the same event can trigger again later if needed

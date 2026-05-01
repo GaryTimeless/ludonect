@@ -3,7 +3,7 @@ import smartCoachBerlin from './SmartCoachBerlin.json'
 
 export interface Question {
   id: number
-  text: string
+  text: string | { de: string; en: string }
   min: number
   max: number
 }

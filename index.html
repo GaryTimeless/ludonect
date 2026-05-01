@@ -28,6 +28,22 @@
 
   <body>
     <div id="app"></div>
+    <script>
+      // Restore SPA route after GitHub Pages 404 redirect.
+      // 404.html stores the original URL in sessionStorage before redirecting to /.
+      (function() {
+        var redirect = sessionStorage.getItem('ludonect-redirect');
+        if (redirect) {
+          sessionStorage.removeItem('ludonect-redirect');
+          // Extract pathname + search + hash from the stored full URL
+          var url = new URL(redirect);
+          var restored = url.pathname + url.search + url.hash;
+          if (restored !== '/') {
+            history.replaceState(null, '', restored);
+          }
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.ts"></script>
   </body>
 

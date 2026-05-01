@@ -1,14 +1,14 @@
 <template>
   <v-container class="mobile-container fade-in">
-    <v-card class="question-card" elevation="3">
+    <v-card v-if="isStateReady" class="question-card" elevation="3">
       <v-card-title class="question-title text-center">
         <h2>{{ questionText }}</h2>
       </v-card-title>
 
       <v-card-text>
         <div class="slider-container">
-          <p class="slider-label text-center mb-4">
-            Deine Antwort ({{ min }}–{{ max }})
+          <p class="slider-label text-center mb-2">
+            {{ t('question.yourAnswer', { min, max }) }}
           </p>
 
           <div class="slider-value-display mb-4">
@@ -38,7 +38,7 @@
           class="mt-6 mb-2"
         />
         <p class="text-center text-caption text-medium-emphasis">
-          {{ answeredCount }} / {{ totalPlayers }} haben bereits geantwortet
+          {{ t('question.answered', { count: answeredCount, total: totalPlayers }) }}
         </p>
 
         <v-btn
@@ -51,13 +51,13 @@
           class="btn-press mt-6"
         >
           <v-icon start v-if="hasAnswered">mdi-check-circle</v-icon>
-          {{ hasAnswered ? 'Antwort abgesendet' : 'Antwort absenden' }}
+          {{ hasAnswered ? t('question.submitted') : t('question.submit') }}
         </v-btn>
 
         <transition name="fade">
           <div v-if="hasAnswered" class="waiting-message mt-4 pulse">
             <v-icon color="success" size="small">mdi-clock-outline</v-icon>
-            <span class="ml-2">Warte auf andere Spieler...</span>
+            <span class="ml-2">{{ t('question.waitingForOthers') }}</span>
           </div>
         </transition>
 
@@ -72,9 +72,12 @@
           class="btn-press mt-6"
         >
           <v-icon start>mdi-arrow-right</v-icon>
-          Zur Schätzung
+          {{ t('question.toEstimation') }}
         </v-btn>
       </v-card-text>
+    </v-card>
+    <v-card v-else elevation="3" class="question-card d-flex justify-center align-center" style="min-height:200px">
+      <v-progress-circular indeterminate color="primary" size="64" width="4"/>
     </v-card>
   </v-container>
 </template>
@@ -83,7 +86,12 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { inject } from "vue";
+import { useI18n } from "vue-i18n";
+import { useLocaleQuestion } from "@/composables/useLocaleQuestion";
 import { socketService } from "@/services/socketService";
+
+const { t } = useI18n();
+const { getQuestionText } = useLocaleQuestion();
 
 const questions = inject("questions", []) as any[];
 const route = useRoute();
@@ -103,6 +111,8 @@ const proceeding = ref(false);
 
 // Get game state from socket service
 const gameState = computed(() => socketService.gameState.value);
+// Only render the card once the socket state is settled
+const isStateReady = computed(() => socketService.connected.value || gameState.value);
 const currentPlayerId = computed(() => localStorage.getItem('playerId') ?? socketService.getSocketId() ?? undefined);
 const isHost = computed(() => gameState.value?.hostId === currentPlayerId.value);
 const totalPlayers = computed(() => gameState.value?.players.length || 0);
@@ -125,7 +135,7 @@ onMounted(async () => {
   console.log('[QuestionView] Gefundene Frage:', question);
 
   if (question) {
-    questionText.value = question.text;
+    questionText.value = getQuestionText(question);
     min.value = question.min;
     max.value = question.max;
     answer.value = Math.floor((question.min + question.max) / 2);
@@ -152,6 +162,25 @@ watch(
   { deep: true }
 );
 
+    // Watch: validate we're in the right room once socket is connected
+    watch(
+      () => ({ connected: socketService.connected.value, roomCode: gameState.value?.roomCode }),
+      ({ connected, roomCode }) => {
+        if (!connected) return; // socket still connecting, wait
+        // No room at all — user is not in any game
+        if (!roomCode) {
+          console.log('[QuestionView] Not in any room, redirecting to /');
+          router.push('/');
+          return;
+        }
+        // Room code mismatch
+        if (roomCode !== gameId) {
+          console.log('[QuestionView] Room mismatch, redirecting to /');
+          router.push('/');
+        }
+      }
+    );
+
 async function submitAnswer() {
   if (hasAnswered.value) return;
 
@@ -167,7 +196,7 @@ async function submitAnswer() {
     hasAnswered.value = true;
   } catch (error: any) {
     console.error('[QuestionView] Fehler beim Speichern der Antwort:', error);
-    alert(error.message || 'Fehler beim Speichern der Antwort');
+    alert(error.message || t('question.submitError'));
   } finally {
     submitting.value = false;
   }
@@ -183,7 +212,7 @@ async function proceedToEstimation() {
     console.log('[QuestionView] Proceeding to estimation view');
   } catch (error: any) {
     console.error('[QuestionView] Fehler beim Weiterleiten:', error);
-    alert(error.message || 'Fehler beim Weiterleiten');
+    alert(error.message || t('question.proceedError'));
   } finally {
     proceeding.value = false;
   }
