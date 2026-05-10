@@ -13,6 +13,21 @@ const STATE_ROUTE_MAP: Record<string, string> = {
   prepare: 'PrepareNextRound',
 };
 
+// Valid forward transitions in the game state machine.
+// The server may emit navigateTo before or in parallel with gameUpdate —
+// the client guard must tolerate navigation to the next expected state.
+const FORWARD_TRANSITIONS: Record<string, string> = {
+  waiting: 'question',
+  question: 'estimation',
+  estimation: 'prepare',
+  prepare: 'question',
+};
+
+// Reverse mapping: route name → state
+const ROUTE_STATE_MAP: Record<string, string> = Object.fromEntries(
+  Object.entries(STATE_ROUTE_MAP).map(([state, route]) => [route, state])
+);
+
 /**
  * Returns the correct route path for the current game state.
  * Used to redirect users who land on a wrong URL.
@@ -70,6 +85,17 @@ export function setupRouterGuards(router: Router) {
     // 4. State mismatch: URL doesn't match game state
     const expectedState = STATE_ROUTE_MAP[gameState.state];
     if (expectedState && expectedState !== routeName) {
+      // Allow forward progress: target route is the next state in the game flow.
+      // The server emits navigateTo before or in parallel with gameUpdate — the
+      // state update may not have arrived yet. Only block backward/stale URLs.
+      const targetState = ROUTE_STATE_MAP[routeName];
+      const nextState = FORWARD_TRANSITIONS[gameState.state];
+
+      if (targetState && targetState === nextState) {
+        console.log(`[Guard] Forward progress: route=${routeName} (${targetState}) is next after server state=${gameState.state}, allowing`);
+        return true;
+      }
+
       const correctPath = getCorrectPath(gameState);
       if (correctPath && correctPath !== to.path) {
         console.log(`[Guard] State mismatch: route=${routeName}, state=${gameState.state}, redirecting to ${correctPath}`);

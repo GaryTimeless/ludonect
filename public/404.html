@@ -2,15 +2,77 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ludonect | play.connect.grow</title>
+  <style>
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      background: #f9faf7;
+      color: #385028;
+    }
+    .page-box {
+      text-align: center;
+      padding: 2rem;
+    }
+    .page-logo {
+      max-width: 160px;
+      margin-bottom: 1.5rem;
+    }
+    .page-spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #e0e0d0;
+      border-top-color: #59981a;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .page-link {
+      color: #59981a;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(89,152,26,0.3);
+    }
+    .page-link:hover { border-bottom-color: #59981a; }
+  </style>
   <script>
-    // GitHub Pages serves this for any unknown path.
-    // Store the intended URL and redirect to root where index.html handles it.
-    sessionStorage.setItem('ludonect-redirect', location.href);
-    location.replace('/');
+    var isFileProtocol = location.protocol === 'file:';
+
+    if (isFileProtocol) {
+      // Local testing: show the page, don't redirect
+      document.documentElement.classList.add('local');
+    } else {
+      // GitHub Pages: store intended URL and redirect to root for SPA routing
+      sessionStorage.setItem('ludonect-redirect', location.href);
+      setTimeout(function() {
+        location.replace('/');
+      }, 100);
+    }
   </script>
 </head>
 <body>
-  <p>Weiterleitung zu Ludonect…</p>
+  <div class="page-box">
+    <img src="/favicon.png" alt="Ludonect" class="page-logo" onerror="this.style.display='none'">
+    <div class="page-spinner" id="spinner"></div>
+    <p id="message">Weiterleitung zu Ludonect&hellip;</p>
+    <p style="font-size:0.85rem;color:#888;">
+      Falls nichts passiert: <a class="page-link" href="/">hier klicken</a>
+    </p>
+  </div>
+  <script>
+    if (isFileProtocol) {
+      document.getElementById('spinner').style.display = 'none';
+      document.getElementById('message').textContent = 'Diese Seite existiert nicht.';
+    }
+  </script>
 </body>
 </html>

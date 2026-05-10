@@ -8,6 +8,7 @@ import PrepareNextRound from "@/views/PrepareNextRound.vue";
 import GameRunningView from "@/views/GameRunningView.vue";
 import LegalView from "@/views/LegalView.vue";
 import DemoView from "@/views/DemoView.vue";
+import NotFoundView from "@/views/NotFoundView.vue";
 import { setupRouterGuards } from './guards';
 
 const routes: Array<RouteRecordRaw> = [
@@ -65,6 +66,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/demo",
     name: "Demo",
     component: DemoView,
+  },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: NotFoundView,
   },
 ];
 
