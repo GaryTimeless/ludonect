@@ -3,7 +3,7 @@ import crypto from 'crypto';
 export interface Instance {
   id: string;
   ownerEmail: string;
-  code: string;          // 6-stellig, alphanumerisch — Raum-Code für Spieler
+  code: string;          // 6-stellig — Haupt-Raum-Code (erster Raum)
   dashboardCode: string; // 4-stellig — Zugang zum Dashboard
   subdomain: string;
   eventName: string;
@@ -14,11 +14,13 @@ export interface Instance {
   expiresAt: number | null;
   maxRooms: number;
   duration: string;
+  roomCodes: string[];   // Alle 4-stelligen Raum-Codes dieser Instanz
 }
 
 export class InstanceManager {
   private instances = new Map<string, Instance>();
-  private bySubdomain = new Map<string, string>(); // subdomain → code
+  private bySubdomain = new Map<string, string>(); // subdomain → 6-digit code
+  private byRoomCode = new Map<string, string>();  // 4-digit room code → 6-digit instance code
 
   private generateCode(): string {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // keine 0/O, 1/I/L für Lesbarkeit
@@ -89,6 +91,7 @@ export class InstanceManager {
       expiresAt,
       maxRooms: 3,
       duration: params.duration,
+      roomCodes: [],
     };
 
     this.instances.set(code, instance);
@@ -123,6 +126,38 @@ export class InstanceManager {
       }
     }
     return undefined;
+  }
+
+  getInstanceByRoomCode(roomCode: string): Instance | undefined {
+    const instanceCode = this.byRoomCode.get(roomCode.toUpperCase());
+    if (!instanceCode) return undefined;
+    return this.getInstanceByCode(instanceCode);
+  }
+
+  createRoomForInstance(dashboardCode: string, email: string): string | null {
+    const instance = this.getInstanceByDashboardCode(dashboardCode);
+    if (!instance || instance.ownerEmail.toLowerCase() !== email.toLowerCase() || !instance.active) {
+      return null;
+    }
+    if (instance.roomCodes.length >= instance.maxRooms) {
+      return null; // max rooms reached
+    }
+
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let newCode = '';
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const bytes = crypto.randomBytes(4);
+      newCode = '';
+      for (let i = 0; i < 4; i++) newCode += chars[bytes[i] % chars.length];
+      // Check uniqueness against all room codes in ALL instances
+      const exists = this.byRoomCode.has(newCode);
+      if (!exists) break;
+    }
+
+    instance.roomCodes.push(newCode);
+    this.byRoomCode.set(newCode, instance.code);
+    console.log(`[InstanceManager] Created room ${newCode} for instance ${instance.code} (${instance.roomCodes.length}/${instance.maxRooms})`);
+    return newCode;
   }
 
   getAllInstances(): Instance[] {

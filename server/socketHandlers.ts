@@ -92,32 +92,37 @@ export function setupSocketHandlers(
           return;
         }
 
-        // ── 6-digit codes: Instance lookup ──────────────────────────────
-        if (cleanRoomCode.length === 6) {
-          const instance = instanceManager.getInstanceByCode(cleanRoomCode);
-          if (!instance) {
-            callback({ success: false, error: 'Instanz nicht gefunden. Bitte Code prüfen.' });
-            return;
-          }
+        // ── Instance room codes (4-digit or 6-digit) ──────────────────
+        const instance = cleanRoomCode.length === 6
+          ? instanceManager.getInstanceByCode(cleanRoomCode)
+          : instanceManager.getInstanceByRoomCode(cleanRoomCode);
+
+        if (instance) {
           if (!instance.active) {
             callback({ success: false, error: 'Diese Instanz ist abgelaufen.' });
             return;
           }
-
-          // Check if game already exists, if not create one
+          // Check if game already exists for this room code, if not create one
           let game = gameManager.getGame(cleanRoomCode);
           if (!game) {
             game = gameManager.createGame(cleanRoomCode, playerId, socket.id, playerName.trim(), instance.questionSet);
             if (game.players[0]) game.players[0].animalIcon = ANIMAL_ICONS[0];
             socket.join(cleanRoomCode);
-            console.log(`[Instance ${cleanRoomCode}] Created game for instance (catalog: ${instance.questionSet})`);
+            console.log(`[Instance ${instance.code}] Created game for room ${cleanRoomCode} (catalog: ${instance.questionSet})`);
             callback({ success: true, game });
             io.to(cleanRoomCode).emit('gameUpdate', game);
             return;
           }
+          // Game exists — fall through to normal join
+        }
 
-          // Game exists — join as normal player
-          // ... fall through to normal join logic below
+        // Free 4-digit codes: game must already exist
+        if (cleanRoomCode.length === 4 && !instance) {
+          const game = gameManager.getGame(cleanRoomCode);
+          if (!game) {
+            callback({ success: false, error: 'Room not found' });
+            return;
+          }
         }
 
         const game = gameManager.getGame(cleanRoomCode);

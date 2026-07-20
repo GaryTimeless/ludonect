@@ -254,8 +254,31 @@ Viel Spaß!
     }
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: true, instance: { code: instance.code, subdomain: instance.subdomain, eventName: instance.eventName, duration: instance.duration, questionSet: instance.questionSet } }));
+    res.end(JSON.stringify({ success: true, instance: { code: instance.code, subdomain: instance.subdomain, eventName: instance.eventName, duration: instance.duration, questionSet: instance.questionSet, roomCodes: instance.roomCodes, maxRooms: instance.maxRooms } }));
     return true;
+  }
+
+  // POST /api/dashboard/create-room
+  if (req.method === 'POST' && url.pathname === '/api/dashboard/create-room') {
+    try {
+      const body = await parseBody(req);
+      const { email, dashboardCode } = JSON.parse(body);
+
+      const newCode = instanceManager.createRoomForInstance(dashboardCode, email);
+      if (!newCode) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Konnte keinen Raum erstellen. Prüfe Code/Email oder max. Räume erreicht.' }));
+        return true;
+      }
+
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, roomCode: newCode }));
+      return true;
+    } catch {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Ungültige Anfrage' }));
+      return true;
+    }
   }
 
   return false;

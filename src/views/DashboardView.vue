@@ -68,48 +68,76 @@
           <template v-else>
             <h1 class="dashboard-title text-center mb-2">Dein Dashboard</h1>
             <p class="dashboard-subtitle text-center mb-8">
-              Event: <strong>{{ instance.eventName }}</strong>
+              {{ instance.eventName }}
             </p>
 
+            <!-- Räume -->
             <v-card class="dashboard-card mb-6" elevation="2">
               <v-card-text>
-                <h3 class="mb-4">Fragen verwalten</h3>
-                <p style="color: #666; margin-bottom: 24px;">
-                  Aktuell spielst du mit unseren Standard-Fragen (51 Stück).<br/>
-                  Bald kannst du hier eigene Fragen hochladen oder direkt eingeben.
-                </p>
+                <div class="room-header">
+                  <h3 class="mb-0">Räume ({{ rooms.length }}/{{ instance.maxRooms }})</h3>
+                  <v-btn
+                    v-if="rooms.length < instance.maxRooms"
+                    color="primary"
+                    variant="elevated"
+                    size="small"
+                    rounded="pill"
+                    :loading="creatingRoom"
+                    @click="createRoom"
+                  >
+                    + Neuer Raum
+                  </v-btn>
+                </div>
 
-                <v-alert type="info" variant="tonal" class="mb-4">
-                  Die eigene-Fragen-Funktion ist in Arbeit. Bei dringendem Bedarf: <a href="mailto:hello@ludonect.de">hello@ludonect.de</a>
-                </v-alert>
+                <div v-if="rooms.length === 0" style="color: #666; padding: 16px 0;">
+                  Noch keine Räume. Erstelle einen, um loszulegen.
+                </div>
+
+                <div v-for="(code, i) in rooms" :key="code" class="room-item">
+                  <div class="room-num">Raum {{ i + 1 }}</div>
+                  <div class="room-code">{{ code }}</div>
+                  <v-btn
+                    variant="outlined"
+                    color="primary"
+                    size="small"
+                    rounded="pill"
+                    :to="`/join/${code}`"
+                  >
+                    Beitreten
+                  </v-btn>
+                </div>
               </v-card-text>
             </v-card>
 
+            <!-- Fragen -->
+            <v-card class="dashboard-card mb-6" elevation="2">
+              <v-card-text>
+                <h3 class="mb-4">Fragen</h3>
+                <p style="color: #666;">
+                  Aktuell: Standard-Fragen (51 Stück).<br/>
+                  Eigene Fragen: in Arbeit.
+                </p>
+              </v-card-text>
+            </v-card>
+
+            <!-- Details -->
             <v-card class="dashboard-card" elevation="2">
               <v-card-text>
-                <h3 class="mb-4">Event-Details</h3>
+                <h3 class="mb-4">Details</h3>
                 <div class="detail-grid">
                   <div class="detail-row">
                     <span class="detail-label">Subdomain</span>
                     <span class="detail-value">{{ instance.subdomain }}.ludonect.de</span>
                   </div>
                   <div class="detail-row">
-                    <span class="detail-label">Raum-Code</span>
-                    <span class="detail-value code-value">{{ instance.code }}</span>
+                    <span class="detail-label">Dashboard-Code</span>
+                    <span class="detail-value code-value" style="color: #7B5EA7;">{{ dashboardCode }}</span>
                   </div>
                   <div class="detail-row">
                     <span class="detail-label">Laufzeit</span>
                     <span class="detail-value">{{ instance.duration }}</span>
                   </div>
-                  <div class="detail-row">
-                    <span class="detail-label">Fragen-Set</span>
-                    <span class="detail-value">Standard (51 Fragen)</span>
-                  </div>
                 </div>
-
-                <v-btn color="primary" rounded="pill" :to="`/join/${instance.code}`" class="mt-6" block>
-                  Jetzt spielen
-                </v-btn>
               </v-card-text>
             </v-card>
           </template>
@@ -128,7 +156,10 @@ const loginCode = ref('');
 const loading = ref(false);
 const error = ref('');
 const authenticated = ref(false);
+const dashboardCode = ref('');
 const instance = ref<any>(null);
+const rooms = ref<string[]>([]);
+const creatingRoom = ref(false);
 
 async function handleLogin() {
   loading.value = true;
@@ -144,12 +175,30 @@ async function handleLogin() {
     }
 
     instance.value = data.instance;
+    rooms.value = data.instance.roomCodes || [];
+    dashboardCode.value = loginCode.value.toUpperCase();
     authenticated.value = true;
   } catch {
     error.value = 'Verbindungsfehler';
   } finally {
     loading.value = false;
   }
+}
+
+async function createRoom() {
+  creatingRoom.value = true;
+  try {
+    const resp = await fetch('/api/dashboard/create-room', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: loginEmail.value, dashboardCode: dashboardCode.value }),
+    });
+    const data = await resp.json();
+    if (data.success) {
+      rooms.value.push(data.roomCode);
+    }
+  } catch { /* silently fail */ }
+  finally { creatingRoom.value = false; }
 }
 </script>
 
@@ -203,6 +252,37 @@ h3 {
   font-family: 'Tenor Sans', Arial, sans-serif;
   font-weight: 400;
   font-size: 1.2rem;
+}
+
+.room-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.room-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #e8e8e0;
+}
+
+.room-item:last-child { border-bottom: none; }
+
+.room-num {
+  color: #666;
+  font-size: 0.9rem;
+  min-width: 60px;
+}
+
+.room-code {
+  font-family: 'Courier New', monospace;
+  font-size: 1.2rem;
+  color: #59981A;
+  letter-spacing: 2px;
+  flex: 1;
 }
 
 .detail-grid { background: #f8f8f4; border-radius: 12px; padding: 20px; }
