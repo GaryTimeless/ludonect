@@ -18,6 +18,11 @@ const routes: Array<RouteRecordRaw> = [
     component: LandingPageView,
   },
   {
+    path: '/purchase',
+    name: 'Purchase',
+    component: () => import('../views/PurchaseView.vue'),
+  },
+  {
     path: '/play',
     name: 'LobbyRoot',
     component: LobbyView,

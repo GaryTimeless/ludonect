@@ -17,6 +17,9 @@
           <v-btn color="primary" variant="elevated" rounded="pill" size="small" to="/play">
             {{ t('landing.nav.playNow') }}
           </v-btn>
+          <v-btn variant="outlined" rounded="pill" size="small" to="/purchase" class="ml-2" style="border-color: #d2991d; color: #d2991d;">
+            Pro
+          </v-btn>
         </div>
         <button class="lp-hamburger" :class="{ open: mobileMenuOpen }" @click="mobileMenuOpen = !mobileMenuOpen" aria-label="Menü öffnen">
           <span></span><span></span><span></span>

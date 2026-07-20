@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import { GameManager } from './gameManager.js';
 import { ReconnectionManager } from './reconnectionManager.js';
 import { setupSocketHandlers } from './socketHandlers.js';
+import { InstanceManager } from './instanceManager.js';
 
 // ── Client Error Ring Buffer ────────────────────────────────────────────────
 const MAX_CLIENT_ERRORS = 50;
@@ -58,6 +59,188 @@ function handleLogError(req: IncomingMessage, res: ServerResponse) {
 // Mit dem || Fallback wird sichergestellt, dass immer ein Port gebunden wird
 const PORT = process.env.PORT || 3001;
 
+// ── Instance Manager ────────────────────────────────────────────────────────
+export const instanceManager = new InstanceManager();
+
+// ── Request Body Parser ─────────────────────────────────────────────────────
+function parseBody(req: IncomingMessage): Promise<string> {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', (chunk) => { body += chunk.toString(); });
+    req.on('end', () => resolve(body));
+  });
+}
+
+// ── Subdomain Routing ───────────────────────────────────────────────────────
+const RESERVED_SUBDOMAINS = ['admin', 'api', 'www', 'mail', 'help', 'dashboard', 'demo', 'play', 'app', 'test', 'dev', 'shop'];
+
+function handleSubdomainRoute(req: IncomingMessage, res: ServerResponse, host: string): boolean {
+  // Extract subdomain from Host header
+  const mainDomain = process.env.MAIN_DOMAIN || 'ludonect.de';
+  const localhostPattern = /^([^.]+)\.localhost/;
+  const domainPattern = new RegExp(`^([^.]+)\\\\.${mainDomain.replace(/[.*+?^${}()|[\]\\]/g, '\\\\$&')}$`);
+
+  let subdomain: string | null = null;
+
+  // localhost subdomain pattern (for dev): test.localhost:5173
+  const localMatch = host.match(localhostPattern);
+  if (localMatch) {
+    subdomain = localMatch[1];
+  } else {
+    // Production domain pattern: julia.ludonect.de
+    const domainMatch = host.match(domainPattern);
+    if (domainMatch) {
+      subdomain = domainMatch[1];
+    }
+  }
+
+  if (!subdomain || RESERVED_SUBDOMAINS.includes(subdomain.toLowerCase())) {
+    return false;
+  }
+
+  const instance = instanceManager.getInstanceBySubdomain(subdomain.toLowerCase());
+  if (!instance || !instance.active) {
+    return false;
+  }
+
+  // Serve the SPA index.html — the frontend will read the subdomain from window.location
+  // Redirect to /join/CODE so the LobbyView auto-joins via route param
+  res.writeHead(302, { 'Location': `/join/${encodeURIComponent(instance.code)}` });
+  res.end();
+  return true;
+}
+
+// ── Purchase Endpoints ──────────────────────────────────────────────────────
+async function handlePurchaseAPI(req: IncomingMessage, res: ServerResponse, url: URL): Promise<boolean> {
+  // CORS headers for API
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+
+  // POST /api/purchase
+  if (req.method === 'POST' && url.pathname === '/api/purchase') {
+    try {
+      const body = await parseBody(req);
+      const { email, subdomain, eventName, duration, questionSet } = JSON.parse(body);
+
+      // Validation
+      if (!email || !subdomain) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Email und Subdomain sind erforderlich' }));
+        return true;
+      }
+
+      if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/i.test(subdomain) || subdomain.length < 3 || subdomain.length > 30) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Subdomain: 3-30 Zeichen, nur Buchstaben, Zahlen und Bindestriche' }));
+        return true;
+      }
+
+      if (RESERVED_SUBDOMAINS.includes(subdomain.toLowerCase())) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Diese Subdomain ist reserviert' }));
+        return true;
+      }
+
+      const instance = instanceManager.createInstance({
+        email,
+        subdomain: subdomain.toLowerCase(),
+        eventName: eventName || 'Mein Spieleabend',
+        duration: duration || '48h',
+        questionSet: questionSet || 'basic',
+      });
+
+      console.log(`[Purchase] New instance created: ${instance.code} → ${instance.subdomain}`);
+      res.writeHead(201, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({
+        success: true,
+        instance: {
+          code: instance.code,
+          subdomain: instance.subdomain,
+          eventName: instance.eventName,
+          duration: instance.duration,
+          questionSet: instance.questionSet,
+          expiresAt: instance.expiresAt,
+        },
+        downloadUrl: `/api/purchase/download?code=${encodeURIComponent(instance.code)}`,
+      }));
+      return true;
+    } catch (err: any) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: err.message || 'Fehler beim Anlegen der Instanz' }));
+      return true;
+    }
+  }
+
+  // GET /api/purchase/download?code=XXXXXX
+  if (req.method === 'GET' && url.pathname === '/api/purchase/download') {
+    const code = url.searchParams.get('code');
+    if (!code) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Code fehlt' }));
+      return true;
+    }
+
+    const instance = instanceManager.getInstanceByCode(code.toUpperCase());
+    if (!instance) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Instanz nicht gefunden' }));
+      return true;
+    }
+
+    const link = process.env.MAIN_DOMAIN
+      ? `https://${instance.subdomain}.${process.env.MAIN_DOMAIN}`
+      : `http://${instance.subdomain}.localhost:5173`;
+
+    const emailContent = `╔════════════════════════════════════════════════╗
+║   🎮 LUDONECT – Dein eigener Spieleabend    ║
+╚════════════════════════════════════════════════╝
+
+Hallo!
+
+Dein LUDONECT-Event "${instance.eventName}" ist bereit!
+
+📋 DEINE ZUGANGSDATEN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  🔢 Raum-Code:     ${instance.code}
+  🌐 Subdomain:     ${link}
+  📧 Email:         ${instance.ownerEmail}
+  📅 Laufzeit:      ${instance.duration}
+  🎯 Fragen-Set:    ${instance.questionSet}
+  ⏰ Gültig bis:    ${instance.expiresAt ? new Date(instance.expiresAt).toISOString() : 'unbegrenzt'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+SO FUNKTIONIERT'S
+ 1. Teile den Code oder den Link mit deinen Freunden
+ 2. Alle gehen auf ${link} (oder geben den Code auf ludonect.de ein)
+ 3. Name eingeben – kein Login, kein Download nötig
+ 4. Spiel starten!
+
+FRAGEN?
+  Schreib einfach an lex@lex.fit
+
+Viel Spaß!
+  – Dein LUDONECT-Team
+`;
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="ludonect-${instance.code}.txt"`);
+    res.writeHead(200);
+    res.end(emailContent);
+    return true;
+  }
+
+  return false;
+}
+
 // Erlaubte Origins für CORS - für Production und Development
 const ALLOWED_ORIGINS = [
   'https://garytimeless.github.io',  // GitHub Pages URL
@@ -69,17 +252,28 @@ const ALLOWED_ORIGINS = [
 
 // Create HTTP server with /api/log-error handler
 const httpServer = createServer((req, res) => {
-  if (req.url === '/api/log-error') {
-    handleLogError(req, res);
-  } else if (req.url === '/dashboard') {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.writeHead(200);
-    res.end(renderDashboard(gameManager));
-  } else {
-    // All other requests are handled by Socket.IO or ignored
-    res.writeHead(404);
-    res.end();
-  }
+  const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
+
+  // 1. Purchase API endpoints
+  handlePurchaseAPI(req, res, url).then(handled => {
+    if (handled) return;
+
+    // 2. Subdomain routing
+    const host = req.headers.host || '';
+    if (handleSubdomainRoute(req, res, host)) return;
+
+    // 3. Existing endpoints
+    if (req.url === '/api/log-error') {
+      handleLogError(req, res);
+    } else if (url.pathname === '/dashboard') {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.writeHead(200);
+      res.end(renderDashboard(gameManager));
+    } else {
+      res.writeHead(404);
+      res.end();
+    }
+  });
 });
 
 // Create Socket.io server with CORS

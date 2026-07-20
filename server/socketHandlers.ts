@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { GameManager } from './gameManager.js';
 import { ReconnectionManager } from './reconnectionManager.js';
 import { generateRoomCode, generateShareableLink, isValidRoomCode } from './utils.js';
+import { instanceManager } from './index.js';
 import {
   Player,
   CreateRoomData,
@@ -89,6 +90,34 @@ export function setupSocketHandlers(
         if (!isValidRoomCode(cleanRoomCode)) {
           callback({ success: false, error: 'Invalid room code format' });
           return;
+        }
+
+        // ── 6-digit codes: Instance lookup ──────────────────────────────
+        if (cleanRoomCode.length === 6) {
+          const instance = instanceManager.getInstanceByCode(cleanRoomCode);
+          if (!instance) {
+            callback({ success: false, error: 'Instanz nicht gefunden. Bitte Code prüfen.' });
+            return;
+          }
+          if (!instance.active) {
+            callback({ success: false, error: 'Diese Instanz ist abgelaufen.' });
+            return;
+          }
+
+          // Check if game already exists, if not create one
+          let game = gameManager.getGame(cleanRoomCode);
+          if (!game) {
+            game = gameManager.createGame(cleanRoomCode, playerId, socket.id, playerName.trim(), instance.questionSet);
+            if (game.players[0]) game.players[0].animalIcon = ANIMAL_ICONS[0];
+            socket.join(cleanRoomCode);
+            console.log(`[Instance ${cleanRoomCode}] Created game for instance (catalog: ${instance.questionSet})`);
+            callback({ success: true, game });
+            io.to(cleanRoomCode).emit('gameUpdate', game);
+            return;
+          }
+
+          // Game exists — join as normal player
+          // ... fall through to normal join logic below
         }
 
         const game = gameManager.getGame(cleanRoomCode);
