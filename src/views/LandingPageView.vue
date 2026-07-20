@@ -191,8 +191,8 @@
                 block
                 elevation="0"
                 class="mt-auto"
-                  :to="plan.cta === '/play' ? '/play' : undefined"
-                @click="plan.cta !== '/play' ? openContactPopup(plan) : undefined"
+                :to="plan.cta.startsWith('/') ? plan.cta : undefined"
+                :href="plan.cta.startsWith('/') ? undefined : plan.cta"
               >
                 {{ t(plan.ctaKey) }}
               </v-btn>
@@ -325,7 +325,7 @@ const pricingPlans = [
     priceKey: 'landing.pricing.eventPrice', periodKey: 'landing.pricing.eventPeriod',
     taglineKey: 'landing.pricing.eventTagline',
     featureKeys: ['landing.pricing.eventF1','landing.pricing.eventF2','landing.pricing.eventF3','landing.pricing.eventF4'],
-    cta: 'mailto:hello@ludonect.de', ctaKey: 'landing.pricing.eventCta', featured: true, badgeKey: 'landing.pricing.eventBadge',
+    cta: '/purchase', ctaKey: 'landing.pricing.eventCta', featured: true, badgeKey: 'landing.pricing.eventBadge',
   },
   {
     nameKey: 'landing.pricing.proName', icon: 'mdi-briefcase-outline',
