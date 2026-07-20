@@ -6,7 +6,8 @@
           <img src="@/assets/ludonect_combo.png" alt="Ludonect" class="lp-nav-logo" />
         </router-link>
         <nav class="lp-nav-links">
-          <router-link to="/" class="lp-back-link">← Zurück</router-link>
+          <LanguageSwitcher />
+          <router-link to="/" class="lp-back-link">{{ t('common.back') }}</router-link>
         </nav>
       </div>
     </header>
@@ -14,70 +15,59 @@
     <v-container class="purchase-container">
       <v-row justify="center">
         <v-col cols="12" md="8" lg="6">
-          <h1 class="purchase-title text-center mb-2">Eventpass kaufen</h1>
-          <p class="purchase-subtitle text-center mb-8">
-            Eigene Fragen, eigener Link, kein Login für deine Gäste.
-          </p>
+          <h1 class="purchase-title text-center mb-2">{{ t('purchase.title') }}</h1>
+          <p class="purchase-subtitle text-center mb-8">{{ t('purchase.subtitle') }}</p>
 
           <v-card class="purchase-card" v-if="!purchaseComplete" elevation="2">
             <v-card-text>
               <v-form @submit.prevent="handlePurchase">
                 <v-text-field
                   v-model="form.email"
-                  label="Deine Email"
+                  :label="t('purchase.email')"
                   type="email"
                   :rules="[rules.required, rules.email]"
                   variant="outlined"
                   color="primary"
                   class="mb-4"
-                  placeholder="deine@email.de"
+                  :placeholder="t('purchase.emailPlaceholder')"
                   required
                 />
 
                 <v-text-field
                   v-model="form.subdomain"
-                  label="Deine Subdomain"
+                  :label="t('purchase.subdomain')"
                   :rules="[rules.required, rules.subdomain]"
                   variant="outlined"
                   color="primary"
                   class="mb-1"
                   placeholder="mein-team"
-                  required
-                  hint="3–30 Zeichen, nur Buchstaben, Zahlen und Bindestriche"
+                  :hint="t('purchase.subdomainHint')"
                   persistent-hint
+                  required
                 >
                   <template #append-inner>
-                    <span class="subdomain-suffix">.ludonect.de</span>
+                    <span class="subdomain-suffix">{{ t('purchase.subdomainSuffix') }}</span>
                   </template>
                 </v-text-field>
 
                 <v-text-field
                   v-model="form.eventName"
-                  label="Event-Name"
+                  :label="t('purchase.eventName')"
                   :rules="[rules.required]"
                   variant="outlined"
                   color="primary"
                   class="mb-4"
-                  placeholder="Julias Teamevent"
+                  :placeholder="t('purchase.eventNamePlaceholder')"
                   required
                 />
 
                 <v-select
                   v-model="form.duration"
-                  label="Laufzeit"
+                  :label="t('purchase.duration')"
                   :items="durationOptions"
                   variant="outlined"
                   color="primary"
                   class="mb-4"
-                />
-
-                <v-select
-                  v-model="form.questionSet"
-                  label="Fragen-Set"
-                  :items="questionSetOptions"
-                  variant="outlined"
-                  color="primary"
-                  class="mb-6"
                 />
 
                 <v-btn
@@ -90,15 +80,13 @@
                   :loading="loading"
                   :disabled="loading"
                 >
-                  Jetzt einrichten – {{ selectedPrice }}&thinsp;€
+                  {{ t('purchase.submit') }} – {{ selectedPrice }}&thinsp;€
                 </v-btn>
-                <p class="text-center mt-3" style="color: #999; font-size: 0.85rem;">
-                  Dummy-Payment — wird nicht belastet.
-                </p>
+                <p class="text-center mt-3 dummy-note">{{ t('purchase.dummyNote') }}</p>
 
-                <p class="text-center mt-4" style="color: #666; font-size: 0.9rem;">
-                  Starte mit unseren Standard-Fragen.<br/>
-                  Eigene Fragen kannst du nach dem Kauf in deinem Dashboard hochladen.
+                <p class="text-center mt-4 standard-note">
+                  {{ t('purchase.standardNote') }}<br/>
+                  {{ t('purchase.dashboardHint') }}
                 </p>
               </v-form>
             </v-card-text>
@@ -108,19 +96,19 @@
           <v-card class="purchase-card success-card" v-else elevation="2">
             <v-card-text class="text-center">
               <v-icon icon="mdi-check-circle" size="64" color="primary" class="mb-4" />
-              <h2 class="mb-4">Alles bereit!</h2>
+              <h2 class="mb-4">{{ t('purchase.success') }}</h2>
 
               <div class="instance-details mb-6">
                 <div class="detail-row">
-                  <span class="detail-label">Event</span>
+                  <span class="detail-label">{{ t('purchase.event') }}</span>
                   <span class="detail-value">{{ result.eventName }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Raum-Code</span>
+                  <span class="detail-label">{{ t('purchase.roomCode') }}</span>
                   <span class="detail-value code-value">{{ result.code }}</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Dashboard-Code</span>
+                  <span class="detail-label">{{ t('purchase.dashboardCode') }}</span>
                   <span class="detail-value code-value dashboard-code">{{ result.dashboardCode }}</span>
                 </div>
                 <div class="detail-row">
@@ -128,21 +116,20 @@
                   <span class="detail-value">{{ result.subdomain }}.ludonect.de</span>
                 </div>
                 <div class="detail-row">
-                  <span class="detail-label">Laufzeit</span>
+                  <span class="detail-label">{{ t('purchase.duration') }}</span>
                   <span class="detail-value">{{ result.duration }}</span>
                 </div>
               </div>
 
-              <p class="text-grey mb-2" style="color: #666;">
-                Teile den <strong>Raum-Code</strong> mit deinen Gästen.
-              </p>
-              <p class="text-grey mb-6" style="color: #666; font-size: 0.9rem;">
-                Mit dem <strong>Dashboard-Code</strong> und deiner Email kannst du auf<br/>
-                <router-link to="/dashboard">ludonect.de/dashboard</router-link> deine Fragen verwalten.
+              <p class="text-grey mb-2 detail-note" v-html="t('purchase.shareCode')" />
+              <p class="text-grey mb-6 detail-note-small">
+                {{ t('purchase.dashboardAccess') }}
+                <router-link to="/dashboard">ludonect.de/dashboard</router-link>
+                {{ t('purchase.manageQuestions') }}
               </p>
 
               <v-btn color="primary" size="large" rounded="pill" :to="`/join/${result.code}`" block>
-                Jetzt spielen
+                {{ t('purchase.playNow') }}
               </v-btn>
             </v-card-text>
           </v-card>
@@ -154,6 +141,10 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue';
+
+const { t } = useI18n();
 
 interface PurchaseForm {
   email: string;
@@ -185,7 +176,6 @@ const loading = ref(false);
 const purchaseComplete = ref(false);
 const result = ref<PurchaseResult>({ code: '', dashboardCode: '', subdomain: '', eventName: '', duration: '', questionSet: '', expiresAt: 0 });
 const downloadUrl = ref('');
-const error = ref('');
 
 const rules = {
   required: (v: string) => !!v || 'Erforderlich',
@@ -197,41 +187,26 @@ const rules = {
   },
 };
 
-const durationOptions = [
-  { title: '24 Stunden (Event) – 5\u2009€', value: '24h', price: 5 },
-  { title: '30 Tage (1 Monat) – 15\u2009€', value: '30d', price: 15 },
-];
+const durationOptions = computed(() => [
+  { title: `${t('purchase.durations.h24')} – 5\u2009€`, value: '24h', price: 5 },
+  { title: `${t('purchase.durations.d30')} – 15\u2009€`, value: '30d', price: 15 },
+]);
 
-const selectedPrice = computed(() => durationOptions.find(o => o.value === form.value.duration)?.price ?? 5);
-
-const questionSetOptions = [
-  { title: 'Standard-Fragen', value: 'basic' },
-  { title: 'SmartCoach Berlin', value: 'SmartCoachBerlin' },
-];
+const selectedPrice = computed(() => durationOptions.value.find(o => o.value === form.value.duration)?.price ?? 5);
 
 async function handlePurchase() {
   loading.value = true;
-  error.value = '';
-
   try {
     const response = await fetch('/api/purchase', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form.value),
     });
-
     const data = await response.json();
-
-    if (!data.success) {
-      error.value = data.error || 'Unbekannter Fehler';
-      return;
-    }
-
+    if (!data.success) return;
     result.value = data.instance;
     downloadUrl.value = data.downloadUrl;
     purchaseComplete.value = true;
-
-    // Auto-download the info file after a short delay
     setTimeout(() => {
       const a = document.createElement('a');
       a.href = data.downloadUrl;
@@ -240,8 +215,6 @@ async function handlePurchase() {
       a.click();
       document.body.removeChild(a);
     }, 500);
-  } catch (err: any) {
-    error.value = 'Verbindungsfehler. Bitte versuche es erneut.';
   } finally {
     loading.value = false;
   }
@@ -256,121 +229,37 @@ async function handlePurchase() {
   color: #385028;
 }
 
-/* Navbar — match landing page */
-.lp-navbar {
-  padding: 12px 24px;
-  border-bottom: 1px solid #e8e8e0;
-  background: #fff;
-}
+.lp-navbar { padding: 12px 24px; border-bottom: 1px solid #e8e8e0; background: #fff; }
+.lp-navbar-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+.lp-nav-logo { height: 36px; }
+.lp-nav-links { display: flex; align-items: center; gap: 16px; }
+.lp-back-link { color: #385028; text-decoration: none; font-size: 0.9rem; }
+.lp-back-link:hover { opacity: 0.7; }
 
-.lp-navbar-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+.purchase-container { padding-top: 56px; padding-bottom: 80px; }
+.purchase-title { font-size: 2rem; font-weight: 400; color: #385028; font-family: 'Tenor Sans', Arial, sans-serif; }
+.purchase-subtitle { color: #666; font-size: 1.1rem; font-family: 'Tenor Sans', Arial, sans-serif; }
 
-.lp-nav-logo {
-  height: 36px;
-}
+.purchase-card { border-radius: 16px !important; border: 1px solid #e0e0d8 !important; }
+.purchase-card :deep(.v-card-text) { padding: 32px; }
 
-.lp-back-link {
-  color: #385028;
-  text-decoration: none;
-  font-size: 0.9rem;
-}
+.subdomain-suffix { color: #999; font-size: 0.85rem; padding-right: 8px; }
+.dummy-note { color: #999; font-size: 0.85rem; }
+.standard-note { color: #666; font-size: 0.9rem; }
 
-.lp-back-link:hover {
-  opacity: 0.7;
-}
+.success-card { border: 2px solid #C5E1A5 !important; }
 
-.purchase-container {
-  padding-top: 56px;
-  padding-bottom: 80px;
-}
+.instance-details { background: #f8f8f4; border-radius: 12px; padding: 20px; text-align: left; }
+.detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e8e8e0; }
+.detail-row:last-child { border-bottom: none; }
+.detail-label { color: #666; font-size: 0.9rem; }
+.detail-value { color: #385028; font-weight: 600; }
 
-.purchase-title {
-  font-size: 2rem;
-  font-weight: 400;
-  color: #385028;
-  font-family: 'Tenor Sans', Arial, sans-serif;
-}
+.code-value { color: #59981A; font-size: 1.3rem; font-family: 'Courier New', monospace; letter-spacing: 3px; }
+.dashboard-code { color: #7B5EA7; }
 
-.purchase-subtitle {
-  color: #666;
-  font-size: 1.1rem;
-  font-family: 'Tenor Sans', Arial, sans-serif;
-}
+.detail-note { color: #666; }
+.detail-note-small { color: #666; font-size: 0.9rem; }
 
-.purchase-card {
-  border-radius: 16px !important;
-  border: 1px solid #e0e0d8 !important;
-}
-
-.purchase-card :deep(.v-card-text) {
-  padding: 32px;
-}
-
-.subdomain-suffix {
-  color: #999;
-  font-size: 0.85rem;
-  padding-right: 8px;
-}
-
-.success-card {
-  border: 2px solid #C5E1A5 !important;
-}
-
-.instance-details {
-  background: #f8f8f4;
-  border-radius: 12px;
-  padding: 20px;
-  text-align: left;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid #e8e8e0;
-}
-
-.detail-row:last-child {
-  border-bottom: none;
-}
-
-.detail-label {
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.detail-value {
-  color: #385028;
-  font-weight: 600;
-}
-
-.code-value {
-  color: #59981A;
-  font-size: 1.3rem;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 3px;
-}
-
-.dashboard-code {
-  color: #7B5EA7;
-}
-
-.success-actions {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-h2 {
-  color: #385028;
-  font-family: 'Tenor Sans', Arial, sans-serif;
-  font-weight: 400;
-}
+h2 { color: #385028; font-family: 'Tenor Sans', Arial, sans-serif; font-weight: 400; }
 </style>

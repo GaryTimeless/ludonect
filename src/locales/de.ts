@@ -250,6 +250,37 @@ export default {
     playAgain: '↺ Nochmal spielen',
     backToOverview: '← Zurück zur Übersicht',
   },
+
+  purchase: {
+    title: 'Eventpass kaufen',
+    subtitle: 'Eigene Fragen, eigener Link, kein Login für deine Gäste.',
+    email: 'Deine Email',
+    emailPlaceholder: 'deine@email.de',
+    subdomain: 'Deine Subdomain',
+    subdomainHint: '3–30 Zeichen, nur Buchstaben, Zahlen und Bindestriche',
+    subdomainSuffix: '.ludonect.de',
+    eventName: 'Event-Name',
+    eventNamePlaceholder: 'Julias Teamevent',
+    duration: 'Laufzeit',
+    questionSet: 'Fragen-Set',
+    submit: 'Jetzt einrichten',
+    dummyNote: 'Dummy-Payment — wird nicht belastet.',
+    standardNote: 'Starte mit unseren Standard-Fragen.',
+    dashboardHint: 'Eigene Fragen kannst du nach dem Kauf in deinem Dashboard hochladen.',
+    success: 'Alles bereit!',
+    shareCode: 'Teile den <strong>Raum-Code</strong> mit deinen Gästen.',
+    dashboardAccess: 'Mit dem <strong>Dashboard-Code</strong> und deiner Email kannst du auf',
+    manageQuestions: 'deine Fragen verwalten.',
+    playNow: 'Jetzt spielen',
+    roomCode: 'Raum-Code',
+    dashboardCode: 'Dashboard-Code',
+    event: 'Event',
+    durations: {
+      h24: '24 Stunden (Event)',
+      d30: '30 Tage (1 Monat)',
+    },
+    errorConnection: 'Verbindungsfehler. Bitte versuche es erneut.',
+}
 }
 
 

@@ -427,7 +427,7 @@ const pricingPlans = [
   padding: 6px 0;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 700px) {
   .lp-navbar-inner { position: relative; }
   .lp-nav-links { display: none; }
   .lp-nav-actions {
