@@ -95,6 +95,11 @@
                 <p class="text-center mt-3" style="color: #999; font-size: 0.85rem;">
                   Dummy-Payment — wird nicht belastet.
                 </p>
+
+                <p class="text-center mt-4" style="color: #666; font-size: 0.9rem;">
+                  Starte mit unseren Standard-Fragen.<br/>
+                  Eigene Fragen kannst du nach dem Kauf in deinem Dashboard hochladen.
+                </p>
               </v-form>
             </v-card-text>
           </v-card>
@@ -133,8 +138,8 @@
                 <v-btn color="primary" size="large" rounded="pill" :to="`/join/${result.code}`" class="mr-3">
                   Jetzt spielen
                 </v-btn>
-                <v-btn variant="outlined" color="primary" rounded="pill" :href="downloadUrl" download>
-                  Erneut herunterladen
+                <v-btn variant="outlined" color="primary" rounded="pill" :to="`/dashboard/${result.code}`">
+                  Fragen verwalten
                 </v-btn>
               </div>
             </v-card-text>

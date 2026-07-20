@@ -23,6 +23,12 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/PurchaseView.vue'),
   },
   {
+    path: '/dashboard/:code',
+    name: 'Dashboard',
+    component: () => import('../views/DashboardView.vue'),
+    props: true,
+  },
+  {
     path: '/play',
     name: 'LobbyRoot',
     component: LobbyView,
