@@ -206,7 +206,7 @@
       <v-container>
         <div class="footer-inner">
           <div class="footer-brand">
-            <img src="@/assets/ludonect_combo.png" alt="Ludonect" class="footer-logo" />
+            <img src="@/assets/ludonect_schrift.png" alt="Ludonect" class="footer-logo" />
             <p class="footer-tagline">{{ t('landing.footer.tagline') }}</p>
             <p class="footer-made">{{ t('landing.footer.made') }}</p>
           </div>
@@ -809,7 +809,7 @@ const pricingPlans = [
   gap: 32px;
   margin-bottom: 32px;
 }
-.footer-logo { height: 32px; filter: brightness(0) invert(1); }
+.footer-logo { height: 32px; width: auto; }
 .footer-tagline { font-size: 0.85rem; opacity: 0.7; margin-top: 8px; }
 .footer-made { font-size: 0.82rem; opacity: 0.5; margin-top: 4px; }
 .footer-links {
