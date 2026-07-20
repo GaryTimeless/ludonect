@@ -89,7 +89,7 @@ export class InstanceManager {
       active: true,
       createdAt: now,
       expiresAt,
-      maxRooms: 3,
+      maxRooms: 40,
       duration: params.duration,
       roomCodes: [],
     };
