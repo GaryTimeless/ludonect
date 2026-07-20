@@ -90,7 +90,7 @@
                   :loading="loading"
                   :disabled="loading"
                 >
-                  Jetzt einrichten – 19&thinsp;€
+                  Jetzt einrichten – {{ selectedPrice }}&thinsp;€
                 </v-btn>
                 <p class="text-center mt-3" style="color: #999; font-size: 0.85rem;">
                   Dummy-Payment — wird nicht belastet.
@@ -146,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 interface PurchaseForm {
   email: string;
@@ -169,7 +169,7 @@ const form = ref<PurchaseForm>({
   email: '',
   subdomain: '',
   eventName: '',
-  duration: '48h',
+  duration: '24h',
   questionSet: 'basic',
 });
 
@@ -190,10 +190,11 @@ const rules = {
 };
 
 const durationOptions = [
-  { title: '48 Stunden (Event)', value: '48h' },
-  { title: '7 Tage', value: '7d' },
-  { title: '30 Tage', value: '30d' },
+  { title: '24 Stunden (Event) – 5\u2009€', value: '24h', price: 5 },
+  { title: '30 Tage (1 Monat) – 15\u2009€', value: '30d', price: 15 },
 ];
+
+const selectedPrice = computed(() => durationOptions.find(o => o.value === form.value.duration)?.price ?? 5);
 
 const questionSetOptions = [
   { title: 'Standard-Fragen', value: 'basic' },

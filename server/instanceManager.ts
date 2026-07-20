@@ -50,10 +50,11 @@ export class InstanceManager {
     let expiresAt: number | null = null;
     const now = Date.now();
     switch (params.duration) {
+      case '24h': expiresAt = now + 24 * 60 * 60 * 1000; break;
       case '48h': expiresAt = now + 48 * 60 * 60 * 1000; break;
       case '7d':  expiresAt = now + 7 * 24 * 60 * 60 * 1000; break;
       case '30d': expiresAt = now + 30 * 24 * 60 * 60 * 1000; break;
-      default:    expiresAt = now + 48 * 60 * 60 * 1000;
+      default:    expiresAt = now + 24 * 60 * 60 * 1000;
     }
 
     const code = this.generateCode();
