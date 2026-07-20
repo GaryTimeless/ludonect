@@ -162,6 +162,7 @@ async function handlePurchaseAPI(req: IncomingMessage, res: ServerResponse, url:
         success: true,
         instance: {
           code: instance.code,
+          dashboardCode: instance.dashboardCode,
           subdomain: instance.subdomain,
           eventName: instance.eventName,
           duration: instance.duration,
@@ -210,6 +211,7 @@ Dein LUDONECT-Event "${instance.eventName}" ist bereit!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   🔢 Raum-Code:     ${instance.code}
+  🔐 Dashboard:     ${instance.dashboardCode}
   🌐 Subdomain:     ${link}
   📧 Email:         ${instance.ownerEmail}
   📅 Laufzeit:      ${instance.duration}
@@ -218,14 +220,15 @@ Dein LUDONECT-Event "${instance.eventName}" ist bereit!
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-SO FUNKTIONIERT'S
- 1. Teile den Code oder den Link mit deinen Freunden
- 2. Alle gehen auf ${link} (oder geben den Code auf ludonect.de ein)
- 3. Name eingeben – kein Login, kein Download nötig
- 4. Spiel starten!
+FÜR DEINE GÄSTE (Raum-Code ${instance.code})
+ 1. Gehe auf ${link} oder gib den Code auf ludonect.de ein
+ 2. Name eingeben – kein Login, kein Download
+ 3. Spiel starten!
 
-FRAGEN?
-  Schreib einfach an lex@lex.fit
+FÜR DICH (Dashboard-Code ${instance.dashboardCode})
+ 1. Gehe auf ludonect.de/dashboard
+ 2. Gib deine Email und den Dashboard-Code ein
+ 3. Verwalte Fragen und Einstellungen
 
 Viel Spaß!
   – Dein LUDONECT-Team
@@ -235,6 +238,23 @@ Viel Spaß!
     res.setHeader('Content-Disposition', `attachment; filename="ludonect-${instance.code}.txt"`);
     res.writeHead(200);
     res.end(emailContent);
+    return true;
+  }
+
+  // GET /api/dashboard/login?email=...&code=...
+  if (req.method === 'GET' && url.pathname === '/api/dashboard/login') {
+    const email = url.searchParams.get('email') || '';
+    const code = url.searchParams.get('code') || '';
+
+    const instance = instanceManager.getInstanceByDashboardCode(code.toUpperCase());
+    if (!instance || instance.ownerEmail.toLowerCase() !== email.toLowerCase()) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Email oder Dashboard-Code ungültig' }));
+      return true;
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true, instance: { code: instance.code, subdomain: instance.subdomain, eventName: instance.eventName, duration: instance.duration, questionSet: instance.questionSet } }));
     return true;
   }
 

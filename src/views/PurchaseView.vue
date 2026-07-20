@@ -120,6 +120,10 @@
                   <span class="detail-value code-value">{{ result.code }}</span>
                 </div>
                 <div class="detail-row">
+                  <span class="detail-label">Dashboard-Code</span>
+                  <span class="detail-value code-value dashboard-code">{{ result.dashboardCode }}</span>
+                </div>
+                <div class="detail-row">
                   <span class="detail-label">Subdomain</span>
                   <span class="detail-value">{{ result.subdomain }}.ludonect.de</span>
                 </div>
@@ -129,19 +133,17 @@
                 </div>
               </div>
 
-              <p class="text-grey mb-6" style="color: #666;">
-                Eine Info-Datei mit allen Zugangsdaten wurde heruntergeladen.<br/>
-                Teile den Code oder Link mit deinen Freunden!
+              <p class="text-grey mb-2" style="color: #666;">
+                Teile den <strong>Raum-Code</strong> mit deinen Gästen.
+              </p>
+              <p class="text-grey mb-6" style="color: #666; font-size: 0.9rem;">
+                Mit dem <strong>Dashboard-Code</strong> und deiner Email kannst du auf<br/>
+                <router-link to="/dashboard">ludonect.de/dashboard</router-link> deine Fragen verwalten.
               </p>
 
-              <div class="success-actions">
-                <v-btn color="primary" size="large" rounded="pill" :to="`/join/${result.code}`" class="mr-3">
-                  Jetzt spielen
-                </v-btn>
-                <v-btn variant="outlined" color="primary" rounded="pill" :to="`/dashboard/${result.code}`">
-                  Fragen verwalten
-                </v-btn>
-              </div>
+              <v-btn color="primary" size="large" rounded="pill" :to="`/join/${result.code}`" block>
+                Jetzt spielen
+              </v-btn>
             </v-card-text>
           </v-card>
         </v-col>
@@ -163,6 +165,7 @@ interface PurchaseForm {
 
 interface PurchaseResult {
   code: string;
+  dashboardCode: string;
   subdomain: string;
   eventName: string;
   duration: string;
@@ -352,6 +355,10 @@ async function handlePurchase() {
   font-size: 1.3rem;
   font-family: 'Courier New', monospace;
   letter-spacing: 3px;
+}
+
+.dashboard-code {
+  color: #7B5EA7;
 }
 
 .success-actions {

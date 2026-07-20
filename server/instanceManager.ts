@@ -3,16 +3,17 @@ import crypto from 'crypto';
 export interface Instance {
   id: string;
   ownerEmail: string;
-  code: string;          // 6-stellig, alphanumerisch
+  code: string;          // 6-stellig, alphanumerisch — Raum-Code für Spieler
+  dashboardCode: string; // 4-stellig — Zugang zum Dashboard
   subdomain: string;
   eventName: string;
-  questionSet: string;   // 'basic', 'SmartCoachBerlin', oder custom
+  questionSet: string;
   tier: 'custom';
   active: boolean;
   createdAt: number;
   expiresAt: number | null;
   maxRooms: number;
-  duration: string;      // '48h', '7d', '30d'
+  duration: string;
 }
 
 export class InstanceManager {
@@ -32,6 +33,21 @@ export class InstanceManager {
       }
     }
     throw new Error('Could not generate unique code after 100 attempts');
+  }
+
+  private generateDashboardCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const bytes = crypto.randomBytes(4);
+      let code = '';
+      for (let i = 0; i < 4; i++) {
+        code += chars[bytes[i] % chars.length];
+      }
+      // Check uniqueness across all dashboard codes
+      const exists = Array.from(this.instances.values()).some(i => i.dashboardCode === code);
+      if (!exists) return code;
+    }
+    throw new Error('Could not generate unique dashboard code');
   }
 
   createInstance(params: {
@@ -58,10 +74,12 @@ export class InstanceManager {
     }
 
     const code = this.generateCode();
+    const dashboardCode = this.generateDashboardCode();
     const instance: Instance = {
       id: crypto.randomUUID(),
       ownerEmail: params.email,
       code,
+      dashboardCode,
       subdomain: params.subdomain,
       eventName: params.eventName,
       questionSet: params.questionSet || 'basic',
@@ -75,7 +93,7 @@ export class InstanceManager {
 
     this.instances.set(code, instance);
     this.bySubdomain.set(params.subdomain, code);
-    console.log(`[InstanceManager] Created instance: ${code} (${params.subdomain})`);
+    console.log(`[InstanceManager] Created instance: ${code} (dashboard: ${dashboardCode}) → ${params.subdomain}`);
     return instance;
   }
 
@@ -93,6 +111,18 @@ export class InstanceManager {
     const code = this.bySubdomain.get(subdomain.toLowerCase());
     if (!code) return undefined;
     return this.getInstanceByCode(code);
+  }
+
+  getInstanceByDashboardCode(dashboardCode: string): Instance | undefined {
+    for (const instance of this.instances.values()) {
+      if (instance.dashboardCode === dashboardCode.toUpperCase()) {
+        if (instance.expiresAt && instance.expiresAt < Date.now()) {
+          instance.active = false;
+        }
+        return instance;
+      }
+    }
+    return undefined;
   }
 
   getAllInstances(): Instance[] {
