@@ -183,7 +183,7 @@ const form = ref<PurchaseForm>({
 
 const loading = ref(false);
 const purchaseComplete = ref(false);
-const result = ref<PurchaseResult>({ code: '', subdomain: '', eventName: '', duration: '', questionSet: '', expiresAt: 0 });
+const result = ref<PurchaseResult>({ code: '', dashboardCode: '', subdomain: '', eventName: '', duration: '', questionSet: '', expiresAt: 0 });
 const downloadUrl = ref('');
 const error = ref('');
 
