@@ -618,6 +618,8 @@ export function setupSocketHandlers(
         game.currentRound.currentTurnIndex = 1;
         game.currentRound.activePlayerId = order.length > 1 ? order[1] : null;
 
+        game.state = 'estimation';
+
         callback({ success: true });
         io.to(roomCode).emit('gameUpdate', game);
         console.log(`[Room ${roomCode}] Estimation game started (progressive mode)`);
